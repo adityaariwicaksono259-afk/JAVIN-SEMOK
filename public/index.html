@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>JavaChat — Anonymous Chat Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',system-ui,sans-serif;background:#faf6eb;color:#433b2a;line-height:1.6}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#faf6eb}
+::-webkit-scrollbar-thumb{background:#c2bcae;border-radius:99px;border:2px solid #faf6eb}
+::-webkit-scrollbar-thumb:hover{background:#a39e90}
+.mesh-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-color:#faf6eb;background-image:radial-gradient(circle,rgba(67,59,42,.08) 1.5px,transparent 1.5px),linear-gradient(rgba(67,59,42,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(67,59,42,.015) 1px,transparent 1px);background-size:24px 24px,48px 48px,48px 48px}
+.container{max-width:1100px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+.hero{text-align:center;padding:80px 0 40px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:#558b2f;color:#fff;padding:8px 20px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;margin-bottom:24px}
+.hero h1{font-size:clamp(40px,10vw,96px);font-weight:900;letter-spacing:-3px;line-height:1;margin-bottom:20px;text-transform:uppercase}
+.hero .sub{font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:6px;color:#558b2f;font-weight:700;text-transform:uppercase;margin-bottom:24px}
+.hero p{font-size:17px;color:#6b6353;max-width:600px;margin:0 auto;line-height:1.7}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:48px 0;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;background:#fff}
+.stat{padding:28px 16px;text-align:center;border-right:3px solid #433b2a}
+.stat:last-child{border-right:none}
+.stat-val{font-size:32px;font-weight:900;color:#558b2f;font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:6px}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6b6353}
+@media(max-width:640px){
+.hero{padding:50px 0 30px}
+.hero h1{letter-spacing:-1px}
+.stats{grid-template-columns:repeat(2,1fr)}
+.stat{border-right:none;border-bottom:3px solid #433b2a}
+.stat:nth-child(1),.stat:nth-child(3){border-right:3px solid #433b2a}
+.stat:nth-child(3),.stat:nth-child(4){border-bottom:none}
+button,a,input,select,textarea,[role="button"]{min-height:44px}
+}
+</style>
+</head>
+<body>
+<div class="mesh-bg"></div>
+<div class="container">
+<div class="hero">
+<div class="hero-badge">SYSTEM ONLINE</div>
+<div class="sub">ANONYMOUS CHAT PLATFORM</div>
+<h1>JAVIN SEMOK</h1>
+
+</div>
+<div class="stats">
+<div class="stat"><div class="stat-val">50K+</div><div class="stat-label">Total Pengguna</div></div>
+<div class="stat"><div class="stat-val">11</div><div class="stat-label">Fitur</div></div>
+<div class="stat"><div class="stat-val">&lt;100ms</div><div class="stat-label">Latency</div></div>
+<div class="stat"><div class="stat-val">24/7</div><div class="stat-label">Uptime</div></div>
+</div>
+<div class="section-title" style="font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;display:flex;align-items:center;gap:12px">FITUR UTAMA</div>
+<div class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:48px">
+<a href="/chat.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">💬</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Chat Room</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Ngobrol real-time sama semua user</div></a>
+<a href="/slot.html" class="card" style="background:#fff;border:3px solid #558b2f;box-shadow:4px 4px 0 #558b2f;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🎰</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Slot Machine</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Main slot, menang jackpot coin</div></a>
+<a href="/dadu.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🎲</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Game Dadu</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Tebak dadu, menang coin</div></a>
+<a href="/tebak.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🎯</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Tebak Angka</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Tebak 1-10, menang x5</div></a>
+<a href="/kartu.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🃏</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Higher / Lower</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Tebak kartu, menang x2</div></a>
+<a href="/leaderboard.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🏆</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Leaderboard</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Top coin & top chat</div></a>
+<a href="/profile.html" class="card" style="background:#fff;border:3px solid #558b2f;box-shadow:4px 4px 0 #558b2f;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">👤</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Profile</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Saldo, ganti nama, top-up, VIP</div></a>
+<a href="/achievement.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🏅</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Achievement</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Koleksi badge pencapaian</div></a>
+<a href="/admin.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🛠️</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Admin</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Panel admin & moderasi</div></a>
+</div>
+<div class="footer" style="margin-top:60px;padding-top:32px;border-top:3px solid #433b2a">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px;text-align:left">
+<div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#6b6353;margin-bottom:16px">NAVIGATION</div>
+<a href="/" style="display:block;font-size:15px;font-weight:600;color:#433b2a;text-decoration:none;margin-bottom:12px">Explore Index</a>
+<a href="/chat.html" style="display:block;font-size:15px;font-weight:600;color:#433b2a;text-decoration:none;margin-bottom:12px">Home Platform</a>
+</div>
+<div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#6b6353;margin-bottom:16px">OPERATIONAL</div>
+<div style="font-size:15px;font-weight:600;color:#433b2a;margin-bottom:12px">&copy; 2026 JAVIN SEMOK</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#558b2f">&gt; ACTIVE 200 OK</div>
+</div>
+</div>
+</div>
+</div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+socket.on('connect', () => socket.emit('peek-online'));
+</script>
+</body>
+</html>

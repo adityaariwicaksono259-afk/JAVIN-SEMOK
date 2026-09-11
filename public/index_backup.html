@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>JavaChat — Platform</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="landing">
+  <div class="landing-bg"></div>
+  <div class="landing-content">
+    <div class="landing-badge"><span class="dot-live"></span> SYSTEM ONLINE</div>
+    <h1 class="landing-title">
+      <span class="landing-logo">💬</span>
+      <span class="landing-title-main">JAVACHAT</span>
+      <span class="landing-title-sub">ANONYMOUS PLATFORM</span>
+    </h1>
+    <p class="landing-desc">
+      Chat anonim real-time + mini games + coin system.
+      Tanpa login, tanpa registrasi. Pilih fitur di bawah.
+    </p>
+
+    <div class="landing-nav-grid">
+      <a href="/chat.html" class="nav-card nav-chat">
+        <div class="nav-icon">💬</div>
+        <div class="nav-name">Chat Room</div>
+        <div class="nav-desc">Ngobrol real-time sama semua user</div>
+      </a>
+      <a href="/slot.html" class="nav-card nav-slot">
+        <div class="nav-icon">🎰</div>
+        <div class="nav-name">Slot Machine</div>
+        <div class="nav-desc">Main slot, menang jackpot coin</div>
+      </a>
+      <a href="/leaderboard.html" class="nav-card nav-lb">
+        <div class="nav-icon">🏆</div>
+        <div class="nav-name">Leaderboard</div>
+        <div class="nav-desc">Top coin & top chat</div>
+      </a>
+      <a href="/profile.html" class="nav-card nav-profile">
+        <div class="nav-icon">👤</div>
+        <div class="nav-name">Profile</div>
+        <div class="nav-desc">Saldo, ganti nama, top-up, VIP</div>
+      </a>
+      <a href="/admin.html" class="nav-card nav-admin">
+        <div class="nav-icon">🛠️</div>
+        <div class="nav-name">Admin</div>
+        <div class="nav-desc">Panel admin & moderasi</div>
+      </a>
+      <a href="/chat.html" class="nav-card nav-more">
+        <div class="nav-icon">🎁</div>
+        <div class="nav-name">Daily Reward</div>
+        <div class="nav-desc">+10 coin gratis tiap hari</div>
+      </a>
+    <a href="/dice.html" class="nav-card nav-dice"><div class="nav-icon">Dadu</div><div class="nav-name">Game Dadu</div><div class="nav-desc">Tebak dadu, menang coin</div></a>
+    <a href="/tebak.html" class="nav-card nav-tebak"><div class="nav-icon">Angka</div><div class="nav-name">Tebak Angka</div><div class="nav-desc">Tebak 1-10, menang x5</div></a>
+      <a href="/kartu.html" class="nav-card"><div class="nav-icon">🃏</div><div class="nav-name">Higher / Lower</div><div class="nav-desc">Tebak kartu, menang x2</div></a>
+    </div>
+
+    <div class="landing-stats">
+      <div class="stat-item"><div class="stat-val" id="statOnline">-</div><div class="stat-label">Online</div></div>
+      <div class="stat-item"><div class="stat-val">6</div><div class="stat-label">Fitur</div></div>
+      <div class="stat-item"><div class="stat-val">&lt;100ms</div><div class="stat-label">Latency</div></div>
+      <div class="stat-item"><div class="stat-val">24/7</div><div class="stat-label">Uptime</div></div>
+    </div>
+
+    <div class="landing-footer"><p>🔒 Anonymous · Gak perlu login · Data lo aman</p></div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  socket.on('connect', () => socket.emit('peek-online'));
+  socket.on('online', (n) => {
+    const el = document.getElementById('statOnline');
+    if (el) el.textContent = n;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Admin Panel - JavaChat</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page">
+  <header class="page-header">
+    <a href="/chat.html" class="header-btn">← Kembali</a>
+    <h1>🛠️ Admin Panel</h1>
+  </header>
+  <div class="page-content">
+    <div id="adminLoginBox">
+      <h2>Login Admin</h2>
+      <input id="adminPass" type="password" placeholder="Password admin" />
+      <div id="adminLoginErr" class="err"></div>
+      <button id="adminLoginConfirm" class="btn-primary big-btn">Login</button>
+    </div>
+    <div id="adminPanelBox" class="hidden"><div class="add-admin-box"><label>ADD ADMIN CHAT</label><input id="addAdminInput" type="text" placeholder="Username user..." autocomplete="off" /><button id="addAdminBtn" class="btn-primary">+ Jadikan Admin</button><div id="addAdminMsg" class="add-admin-msg"></div></div>
+      <div class="tabs">
+        <button class="tab active" data-atab="users">Users</button>
+        <button class="tab" data-atab="topups">Top-up</button>
+      </div>
+      <div id="adminUsersTab" class="admin-list"></div>
+      <div id="adminTopupsTab" class="admin-list hidden"></div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

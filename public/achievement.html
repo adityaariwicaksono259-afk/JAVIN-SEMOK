@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Achievement - JavaChat</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page ach-page">
+  <header class="page-header">
+    <a href="/profile.html" class="header-btn">Kembali</a>
+    <h1>Achievement</h1>
+  </header>
+  <div class="page-content ach-content">
+    <div class="ach-summary">
+      <div class="ach-sum-icon">Trophy</div>
+      <div class="ach-sum-text">
+        <div class="ach-sum-title">Koleksi Achievement</div>
+        <div class="ach-sum-count" id="achCount">0 / 10</div>
+      </div>
+    </div>
+    <div class="ach-grid" id="achGrid"></div>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="achievement.js"></script>
+</body>
+</html>

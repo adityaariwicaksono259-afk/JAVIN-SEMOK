@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Kartu Higher/Lower - JavaChat</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page kartu-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>Kartu Higher/Lower</h1>
+  </header>
+  <div class="page-content kartu-content">
+    <div class="kartu-balance">
+      <span class="kb-label">SALDO</span>
+      <span class="kb-value" id="kartuBalance">0</span>
+    </div>
+    <div class="kartu-stage">
+      <div class="kartu-card" id="kartuCur"><div class="kartu-back">?</div></div>
+      <div class="kartu-vs">VS</div>
+      <div class="kartu-card" id="kartuNext"><div class="kartu-back">?</div></div>
+    </div>
+    <div class="kartu-result" id="kartuResult">Pilih HIGH/LOW lalu mainkan!</div>
+    <div class="kartu-bet-row">
+      <button class="kartu-chip" data-bet="10">10</button>
+      <button class="kartu-chip active" data-bet="50">50</button>
+      <button class="kartu-chip" data-bet="100">100</button>
+      <button class="kartu-chip" data-bet="500">500</button>
+      <button class="kartu-chip kartu-chip-max" data-bet="max">MAX</button>
+    </div>
+    <div class="kartu-guess-row">
+      <button class="kartu-guess kartu-high" data-guess="high">
+        <span class="kg-icon">&#9650;</span>
+        <span class="kg-title">LEBIH TINGGI</span>
+        <span class="kg-sub">x2</span>
+      </button>
+      <button class="kartu-guess kartu-low" data-guess="low">
+        <span class="kg-icon">&#9660;</span>
+        <span class="kg-title">LEBIH RENDAH</span>
+        <span class="kg-sub">x2</span>
+      </button>
+    </div>
+    <div class="kartu-hint">A=1 . J=11 . Q=12 . K=13</div>
+    <div class="kartu-history-title">Riwayat</div>
+    <div class="kartu-history" id="kartuHistory"></div>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="kartu.js?v=1789137596244"></script>
+</body>
+</html>
