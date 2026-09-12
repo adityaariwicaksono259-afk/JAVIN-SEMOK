@@ -1659,3 +1659,36 @@ html, body, .rl-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
 .bj-h.win { background: #128c7e; color: #fff; }
 .bj-h.lose { background: #b71c1c; color: #fff; }
 .bj-h.push { background: #ffd700; color: #5a2a00; }
+
+/* ===== BLACKJACK RESPONSIVE FIX ===== */
+html, body, .bj-page { max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
+.bj-content { width: 100%; max-width: 100%; padding: 12px 10px; box-sizing: border-box; }
+.bj-balance { width: 100%; box-sizing: border-box; }
+.bj-table { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); width: 100%; gap: 4px; }
+.bj-side { padding: 8px 5px; min-height: 120px; min-width: 0; box-sizing: border-box; }
+.bj-side-label { font-size: 9px; letter-spacing: 1px; }
+.bj-score { font-size: 17px; margin-bottom: 4px; }
+.bj-hand { min-height: 50px; gap: 1px; }
+.bj-card { width: 26px; height: 38px; }
+.bj-card-back::before { font-size: 14px; }
+.bj-corner { font-size: 6px; }
+.bj-corner.tl { top: 2px; left: 2px; }
+.bj-corner.br { bottom: 2px; right: 2px; }
+.bj-center { font-size: 14px; }
+.bj-vs { font-size: 10px; }
+.bj-bet-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; width: 100%; }
+.bj-chip { padding: 9px 1px; font-size: 11px; min-width: 0; box-sizing: border-box; }
+.bj-actions { gap: 6px; width: 100%; }
+.bj-btn { padding: 14px 6px; font-size: 13px; min-width: 0; box-sizing: border-box; }
+.bj-start-btn { width: 100%; box-sizing: border-box; padding: 16px; font-size: 15px; }
+.bj-history { width: 100%; }
+
+@media (min-width: 480px) {
+  .bj-card { width: 34px; height: 48px; }
+  .bj-card-back::before { font-size: 18px; }
+  .bj-corner { font-size: 8px; }
+  .bj-center { font-size: 18px; }
+  .bj-score { font-size: 20px; }
+  .bj-side { padding: 10px 8px; min-height: 130px; }
+  .bj-hand { min-height: 60px; }
+}
