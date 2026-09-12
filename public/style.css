@@ -1337,3 +1337,31 @@ body.wp-space .msg-user { color: #b5179e; }
 .mt-switch { padding: 8px 16px; border-radius: 20px; background: #d32f2f; color: #fff; border: none; font-size: 12px; font-weight: 800; cursor: pointer; letter-spacing: 1px; }
 .mt-switch-on { background: #25d366; }
 .mt-admin-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: var(--bg-input); color: var(--text-input); box-sizing: border-box; }
+
+/* ===== LOTTERY ===== */
+.lot-page { background: linear-gradient(180deg,#2a1a00,#1a0f00); min-height: 100vh; }
+.lot-page .page-header { background: linear-gradient(180deg,#4a2a00,#2a1a00); }
+.lot-content { padding: 16px; max-width: 480px; margin: 0 auto; }
+.lot-balance { display: flex; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg,#ffd700,#ff8c00); border-radius: 12px; margin-bottom: 16px; }
+.lb-label { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #5a2a00; align-self: center; }
+.lb-value { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #8b4513; font-family: 'Courier New', monospace; }
+.lot-pool { text-align: center; padding: 24px 16px; background: linear-gradient(135deg, rgba(255,215,0,.15), rgba(255,140,0,.1)); border: 2px solid #ffd700; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 0 30px rgba(255,215,0,.3); }
+.lot-pool-label { font-size: 11px; font-weight: 800; letter-spacing: 3px; color: #ffd700; }
+.lot-pool-value { font-size: 42px; font-weight: 900; color: #fff; font-family: 'Courier New', monospace; margin: 8px 0 4px; text-shadow: 0 0 20px #ffd700; }
+.lot-pool-sub { font-size: 12px; color: #ffb066; }
+.lot-status { text-align: center; font-size: 13px; font-weight: 700; color: #ffd700; padding: 10px; background: rgba(255,215,0,.08); border-radius: 10px; margin-bottom: 16px; min-height: 40px; }
+.lot-buy-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 6px; }
+.lot-qty { padding: 12px; background: linear-gradient(180deg,#4a2a00,#2a1a00); color: #ffd700; border: 2px solid #6a3a00; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; }
+.lot-qty.active { background: linear-gradient(180deg,#ffd700,#ff8c00); color: #5a2a00; border-color: #ffd700; box-shadow: 0 0 16px rgba(255,215,0,.6); }
+.lot-qty-hint { text-align: center; font-size: 11px; color: #a87a3a; margin-bottom: 12px; }
+.lot-buy-btn { width: 100%; padding: 18px; background: linear-gradient(180deg,#ffd700,#ff8c00); color: #5a2a00; border: 3px solid #fff3c4; border-radius: 14px; font-size: 16px; font-weight: 900; letter-spacing: 2px; cursor: pointer; margin-bottom: 20px; box-shadow: 0 6px 24px rgba(255,215,0,.5); }
+.lot-buy-btn:disabled { opacity: .5; }
+.lot-players-title, .lot-hist-title { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #ffd700; margin-bottom: 8px; margin-top: 16px; }
+.lot-players, .lot-history { display: flex; flex-direction: column; gap: 6px; }
+.lot-player { display: flex; justify-content: space-between; padding: 10px 14px; background: rgba(255,215,0,.08); border: 1px solid rgba(255,215,0,.25); border-radius: 8px; font-size: 13px; color: #fff; }
+.lot-player-name { font-weight: 700; }
+.lot-player-tickets { color: #ffd700; font-weight: 800; }
+.lot-hist { padding: 10px 14px; background: rgba(37,211,102,.1); border: 1px solid rgba(37,211,102,.3); border-radius: 8px; }
+.lot-hist-name { font-size: 13px; font-weight: 700; color: #25d366; }
+.lot-hist-info { font-size: 11px; color: #a87a3a; margin-top: 2px; }
+.lot-empty { text-align: center; padding: 20px; color: #a87a3a; font-size: 12px; font-style: italic; }

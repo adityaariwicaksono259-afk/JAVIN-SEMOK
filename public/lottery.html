@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Lottery - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page lot-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>🎟️ Lottery</h1>
+  </header>
+  <div class="page-content lot-content">
+
+    <div class="lot-balance">
+      <span class="lb-label">SALDO</span>
+      <span class="lb-value" id="lotBalance">0</span>
+    </div>
+
+    <div class="lot-pool">
+      <div class="lot-pool-label">TOTAL POOL</div>
+      <div class="lot-pool-value" id="lotPool">0</div>
+      <div class="lot-pool-sub" id="lotTotal">0 tiket terjual</div>
+    </div>
+
+    <div class="lot-status" id="lotStatus">Beli tiket untuk mulai!</div>
+
+    <div class="lot-buy-row">
+      <button class="lot-qty" data-qty="1">1</button>
+      <button class="lot-qty active" data-qty="2">2</button>
+      <button class="lot-qty" data-qty="5">5</button>
+      <button class="lot-qty" data-qty="10">10</button>
+    </div>
+    <div class="lot-qty-hint">1 tiket = 500 coin</div>
+
+    <button class="lot-buy-btn" id="lotBuy">BELI TIKET</button>
+
+    <div class="lot-players-title">PEMAIN SAAT INI</div>
+    <div class="lot-players" id="lotPlayers"></div>
+
+    <div class="lot-hist-title">RIWAYAT PEMENANG</div>
+    <div class="lot-history" id="lotHistory"></div>
+
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="lottery.js"></script>
+</body>
+</html>

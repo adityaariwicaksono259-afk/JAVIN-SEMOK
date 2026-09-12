@@ -245,6 +245,86 @@ socket.on('maintenance-check', (cb) => {
   cb({ ok: true, maintenance: data.maintenance || { active: false } });
 });
 
+socket.on('lottery-buy', ({ qty } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  qty = parseInt(qty) || 1;
+  if (qty < 1 || qty > 10) return cb({ error: 'Max 10 tiket sekali beli' });
+  const TICKET_PRICE = 500;
+  const totalCost = TICKET_PRICE * qty;
+  if (u.coins < totalCost) return cb({ error: 'Saldo kurang (' + u.coins + ')' });
+  if (!data.lottery) data.lottery = { tickets: [], pool: 0, history: [] };
+  u.coins -= totalCost;
+  data.lottery.pool += totalCost;
+  for (let i = 0; i < qty; i++) {
+    data.lottery.tickets.push({ userId: uid, username: u.username, time: Date.now() });
+  }
+  saveData();
+  broadcastUserUpdate(uid);
+  io.emit('lottery-updated', getLotteryState());
+  // Auto draw kalau >= 2 tiket
+  if (data.lottery.tickets.length >= 2) {
+    setTimeout(() => { tryDrawLottery(); }, 15000); // tunggu 15 detik biar yang lain bisa join
+  }
+  cb({ ok: true, coins: u.coins, qty });
+});
+
+socket.on('lottery-state', (cb) => {
+  if (typeof cb !== 'function') return;
+  cb({ ok: true, state: getLotteryState() });
+});
+
+function getLotteryState() {
+  if (!data.lottery) data.lottery = { tickets: [], pool: 0, history: [] };
+  const counts = {};
+  data.lottery.tickets.forEach(t => {
+    if (!counts[t.userId]) counts[t.userId] = { username: t.username, count: 0 };
+    counts[t.userId].count++;
+  });
+  return {
+    pool: data.lottery.pool,
+    total: data.lottery.tickets.length,
+    players: Object.keys(counts).map(k => ({ userId: k, username: counts[k].username, tickets: counts[k].count })),
+    history: (data.lottery.history || []).slice(-5).reverse(),
+    TICKET_PRICE: 500
+  };
+}
+
+let lotteryDrawing = false;
+function tryDrawLottery() {
+  if (lotteryDrawing) return;
+  if (!data.lottery || data.lottery.tickets.length < 2) return;
+  lotteryDrawing = true;
+  const tickets = data.lottery.tickets.slice();
+  const winner = tickets[Math.floor(Math.random() * tickets.length)];
+  const pool = data.lottery.pool;
+  const prize = Math.floor(pool * 0.7);
+  const winnerUser = data.users[winner.userId];
+  if (winnerUser) {
+    winnerUser.coins += prize;
+    broadcastUserUpdate(winner.userId);
+  }
+  const hist = {
+    time: Date.now(),
+    winner: winner.username,
+    winnerId: winner.userId,
+    prize: prize,
+    pool: pool,
+    totalTickets: tickets.length
+  };
+  data.lottery.history.push(hist);
+  if (data.lottery.history.length > 50) data.lottery.history.shift();
+  io.emit('lottery-drawn', hist);
+  io.emit('system', '🎟️ LOTTERY: ' + winner.username + ' menang ' + prize + ' coin!');
+  data.lottery.tickets = [];
+  data.lottery.pool = 0;
+  saveData();
+  lotteryDrawing = false;
+  io.emit('lottery-updated', getLotteryState());
+}
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
