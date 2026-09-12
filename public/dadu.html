@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Game Dadu - JavaChat</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page dice-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>Game Dadu</h1>
+  </header>
+  <div class="page-content dice-content">
+    <div class="dice-balance">
+      <span class="db-label">SALDO</span>
+      <span class="db-value" id="diceBalance">0</span>
+    </div>
+    <div class="dice-stage">
+      <div class="dice-cube" id="diceCube">
+        <div class="dice-face dice-1">1</div>
+        <div class="dice-face dice-2">2</div>
+        <div class="dice-face dice-3">3</div>
+        <div class="dice-face dice-4">4</div>
+        <div class="dice-face dice-5">5</div>
+        <div class="dice-face dice-6">6</div>
+      </div>
+    </div>
+    <div class="dice-result" id="diceResult">Pilih bet, lalu roll!</div>
+    <div class="dice-bet-row">
+      <button class="dice-chip" data-bet="10">10</button>
+      <button class="dice-chip active" data-bet="50">50</button>
+      <button class="dice-chip" data-bet="100">100</button>
+      <button class="dice-chip" data-bet="500">500</button>
+      <button class="dice-chip dice-chip-max" data-bet="max">MAX</button>
+    </div>
+    <div class="dice-pick-row">
+      <button class="dice-pick" data-pick="kecil"><span class="dp-title">KECIL</span><span class="dp-sub">1-3 x1.9</span></button>
+      <button class="dice-pick" data-pick="besar"><span class="dp-title">BESAR</span><span class="dp-sub">4-6 x1.9</span></button>
+    </div>
+    <div class="dice-num-row">
+      <button class="dice-num" data-pick="1">1</button>
+      <button class="dice-num" data-pick="2">2</button>
+      <button class="dice-num" data-pick="3">3</button>
+      <button class="dice-num" data-pick="4">4</button>
+      <button class="dice-num" data-pick="5">5</button>
+      <button class="dice-num" data-pick="6">6</button>
+    </div>
+    <div class="dice-num-hint">Atau tebak angka spesifik (x5)</div>
+    <button class="dice-roll-btn" id="diceRoll">ROLL DADU</button>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="dadu.js"></script>
+</body>
+</html>
