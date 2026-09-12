@@ -11,7 +11,7 @@ const rl = require('./ratelimit');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, { cors: { origin: ['https://javin-semok.onrender.com','https://javin-semok-*.onrender.com','http://localhost:3000','http://127.0.0.1:3000'], methods: ['GET','POST'], credentials: true } });
 const PORT = process.env.PORT || 3000;
 
 const RENAME_FREE = 1;
