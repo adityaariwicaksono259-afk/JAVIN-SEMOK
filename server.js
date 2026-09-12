@@ -54,7 +54,8 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase().slice(0, 6);
+    const extMap = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp' };
+    const ext = extMap[file.mimetype] || '.bin';
     cb(null, Date.now() + '-' + Math.random().toString(36).slice(2, 8) + ext);
   }
 });
@@ -62,8 +63,16 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const ok = ['image/jpeg','image/png','image/gif','image/webp'].includes(file.mimetype);
-    cb(ok ? null : new Error('Hanya JPG/PNG/GIF/WEBP'), ok);
+    const allowedMimes = ['image/jpeg','image/png','image/gif','image/webp'];
+    const allowedExts = ['.jpg','.jpeg','.png','.gif','.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    const baseName = path.basename(file.originalname).toLowerCase();
+    if (baseName.includes('..') || baseName.includes('/') || baseName.includes('\\')) {
+      return cb(new Error('Nama file invalid'));
+    }
+    if (!allowedMimes.includes(file.mimetype)) return cb(new Error('MIME tidak diizinkan'));
+    if (!allowedExts.includes(ext)) return cb(new Error('Ekstensi tidak diizinkan'));
+    cb(null, true);
   }
 });
 
