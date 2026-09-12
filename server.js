@@ -426,6 +426,15 @@ socket.on('admin-dashboard', (cb) => {
   });
 });
 
+socket.on('admin-verify-token', ({ token } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  if (!token || !data.adminTokens || !data.adminTokens[token]) return cb({ ok: false });
+  adminSockets.add(socket.id);
+  socket._adminToken = token;
+  socket._adminLastActivity = Date.now();
+  cb({ ok: true });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
@@ -707,7 +716,7 @@ io.on('connection', (socket) => {
       saveData();
       broadcastUserUpdate(uid);
     }
-    cb({ ok: true });
+    cb({ ok: true, adminToken: socket._adminToken });
   });
 
   socket.on('admin-list', (cb) => {

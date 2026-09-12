@@ -56,4 +56,19 @@ $('refreshBtn').onclick = () => {
   setTimeout(loadStats, 300);
 };
 
+
+// Auto-auth admin token
+(function(){
+  var tok = localStorage.getItem('admin_token');
+  if (!tok) return;
+  socket.on('connect', function() {
+    socket.emit('admin-verify-token', { token: tok }, function(res) {
+      if (res && res.ok) {
+        console.log('[DASH] Admin auto-auth OK');
+        loadStats();
+      }
+    });
+  });
+})();
+
 setInterval(loadStats, 30000);
