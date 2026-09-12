@@ -127,6 +127,7 @@ function checkAchievements(uid) {
   const u = data.users[uid];
   if (!u) return;
   const ach = initAch(u);
+  if (!ach.claimed) ach.claimed = {};
   let changed = false;
   ACHIEVEMENTS.forEach(function(a){
     if (ach.unlocked[a.id]) return;
@@ -134,16 +135,14 @@ function checkAchievements(uid) {
     try { ok = a.check(u); } catch(e) {}
     if (!ok) return;
     ach.unlocked[a.id] = Date.now();
-    u.coins += a.reward;
     changed = true;
-    io.emit('user-updated', { userId: uid, username: u.username, badge: u.badge });
+    // Notif ke user — "buka achievement, ada yang bisa diklaim"
     onlineUsers.forEach(function(ouid, sid){
       if (ouid === uid) {
         var s2 = io.sockets.sockets.get(sid);
-        if (s2) s2.emit('achievement-unlocked', { id: a.id, icon: a.icon, name: a.name, reward: a.reward, coins: u.coins });
+        if (s2) s2.emit('achievement-ready', { id: a.id, icon: a.icon, name: a.name, reward: a.reward });
       }
     });
-    io.emit('system', '🏆 ' + u.username + ' unlock ' + a.icon + ' ' + a.name + ' (+' + a.reward + ' coin)');
   });
   if (changed) saveData();
 }
@@ -908,6 +907,25 @@ socket.on('wallpaper-set', ({ wallpaper } = {}, cb) => {
   io.emit('user-wallpaper-changed', { userId: uid, wallpaper });
   cb({ ok: true, wallpaper });
 });
+socket.on('achievement-claim', ({ id } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  if (!u) return cb({ error: 'User tidak ada' });
+  const ach = initAch(u);
+  if (!ach.claimed) ach.claimed = {};
+  if (!ach.unlocked[id]) return cb({ error: 'Belum memenuhi syarat' });
+  if (ach.claimed[id]) return cb({ error: 'Udah diklaim' });
+  const def = ACHIEVEMENTS.find(function(a){ return a.id === id; });
+  if (!def) return cb({ error: 'Achievement tidak ada' });
+  ach.claimed[id] = Date.now();
+  u.coins += def.reward;
+  saveData();
+  broadcastUserUpdate(uid);
+  cb({ ok: true, reward: def.reward, coins: u.coins });
+});
+
 socket.on('disconnect', () => {
     adminSockets.delete(socket.id);
     const uid = onlineUsers.get(socket.id);

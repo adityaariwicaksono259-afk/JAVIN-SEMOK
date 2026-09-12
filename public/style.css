@@ -1276,3 +1276,10 @@ body.wp-space .msg-user { color: #b5179e; }
 /* ===== LANDING PAGE OVERRIDE ===== */
 .landing{display:none}
 .landing-bg{display:none}
+
+/* ===== ACHIEVEMENT CLAIM BTN ===== */
+.ach-card.ready { border-color: #25d366; background: linear-gradient(135deg, rgba(37,211,102,.12), rgba(18,140,126,.05)); }
+.ach-claim-btn { padding: 8px 14px; background: #25d366; color: #fff; border: none; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; letter-spacing: .5px; box-shadow: 0 2px 8px rgba(37,211,102,.4); }
+.ach-claim-btn:active { transform: scale(.95); }
+.ach-claim-btn:disabled { opacity: .6; }
+.ach-ready-text { font-size: 12px; color: #25d366; font-weight: 700; }

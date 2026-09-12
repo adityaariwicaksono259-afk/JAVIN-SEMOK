@@ -75,27 +75,85 @@ function renderGrid(u) {
   const grid = $('achGrid');
   grid.innerHTML = '';
   const unlocked = (u.ach && u.ach.unlocked) || {};
+  const claimed = (u.ach && u.ach.claimed) || {};
   let count = 0;
   DEFS.forEach(a => {
     const isUnlocked = !!unlocked[a.id];
-    if (isUnlocked) count++;
+    const isClaimed = !!claimed[a.id];
+    if (isClaimed) count++;
     const card = document.createElement('div');
-    card.className = 'ach-card' + (isUnlocked ? ' unlocked' : '');
+    card.className = 'ach-card' + (isClaimed ? ' unlocked' : isUnlocked ? ' ready' : '');
     const pct = progressFor(a, u);
     const ptext = progressText(a, u);
+    let rightHtml = '';
+    if (isClaimed) {
+      rightHtml = '<div class="ach-check">OK</div>';
+    } else if (isUnlocked) {
+      rightHtml = '<button class="ach-claim-btn" data-ach="' + a.id + '">Klaim</button>';
+    }
+    let midHtml = '';
+    if (isClaimed) {
+      midHtml = '<div class="ach-reward-done">Udah diklaim - +' + a.reward + ' coin</div>';
+    } else if (isUnlocked) {
+      midHtml = '<div class="ach-ready-text">Siap diklaim! +' + a.reward + ' coin</div>';
+    } else {
+      midHtml = '<div class="ach-progress-bar"><div class="ach-progress-fill" style="width:' + pct + '"></div></div>' +
+                '<div class="ach-progress-text">' + ptext + ' - +' + a.reward + ' coin</div>';
+    }
     card.innerHTML =
       '<div class="ach-icon">' + a.icon + '</div>' +
       '<div class="ach-info">' +
         '<div class="ach-name">' + a.name + '</div>' +
         '<div class="ach-desc">' + a.desc + '</div>' +
-        (isUnlocked
-          ? '<div class="ach-reward-done">Unlocked! +' + a.reward + ' coin</div>'
-          : '<div class="ach-progress-bar"><div class="ach-progress-fill" style="width:' + pct + '"></div></div>' +
-            '<div class="ach-progress-text">' + ptext + ' - +' + a.reward + ' coin</div>'
-        ) +
+        midHtml +
       '</div>' +
-      (isUnlocked ? '<div class="ach-check">OK</div>' : '');
+      rightHtml;
     grid.appendChild(card);
   });
   $('achCount').textContent = count + ' / ' + DEFS.length;
+
+  // Bind tombol klaim
+  grid.querySelectorAll('.ach-claim-btn').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.ach;
+      btn.disabled = true;
+      btn.textContent = '...';
+      socket.emit('achievement-claim', { id }, (res) => {
+        if (res && res.error) {
+          alert('Error: ' + res.error);
+          btn.disabled = false;
+          btn.textContent = 'Klaim';
+          return;
+        }
+        showClaimPopup(res.reward);
+        if (me) me.coins = res.coins;
+        // Refresh grid
+        if (typeof renderGrid === 'function') renderGrid(me);
+      });
+    };
+  });
 }
+
+function showClaimPopup(reward) {
+  var p = document.createElement('div');
+  p.className = 'ach-popup';
+  p.innerHTML = '<div class="ap-icon">🎁</div><div class="ap-info"><div class="ap-title">KLAIM BERHASIL!</div><div class="ap-name">+' + reward + ' coin</div></div>';
+  document.body.appendChild(p);
+  setTimeout(function(){ p.classList.add('show'); }, 50);
+  setTimeout(function(){
+    p.classList.remove('show');
+    setTimeout(function(){ p.remove(); }, 400);
+  }, 3000);
+}
+
+socket.on('achievement-ready', function(d) {
+  var p = document.createElement('div');
+  p.className = 'ach-popup';
+  p.innerHTML = '<div class="ap-icon">' + d.icon + '</div><div class="ap-info"><div class="ap-title">ACHIEVEMENT READY!</div><div class="ap-name">' + d.name + ' - Buka & klaim +' + d.reward + ' coin</div></div>';
+  document.body.appendChild(p);
+  setTimeout(function(){ p.classList.add('show'); }, 50);
+  setTimeout(function(){
+    p.classList.remove('show');
+    setTimeout(function(){ p.remove(); }, 400);
+  }, 4000);
+});
