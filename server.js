@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const db = require('./db');
 
 const app = express();
 const server = http.createServer(app);
@@ -25,26 +26,26 @@ const SLOT_MIN_BET = 10;
 const DATA_FILE = path.join(__dirname, 'data.json');
 let data = { users: {}, messages: [], topups: [] };
 
-function loadData() {
-  if (fs.existsSync(DATA_FILE)) {
-    try {
-      const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-      data.users = raw.users || {};
-      data.messages = raw.messages || [];
-      data.topups = raw.topups || [];
-      data.dms = raw.dms || {};
-    } catch (e) { console.error('load err', e.message); }
+async function loadData() {
+  const fromDB = await db.loadFromDB();
+  if (fromDB) {
+    data.users = fromDB.users || {};
+    data.messages = fromDB.messages || [];
+    data.topups = fromDB.topups || [];
+    data.dms = fromDB.dms || {};
+    data.quests = fromDB.quests || {};
+    data.pinned = fromDB.pinned || null;
+    console.log('✅ Data loaded from MongoDB');
+  } else {
+    console.error('⚠️ MongoDB kosong, mulai fresh');
   }
 }
-let saveTimer = null;
-function saveData() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { fs.writeFileSync(DATA_FILE, JSON.stringify(data)); }
-    catch (e) { console.error('save err', e.message); }
-  }, 150);
-}
-loadData();
+
+// Tunggu DB siap sebelum server listen
+loadData().then(() => {
+  console.log('📦 Data siap, server start...');
+  
+});
 
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
