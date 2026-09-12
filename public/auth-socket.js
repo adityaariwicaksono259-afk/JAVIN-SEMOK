@@ -55,6 +55,7 @@
       var isAdminPage = location.pathname.indexOf('admin') >= 0;
       var isMaintenancePage = location.pathname.indexOf('maintenance') >= 0;
       if (!isAdminPage && !isMaintenancePage) {
+        sessionStorage.setItem('mt_msg', d.message || 'Server sedang maintenance.');
         location.href = '/maintenance.html';
       }
     } else if (d && !d.active) {
@@ -63,6 +64,21 @@
       }
     }
   });
+
+  // Cek maintenance saat pertama connect (untuk user yang baru buka)
+  socket.on('connect', function() {
+    socket.emit('maintenance-check', function(r) {
+      if (r && r.maintenance && r.maintenance.active) {
+        var isAdminPage = location.pathname.indexOf('admin') >= 0;
+        var isMaintenancePage = location.pathname.indexOf('maintenance') >= 0;
+        if (!isAdminPage && !isMaintenancePage) {
+          sessionStorage.setItem('mt_msg', r.maintenance.message || 'Server sedang maintenance.');
+          location.href = '/maintenance.html';
+        }
+      }
+    });
+  });
+
 
     return socket;
   };
