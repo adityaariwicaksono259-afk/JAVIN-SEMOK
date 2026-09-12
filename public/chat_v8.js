@@ -755,3 +755,8 @@ function applyWallpaper(w) {
 window.__socket.on('user-wallpaper-changed', function(d){
   if (d.userId === userId) applyWallpaper(d.wallpaper);
 });
+
+socket.on('rate-limited', function(d) {
+  if (window.__toast) window.__toast('⚠️ ' + (d.msg || 'Pelan dong!'));
+  else alert(d.msg || 'Pelan dong!');
+});

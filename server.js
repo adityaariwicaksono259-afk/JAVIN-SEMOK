@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const db = require('./db');
+const rl = require('./ratelimit');
 
 const app = express();
 const server = http.createServer(app);
@@ -364,7 +365,14 @@ io.on('connection', (socket) => {
 
   socket.on('admin-login', ({ password } = {}, cb) => {
     if (typeof cb !== 'function') return;
-    if (password !== ADMIN_PASSWORD) return cb({ error: 'Password salah' });
+    const ip = socket.handshake.address || 'unknown';
+    const lc = rl.checkLoginLimit(ip);
+    if (!lc.ok) return cb({ error: 'Terlalu banyak percobaan. Tunggu ' + lc.waitSec + ' detik.' });
+    if (password !== ADMIN_PASSWORD) {
+      rl.recordLoginFail(ip);
+      return cb({ error: 'Password salah' });
+    }
+    rl.resetLoginLimit(ip);
     adminSockets.add(socket.id);
     const uid = onlineUsers.get(socket.id);
     if (uid && data.users[uid]) {
@@ -473,6 +481,9 @@ io.on('connection', (socket) => {
   socket.on('message', (payload) => {
     const uid = onlineUsers.get(socket.id);
     if (!uid) return;
+    if (!rl.checkMessageLimit(uid)) {
+      return socket.emit('rate-limited', { msg: 'Pelan dong, jangan spam!' });
+    }
     const u = data.users[uid];
     if (!u || u.banned) return;
 
