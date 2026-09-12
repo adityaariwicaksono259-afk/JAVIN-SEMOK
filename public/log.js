@@ -5,7 +5,20 @@ let allLogs = [];
 
 socket.on('connect', () => {
   socket.emit('join', userId);
-  setTimeout(loadLogs, 800);
+  var tok = localStorage.getItem('admin_token');
+  if (tok) {
+    socket.emit('admin-verify-token', { token: tok }, function(res) {
+      if (res && res.ok) {
+        console.log('[LOG] Admin auto-auth OK');
+        setTimeout(loadLogs, 500);
+      } else {
+        console.log('[LOG] Token invalid');
+        loadLogs();
+      }
+    });
+  } else {
+    setTimeout(loadLogs, 800);
+  }
 });
 
 function loadLogs() {
