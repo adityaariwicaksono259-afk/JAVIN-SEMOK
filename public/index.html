@@ -88,6 +88,7 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
 </div>
 <script src="common.js"></script>
 <script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
 <script>
 const socket = io();
 socket.on('connect', () => socket.emit('peek-online'));
