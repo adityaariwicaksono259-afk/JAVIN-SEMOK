@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Mahjong Slot - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page mj-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>🀄 Mahjong Slot</h1>
+  </header>
+  <div class="page-content mj-content">
+
+    <div class="mj-balance">
+      <span class="mj-lb">SALDO</span>
+      <span class="mj-lv" id="mjBalance">0</span>
+    </div>
+
+    <div class="mj-brand">✨ MAHJONG FORTUNE ✨</div>
+
+    <div class="mj-cabinet">
+      <div class="mj-grid" id="mjGrid">
+        <div class="mj-reel-col" data-col="0"><div class="mj-cell" data-r="0" data-row="0">🀇</div><div class="mj-cell" data-r="0" data-row="1">🀇</div></div>
+        <div class="mj-reel-col" data-col="1"><div class="mj-cell" data-r="1" data-row="0">🀇</div><div class="mj-cell" data-r="1" data-row="1">🀇</div></div>
+        <div class="mj-reel-col" data-col="2"><div class="mj-cell" data-r="2" data-row="0">🀇</div><div class="mj-cell" data-r="2" data-row="1">🀇</div></div>
+        <div class="mj-reel-col" data-col="3"><div class="mj-cell" data-r="3" data-row="0">🀇</div><div class="mj-cell" data-r="3" data-row="1">🀇</div></div>
+        <div class="mj-reel-col" data-col="4"><div class="mj-cell" data-r="4" data-row="0">🀇</div><div class="mj-cell" data-r="4" data-row="1">🀇</div></div>
+      </div>
+
+      <div class="mj-display">
+        <div class="mj-dcell"><div class="mj-dlabel">SALDO</div><div class="mj-dval" id="mjSaldo">0</div></div>
+        <div class="mj-dcell"><div class="mj-dlabel">BET</div><div class="mj-dval" id="mjBet">50</div></div>
+        <div class="mj-dcell"><div class="mj-dlabel">WIN</div><div class="mj-dval mj-win" id="mjWin">0</div></div>
+      </div>
+
+      <div class="mj-status" id="mjStatus"></div>
+
+      <div class="mj-bet-row">
+        <button class="mj-chip" data-bet="10">10</button>
+        <button class="mj-chip active" data-bet="50">50</button>
+        <button class="mj-chip" data-bet="100">100</button>
+        <button class="mj-chip" data-bet="500">500</button>
+        <button class="mj-chip mj-chip-max" data-bet="max">MAX</button>
+      </div>
+
+      <button class="mj-spin-btn" id="mjSpin">🀄 SPIN</button>
+    </div>
+
+    <div class="mj-paytable">
+      <div class="mj-pt-title">💰 PAYTABLE</div>
+      <div class="mj-pt-row"><span>🀄🀄🀄</span><span>x10 · x40 · x200</span></div>
+      <div class="mj-pt-row"><span>🀅🀅🀅</span><span>x5 · x18 · x60</span></div>
+      <div class="mj-pt-row"><span>🀆🀆🀆</span><span>x3 · x10 · x30</span></div>
+      <div class="mj-pt-row"><span>🀐🀐🀐</span><span>x2 · x6 · x18</span></div>
+      <div class="mj-pt-row"><span>🀙🀙🀙</span><span>x1 · x4 · x12</span></div>
+      <div class="mj-pt-row"><span>🀇🀇🀇</span><span>x1 · x3 · x10</span></div>
+      <div class="mj-pt-scatter">🀔 SCATTER — 3+=x5 · 4=x20 · 5=x100</div>
+    </div>
+
+  </div>
+</div>
+
+<div id="mjBigWin" class="mj-bigwin hidden">
+  <div class="mj-rays"></div>
+  <div class="mj-bw-content">
+    <div class="mj-bw-title" id="mjBwTitle">BIG WIN!</div>
+    <div class="mj-bw-amt" id="mjBwAmt">0</div>
+    <div class="mj-bw-sub">coin</div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="mahjong.js"></script>
+</body>
+</html>

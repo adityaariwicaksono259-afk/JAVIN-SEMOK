@@ -568,6 +568,96 @@ socket.on('blackjack-stand', (cb) => {
   cb({ ok: true, player: g.player, dealer: g.dealer, playerTotal: pT, dealerTotal: dT, result, win, coins: u.coins });
 });
 
+socket.on('mahjong-spin', ({ bet } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  bet = parseInt(bet);
+  if (!bet || bet < 10) return cb({ error: 'Minimal 10 coin' });
+  if (bet > 10000) return cb({ error: 'Max 10000 coin' });
+  if (u.coins < bet) return cb({ error: 'Saldo kurang (' + u.coins + ')' });
+  const now = Date.now();
+  if (u.lastMjAt && now - u.lastMjAt < 2000) return cb({ error: 'Tunggu bentar' });
+  u.lastMjAt = now;
+
+  const REELS = 5, ROWS = 2;
+  const POOL = [
+    { s: 'bamboo', w: 22 }, { s: 'circle', w: 18 }, { s: 'character', w: 14 },
+    { s: 'white', w: 10 }, { s: 'green', w: 7 }, { s: 'red', w: 4 }, { s: 'plum', w: 5 }
+  ];
+  const SYM = {
+    bamboo: '🀇', circle: '🀙', character: '🀐',
+    white: '🀆', green: '🀅', red: '🀄', plum: '🀔'
+  };
+  const totalW = POOL.reduce((a,b) => a + b.w, 0);
+  const pick = () => {
+    let r = Math.random() * totalW;
+    for (const p of POOL) { r -= p.w; if (r <= 0) return SYM[p.s]; }
+    return SYM.bamboo;
+  };
+
+  const grid = [];
+  for (let r = 0; r < REELS; r++) grid[r] = [pick(), pick()];
+
+  const PAY = {
+    '🀇': { 3: 1, 4: 3, 5: 10 },
+    '🀙': { 3: 1, 4: 4, 5: 12 },
+    '🀐': { 3: 2, 4: 6, 5: 18 },
+    '🀆': { 3: 3, 4: 10, 5: 30 },
+    '🀅': { 3: 5, 4: 18, 5: 60 },
+    '🀄': { 3: 10, 4: 40, 5: 200 }
+  };
+
+  let totalMult = 0;
+  const wins = [];
+  for (let row = 0; row < ROWS; row++) {
+    const first = grid[0][row];
+    if (first === '🀔') continue;
+    let count = 1;
+    for (let r = 1; r < REELS; r++) {
+      if (grid[r][row] === first) count++;
+      else break;
+    }
+    if (count >= 3 && PAY[first] && PAY[first][count]) {
+      const m = PAY[first][count];
+      totalMult += m;
+      wins.push({ row, symbol: first, count, mult: m, cells: Array.from({length: count}, (_, i) => ({ r: i, row })) });
+    }
+  }
+
+  let scatters = 0;
+  const scatterPositions = [];
+  for (let r = 0; r < REELS; r++) {
+    for (let row = 0; row < ROWS; row++) {
+      if (grid[r][row] === '🀔') { scatters++; scatterPositions.push({ r, row }); }
+    }
+  }
+  if (scatters >= 3) {
+    const scatterMult = scatters === 3 ? 5 : scatters === 4 ? 20 : 100;
+    totalMult += scatterMult;
+    wins.push({ scatter: true, count: scatters, mult: scatterMult, cells: scatterPositions });
+  }
+
+  const win = totalMult > 0 ? bet * totalMult : 0;
+  u.coins -= bet;
+  u.coins += win;
+  saveData();
+  broadcastUserUpdate(uid);
+
+  let tier = 'none';
+  if (totalMult >= 100) tier = 'jackpot';
+  else if (totalMult >= 30) tier = 'mega';
+  else if (totalMult >= 10) tier = 'big';
+  else if (totalMult >= 3) tier = 'win';
+
+  if (totalMult >= 10) {
+    io.emit('system', '🀄 ' + u.username + ' menang ' + win + ' coin di Mahjong! (x' + totalMult + ' ' + tier.toUpperCase() + ')');
+  }
+
+  cb({ ok: true, grid, bet, multiplier: totalMult, win, coins: u.coins, wins, scatters, tier });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
