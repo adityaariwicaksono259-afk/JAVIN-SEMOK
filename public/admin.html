@@ -19,21 +19,12 @@
       <div id="adminLoginErr" class="err"></div>
       <button id="adminLoginConfirm" class="btn-primary big-btn">Login</button>
     </div>
-    <div id="adminPanelBox" class="hidden"><div class="ev-admin-box" id="evAdminBox"><label>🎁 ADMIN EVENT</label><div id="evAdminCurrent"></div><div class="ev-form" id="evForm"><input id="evName" type="text" placeholder="Nama event (contoh: Giveaway 5000 coin)" maxlength="60" /><div class="ev-row2"><input id="evReward" type="number" placeholder="Reward/pemenang" min="100" /><input id="evWinners" type="number" placeholder="Jumlah pemenang" value="1" min="1" max="10" /></div><input id="evDuration" type="number" placeholder="Durasi (menit)" value="10" min="1" max="1440" /><button id="evCreateBtn" class="btn-primary">🎁 BUAT EVENT</button></div><div id="evAdminMsg" class="add-admin-msg"></div><button id="evOpenBtn" class="btn-ghost big-btn" style="margin-top:8px;width:100%">📂 Buka Halaman Event</button></div><a href="/log.html" class="btn-ghost big-btn" style="display:block;text-align:center;margin-bottom:14px;text-decoration:none">📝 Buka Admin Log</a><a href="/dashboard.html" class="btn-primary big-btn" style="display:block;text-align:center;margin-bottom:14px;text-decoration:none">📊 Buka Dashboard</a><div class="kas-admin-box"><label>💰 COIN KAS EVENT</label><div class="kas-display"><span class="kas-label">Saldo Kas:</span><span class="kas-val" id="kasVal">0</span></div><div class="kas-form"><input id="kasUser" type="text" placeholder="Cari username..." autocomplete="off" /><div id="kasResults" class="kas-results"></div><div id="kasSelected" class="kas-selected"></div><input id="kasAmount" type="number" placeholder="Jumlah coin" min="1" /><button id="kasSend" class="btn-primary">KIRIM DARI KAS</button></div><div id="kasMsg" class="add-admin-msg"></div></div><div class="mt-admin-box"><label>MAINTENANCE MODE</label><div class="mt-row"><span id="mtStatus">OFF</span><button id="mtToggle" class="mt-switch">AKTIFKAN</button></div><input id="mtInput" type="text" placeholder="Pesan untuk user..." maxlength="300" /><div id="mtMsg" class="add-admin-msg"></div></div><div class="add-admin-box"><label>ADD ADMIN CHAT</label><input id="addAdminInput" type="text" placeholder="Username user..." autocomplete="off" /><button id="addAdminBtn" class="btn-primary">+ Jadikan Admin</button><div id="addAdminMsg" class="add-admin-msg"></div></div>
-      <div class="tabs">
-        <button class="tab active" data-atab="users">Users</button>
-        <button class="tab" data-atab="topups">Top-up</button>
-      </div>
-      <div id="adminUsersTab" class="admin-list"></div>
-      <div id="adminTopupsTab" class="admin-list hidden"></div>
-    </div>
-  </div>
+    <div id="adminPanelBox" class="hidden">
 </div>
 <div id="toast" class="toast hidden"></div>
 <script src="common.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="auth-socket.js"></script>
 <script src="admin.js"></script>
-<script src="event-admin.js"></script>
 </body>
 </html>
