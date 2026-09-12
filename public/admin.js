@@ -41,6 +41,8 @@ function loadAdminList() {
     if (res.error) return toast('❌ ' + res.error);
     renderAdminUsers(res.users);
     renderAdminTopups(res.topups);
+  
+    if (res && res.users && window.__updateKasUsers) window.__updateKasUsers(res.users);
   });
 }
 
@@ -198,4 +200,83 @@ socket.on('topup-new', () => { if (isAdmin) loadAdminList(); });
       input.value = '';
     });
   };
+})();
+
+// ===== KAS EVENT =====
+(function(){
+  var kasVal = document.getElementById('kasVal');
+  var kasUser = document.getElementById('kasUser');
+  var kasResults = document.getElementById('kasResults');
+  var kasSelected = document.getElementById('kasSelected');
+  var kasAmount = document.getElementById('kasAmount');
+  var kasSend = document.getElementById('kasSend');
+  var kasMsg = document.getElementById('kasMsg');
+  if (!kasVal) return;
+
+  var selectedUser = null;
+  var allUsers = [];
+
+  function showMsg(t, ok) {
+    kasMsg.textContent = t;
+    kasMsg.className = 'add-admin-msg ' + (ok ? 'ok' : 'err');
+    setTimeout(function(){ kasMsg.textContent = ''; kasMsg.className = 'add-admin-msg'; }, 4000);
+  }
+
+  function refreshKas() {
+    socket.emit('admin-kas-get', function(res){
+      if (res && res.ok) kasVal.textContent = (res.kas || 0).toLocaleString('id-ID');
+    });
+  }
+
+  // Load users setelah login
+  var origLoad = window.loadAdminList;
+  socket.on('connect', function() { setTimeout(refreshKas, 2000); });
+
+  kasUser.addEventListener('input', function(){
+    var q = kasUser.value.toLowerCase().trim();
+    kasResults.innerHTML = '';
+    if (!q) return;
+    var matches = allUsers.filter(function(u){ return u.username.toLowerCase().indexOf(q) >= 0; }).slice(0, 5);
+    matches.forEach(function(u){
+      var d = document.createElement('div');
+      d.className = 'kas-result-item';
+      d.innerHTML = '<b>' + u.username + '</b> <span>' + (u.coins || 0) + ' coin</span>';
+      d.onclick = function(){
+        selectedUser = u;
+        kasUser.value = u.username;
+        kasResults.innerHTML = '';
+        kasSelected.innerHTML = '✅ Dipilih: <b>' + u.username + '</b> (userId: ' + u.userId.slice(0, 8) + '...)';
+      };
+      kasResults.appendChild(d);
+    });
+  });
+
+  kasSend.onclick = function(){
+    if (!selectedUser) return showMsg('Pilih user dulu', false);
+    var amt = parseInt(kasAmount.value);
+    if (!amt || amt < 1) return showMsg('Jumlah invalid', false);
+    if (!confirm('Kirim ' + amt + ' coin ke ' + selectedUser.username + '?')) return;
+    kasSend.disabled = true;
+    socket.emit('admin-kas-send', { targetUserId: selectedUser.userId, amount: amt }, function(res){
+      kasSend.disabled = false;
+      if (res && res.error) return showMsg('Error: ' + res.error, false);
+      kasVal.textContent = (res.kas || 0).toLocaleString('id-ID');
+      showMsg('✅ ' + amt + ' coin terkirim ke ' + selectedUser.username, true);
+      kasAmount.value = '';
+      selectedUser = null;
+      kasSelected.innerHTML = '';
+      kasUser.value = '';
+      if (typeof loadAdminList === 'function') loadAdminList();
+    });
+  };
+
+  // Simpan users dari admin-list
+  var origRender = window.renderAdminUsers;
+  socket.on('admin-list-response', function(d){ /* noop */ });
+
+  // Expose function buat update allUsers
+  window.__updateKasUsers = function(users) { allUsers = users; };
+
+  // Auto refresh kas tiap 10 detik
+  setInterval(function(){ if (kasVal && kasVal.textContent !== '0') refreshKas(); }, 10000);
 })();

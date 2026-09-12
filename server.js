@@ -301,6 +301,8 @@ function tryDrawLottery() {
   const winner = tickets[Math.floor(Math.random() * tickets.length)];
   const pool = data.lottery.pool;
   const prize = Math.floor(pool * 0.7);
+  const kasCut = pool - prize;
+  data.kas = (data.kas || 0) + kasCut;
   const winnerUser = data.users[winner.userId];
   if (winnerUser) {
     winnerUser.coins += prize;
@@ -324,6 +326,31 @@ function tryDrawLottery() {
   lotteryDrawing = false;
   io.emit('lottery-updated', getLotteryState());
 }
+
+socket.on('admin-kas-get', (cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Bukan admin' });
+  cb({ ok: true, kas: data.kas || 0 });
+});
+
+socket.on('admin-kas-send', ({ targetUserId, amount } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Bukan admin' });
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  amount = parseInt(amount);
+  if (!amount || amount < 1) return cb({ error: 'Jumlah invalid' });
+  if ((data.kas || 0) < amount) return cb({ error: 'Kas kurang (kas: ' + (data.kas || 0) + ')' });
+  const target = data.users[targetUserId];
+  if (!target) return cb({ error: 'User tidak ditemukan' });
+  data.kas -= amount;
+  target.coins += amount;
+  saveData();
+  broadcastUserUpdate(targetUserId);
+  io.emit('system', '💰 Admin kasih ' + amount + ' coin ke ' + target.username + ' (dari kas event)');
+  try { logAdmin('kas-send', uid, targetUserId, 'amount=' + amount); } catch(e){}
+  cb({ ok: true, kas: data.kas, targetCoins: target.coins });
+});
 
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
