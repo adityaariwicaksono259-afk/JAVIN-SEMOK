@@ -543,7 +543,7 @@ socket.on('blackjack-hit', (cb) => {
     bjGames.delete(socket.id);
     saveData();
     broadcastUserUpdate(uid);
-    return cb({ ok: true, player: g.player, dealer: g.dealer, playerTotal: total, dealerTotal: bjTotal(g.dealer), bust: true, result: 'lose', win: 0, coins: u.coins });
+    return cb({ ok: true, player: g.player, dealer: g.dealer, playerTotal: total, dealerTotal: bjTotal(g.dealer), bust: true, result: 'lose', win: 0, coins: u.coins, bet: g.bet });
   }
   cb({ ok: true, player: g.player, playerTotal: total });
 });

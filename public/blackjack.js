@@ -95,6 +95,7 @@ $('bjStart').onclick = () => {
 
 $('bjHit').onclick = () => {
   if (!playing) return;
+  if ($('bjHit').disabled) return;
   $('bjHit').disabled = true;
   socket.emit('blackjack-hit', (res) => {
     $('bjHit').disabled = false;
@@ -127,23 +128,32 @@ function doStand() {
 
 function endGame(res) {
   playing = false;
-  me.coins = res.coins;
-  $('bjBalance').textContent = res.coins.toLocaleString('id-ID');
+  if (res && res.coins !== undefined) {
+    me.coins = res.coins;
+    $('bjBalance').textContent = res.coins.toLocaleString('id-ID');
+  }
+  var bet = res.bet || currentBet || 0;
   if (res.result === 'win') {
-    const isBj = res.playerTotal === 21 && res.player.length === 2 && res.win === Math.floor(res.bet * 2.5);
+    var isBj = res.playerTotal === 21 && res.player && res.player.length === 2 && res.win === Math.floor(bet * 2.5);
     $('bjStatus').textContent = (isBj ? '🃏 BLACKJACK! ' : '🎉 MENANG! ') + '+' + res.win.toLocaleString('id-ID') + ' coin';
     $('bjStatus').className = 'bj-status win';
   } else if (res.result === 'push') {
     $('bjStatus').textContent = '🤝 SERI - modal balik';
     $('bjStatus').className = 'bj-status push';
   } else {
-    $('bjStatus').textContent = (res.bust ? '💥 BUST! ' : '😢 KALAH ') + '-' + res.bet.toLocaleString('id-ID') + ' coin';
+    $('bjStatus').textContent = (res.bust ? '💥 BUST! ' : '😢 KALAH ') + '-' + bet.toLocaleString('id-ID') + ' coin';
     $('bjStatus').className = 'bj-status lose';
   }
   history.unshift({ result: res.result, pT: res.playerTotal, dT: res.dealerTotal });
   if (history.length > 8) history.pop();
   renderHistory();
-  setTimeout(() => { resetTable(); }, 2500);
+  // Force reset setelah 2.5 detik
+  setTimeout(function() {
+    playing = false;
+    $('bjHit').disabled = false;
+    $('bjStand').disabled = false;
+    resetTable();
+  }, 2500);
 }
 
 function renderHistory() {
@@ -158,3 +168,26 @@ function renderHistory() {
 }
 
 setInterval(() => { if (me) $('bjBalance').textContent = me.coins.toLocaleString('id-ID'); }, 3000);
+
+// WATCHDOG — auto-reset kalau stuck
+setInterval(function() {
+  if (!playing) return;
+  var hitDisabled = $('bjHit').disabled;
+  var standVisible = !$('bjActions').classList.contains('hidden');
+  // Kalau HIT disabled 5+ detik tapi game gak selesai, force reset
+  if (hitDisabled && standVisible) {
+    if (!window.__bjWatchdogStart) window.__bjWatchdogStart = Date.now();
+    if (Date.now() - window.__bjWatchdogStart > 5000) {
+      console.log('[BJ] Watchdog reset');
+      window.__bjWatchdogStart = 0;
+      playing = false;
+      $('bjHit').disabled = false;
+      $('bjStand').disabled = false;
+      $('bjActions').classList.add('hidden');
+      resetTable();
+      $('bjStatus').textContent = 'Game ke-reset. Mulai lagi.';
+    }
+  } else {
+    window.__bjWatchdogStart = 0;
+  }
+}, 2000);
