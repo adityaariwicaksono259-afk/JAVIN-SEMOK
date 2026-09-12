@@ -11,6 +11,7 @@ const db = require('./db');
 const rl = require('./ratelimit');
 
 const app = express();
+app.set('trust proxy', true);
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: ['https://javin-semok.onrender.com','https://javin-semok-*.onrender.com','http://localhost:3000','http://127.0.0.1:3000'], methods: ['GET','POST'], credentials: true } });
 const PORT = process.env.PORT || 3000;
@@ -204,7 +205,8 @@ function saveData() {
 // ===== CONNECTION LIMITER PER IP =====
 const connCount = new Map();
 io.use((socket, next) => {
-  const ip = socket.handshake.address || 'unknown';
+  const xff = socket.handshake.headers['x-forwarded-for'];
+  const ip = xff ? xff.split(',')[0].trim() : (socket.handshake.address || 'unknown');
   const count = connCount.get(ip) || 0;
   if (count >= 10) return next(new Error('TOO_MANY_CONNECTIONS'));
   connCount.set(ip, count + 1);
