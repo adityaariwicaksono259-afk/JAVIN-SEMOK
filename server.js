@@ -993,6 +993,19 @@ socket.on('chess-finish', ({ result, difficulty } = {}, cb) => {
   if (!uid) return cb({ error: 'Belum join' });
   const u = data.users[uid];
   if (!u) return cb({ error: 'User tidak ada' });
+  const nowC = Date.now();
+  if (u.lastChessAt && nowC - u.lastChessAt < 60000) {
+    const wait = Math.ceil((60000 - (nowC - u.lastChessAt)) / 1000);
+    return cb({ error: 'Tunggu ' + wait + 's lagi' });
+  }
+  if (!u.chessDay) { u.chessDay = new Date().toDateString(); u.chessCount = 0; }
+  if (u.chessDay !== new Date().toDateString()) {
+    u.chessDay = new Date().toDateString();
+    u.chessCount = 0;
+  }
+  if (u.chessCount >= 10) return cb({ error: 'Max 10 game catur/hari' });
+  u.lastChessAt = nowC;
+  u.chessCount = (u.chessCount || 0) + 1;
   const rewards = {
     win: { easy: 8, medium: 17, hard: 35 },
     lose: { easy: 2, medium: 4, hard: 7 },
@@ -1016,7 +1029,7 @@ socket.on('disconnect', () => {
     if (uid) {
       const u = data.users[uid];
       const name = u ? u.username : 'User';
-      io.emit('system', name + ' keluar');
+      /* leave message hidden */
       io.emit('online', onlineUsers.size);
     }
   });
