@@ -395,6 +395,37 @@ socket.on('badge-set', ({ badgeId } = {}, cb) => {
   cb({ ok: true });
 });
 
+socket.on('admin-dashboard', (cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Bukan admin' });
+  const users = Object.values(data.users || {});
+  const now = Date.now();
+  const today = new Date().toDateString();
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const totalUsers = users.length;
+  const onlineNow = onlineUsers.size;
+  const totalCoins = users.reduce((a, u) => a + (u.coins || 0), 0);
+  const totalMessages = users.reduce((a, u) => a + (u.messageCount || 0), 0);
+  const bannedUsers = users.filter(u => u.banned).length;
+  const newToday = users.filter(u => u.createdAt && new Date(u.createdAt).toDateString() === today).length;
+  const newWeek = users.filter(u => u.createdAt && u.createdAt > weekAgo).length;
+  const msgsToday = (data.messages || []).filter(m => m.time && new Date(m.time).toDateString() === today).length;
+  const topCoin = users.slice().sort((a, b) => (b.coins || 0) - (a.coins || 0)).slice(0, 5).map(u => ({ username: u.username, coins: u.coins || 0 }));
+  const topChat = users.slice().sort((a, b) => (b.messageCount || 0) - (a.messageCount || 0)).slice(0, 5).map(u => ({ username: u.username, messages: u.messageCount || 0 }));
+  const kas = data.kas || 0;
+  const totalGames = users.reduce((a, u) => {
+    const ach = u.ach || {};
+    return a + ((ach.slotWins || 0) + (ach.daduWins || 0) + (ach.tebakWins || 0) + (u.chessCount || 0));
+  }, 0);
+  cb({
+    ok: true,
+    stats: { totalUsers, onlineNow, totalCoins, totalMessages, bannedUsers, newToday, newWeek, msgsToday, kas, totalGames,
+      totalTickets: (data.lottery && data.lottery.tickets && data.lottery.tickets.length) || 0,
+      lotteryPool: (data.lottery && data.lottery.pool) || 0 },
+    topCoin, topChat
+  });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
