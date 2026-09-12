@@ -1,3 +1,4 @@
+let cooldownUntil = 0;
 function showAdminPinMenu(msgId) {
   var a = document.createElement("div");
   a.className = "confirm-overlay";
@@ -229,6 +230,12 @@ if (msgInput) {
 }
 function sendMessage() {
   if (!msgInput) return;
+  const now = Date.now();
+  if (now < cooldownUntil) {
+    var sisa = Math.ceil((cooldownUntil - now) / 1000);
+    if (window.__toast) window.__toast('⏱️ Tunggu ' + sisa + 's lagi');
+    return;
+  }
   const t = msgInput.value.trim();
   if (!t) return;
   const payload = { type: 'text', text: t };
@@ -238,6 +245,20 @@ function sendMessage() {
   socket.emit('typing', false);
   clearReply();
   msgInput.focus();
+  // Cooldown 3 detik
+  cooldownUntil = Date.now() + 3000;
+  if (sendBtn) sendBtn.disabled = true;
+  if (sendBtn) sendBtn.style.opacity = '0.4';
+  var _cdTimer = setInterval(function() {
+    var left = cooldownUntil - Date.now();
+    if (left <= 0) {
+      clearInterval(_cdTimer);
+      if (sendBtn) { sendBtn.disabled = false; sendBtn.style.opacity = '1'; }
+    } else {
+      if (msgInput) msgInput.placeholder = 'Tunggu ' + Math.ceil(left / 1000) + 's...';
+    }
+  }, 200);
+  setTimeout(function() { if (msgInput) msgInput.placeholder = 'Ketik pesan...'; }, 3100);
 }
 
 // ============ REPLY ============
