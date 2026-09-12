@@ -19,6 +19,7 @@ $('adminLoginConfirm').onclick = () => {
   socket.emit('admin-login', { password: pw }, (res) => {
     if (res.error) return $('adminLoginErr').textContent = res.error;
     isAdmin = true;
+    if (res.adminToken) localStorage.setItem('admin_token', res.adminToken);
     $('adminLoginBox').classList.add('hidden');
     $('adminPanelBox').classList.remove('hidden');
     loadAdminList();
