@@ -281,3 +281,97 @@ socket.on('topup-new', () => { if (isAdmin) loadAdminList(); });
   // Auto refresh kas tiap 10 detik
   setInterval(function(){ if (kasVal && kasVal.textContent !== '0') refreshKas(); }, 10000);
 })();
+
+// ===== ADMIN EVENT =====
+(function(){
+  var nameI = document.getElementById('evName');
+  var rewardI = document.getElementById('evReward');
+  var winnersI = document.getElementById('evWinners');
+  var durationI = document.getElementById('evDuration');
+  var createB = document.getElementById('evCreateBtn');
+  var msg = document.getElementById('evAdminMsg');
+  var curBox = document.getElementById('evAdminCurrent');
+  var formBox = document.getElementById('evForm');
+  if (!nameI) return;
+
+  function showMsg(t, ok) {
+    msg.textContent = t;
+    msg.className = 'add-admin-msg ' + (ok ? 'ok' : 'err');
+    setTimeout(function(){ msg.textContent = ''; msg.className = 'add-admin-msg'; }, 4000);
+  }
+
+  function render(current) {
+    if (!current) {
+      formBox.style.display = '';
+      curBox.innerHTML = '<div class="ev-cur-empty">Belum ada event aktif</div>';
+      return;
+    }
+    formBox.style.display = 'none';
+    var total = (current.reward * current.winners).toLocaleString('id-ID');
+    curBox.innerHTML =
+      '<div class="ev-cur-card">' +
+        '<div class="ev-cur-name">🎁 ' + current.name + '</div>' +
+        '<div class="ev-cur-line">Reward: <b>' + current.reward.toLocaleString('id-ID') + '</b> coin × ' + current.winners + ' pemenang</div>' +
+        '<div class="ev-cur-line">Total hold: <b>' + total + '</b> coin</div>' +
+        '<div class="ev-cur-line">Peserta: <b>' + current.joiners.length + '</b> orang</div>' +
+        '<div class="ev-cur-actions">' +
+          '<button class="btn-primary" id="evDrawBtn">🎲 DRAW SEKARANG</button>' +
+          '<button class="btn-ghost" id="evCancelBtn" style="color:#d32f2f">❌ BATALKAN</button>' +
+        '</div>' +
+      '</div>';
+    var drawB = document.getElementById('evDrawBtn');
+    var cancelB = document.getElementById('evCancelBtn');
+    if (drawB) drawB.onclick = function() {
+      if (!confirm('Draw pemenang sekarang?')) return;
+      if (current.joiners.length === 0) return showMsg('Belum ada yang join', false);
+      drawB.disabled = true;
+      socket.emit('event-draw', function(res) {
+        drawB.disabled = false;
+        if (res && res.error) return showMsg('Error: ' + res.error, false);
+        showMsg('🎉 Pemenang: ' + res.winners.join(', ') + ' (refund: ' + res.refund + ')', true);
+        setTimeout(function(){ socket.emit('event-state', function(r){ if (r) render(r.current); }); }, 1500);
+      });
+    };
+    if (cancelB) cancelB.onclick = function() {
+      if (!confirm('Batalkan event? Coin hold bakal balik ke lo.')) return;
+      socket.emit('event-cancel', function(res) {
+        if (res && res.error) return showMsg('Error: ' + res.error, false);
+        showMsg('Event dibatalkan', true);
+        setTimeout(function(){ socket.emit('event-state', function(r){ if (r) render(r.current); }); }, 800);
+      });
+    };
+  }
+
+  createB.onclick = function() {
+    var name = nameI.value.trim();
+    var reward = parseInt(rewardI.value);
+    var winners = parseInt(winnersI.value) || 1;
+    var durationMin = parseInt(durationI.value) || 10;
+    if (!name) return showMsg('Nama event kosong', false);
+    if (!reward || reward < 100) return showMsg('Minimal reward 100 coin', false);
+    var total = reward * winners;
+    if (!confirm('Hold ' + total.toLocaleString('id-ID') + ' coin dari saldo lo?\nReward: ' + reward + ' × ' + winners + ' pemenang')) return;
+    createB.disabled = true;
+    socket.emit('event-create', { name: name, reward: reward, winners: winners, durationMin: durationMin }, function(res) {
+      createB.disabled = false;
+      if (res && res.error) return showMsg('Error: ' + res.error, false);
+      showMsg('✅ Event dibuat!', true);
+      nameI.value = ''; rewardI.value = ''; winnersI.value = '1'; durationI.value = '10';
+      socket.emit('event-state', function(r){ if (r) render(r.current); });
+    });
+  };
+
+  document.getElementById('evOpenBtn').onclick = function() {
+    window.open('/event.html', '_blank');
+  };
+
+  // Load awal
+  setTimeout(function() {
+    socket.emit('event-state', function(r){ if (r) render(r.current); });
+  }, 1500);
+
+  // Auto-refresh tiap 8 detik
+  setInterval(function() {
+    socket.emit('event-state', function(r){ if (r) render(r.current); });
+  }, 8000);
+})();

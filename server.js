@@ -658,6 +658,136 @@ socket.on('mahjong-spin', ({ bet } = {}, cb) => {
   cb({ ok: true, grid, bet, multiplier: totalMult, win, coins: u.coins, wins, scatters, tier });
 });
 
+socket.on('event-create', ({ name, reward, winners, durationMin } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Cuma admin panel' });
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const admin = data.users[uid];
+  if (!admin) return cb({ error: 'Admin tidak ada' });
+  if (data.events && data.events.current) return cb({ error: 'Masih ada event aktif' });
+
+  name = String(name || '').trim().slice(0, 60);
+  reward = parseInt(reward);
+  winners = parseInt(winners) || 1;
+  durationMin = parseInt(durationMin) || 10;
+
+  if (!name) return cb({ error: 'Nama event kosong' });
+  if (!reward || reward < 100) return cb({ error: 'Minimal reward 100 coin' });
+  if (reward > 10000000) return cb({ error: 'Max reward 10jt' });
+  if (winners < 1 || winners > 10) return cb({ error: 'Pemenang 1-10' });
+  if (durationMin < 1 || durationMin > 1440) return cb({ error: 'Durasi 1 menit - 24 jam' });
+
+  const totalHold = reward * winners;
+  if (admin.coins < totalHold) return cb({ error: 'Saldo lo kurang. Butuh ' + totalHold + ' coin (hold)' });
+
+  // Hold coin dari admin
+  admin.coins -= totalHold;
+  saveData();
+  broadcastUserUpdate(uid);
+
+  data.events.current = {
+    id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+    name, reward, winners, totalHold,
+    adminUid: uid,
+    adminName: admin.username,
+    joiners: [],
+    createdAt: Date.now(),
+    endsAt: Date.now() + durationMin * 60 * 1000
+  };
+  saveData();
+  io.emit('event-updated', data.events.current);
+  io.emit('system', '🎁 EVENT BARU: ' + name + ' — hadiah ' + reward + ' coin × ' + winners + ' pemenang! Klik /event.html buat join!');
+  cb({ ok: true });
+});
+
+socket.on('event-join', (cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  if (!data.events || !data.events.current) return cb({ error: 'Gak ada event aktif' });
+  const ev = data.events.current;
+  if (Date.now() > ev.endsAt) return cb({ error: 'Event udah selesai' });
+  if (ev.joiners.find(j => j.uid === uid)) return cb({ error: 'Lo udah join' });
+  if (ev.adminUid === uid) return cb({ error: 'Admin gak bisa join event sendiri' });
+  ev.joiners.push({ uid, username: u.username, time: Date.now() });
+  saveData();
+  io.emit('event-updated', ev);
+  cb({ ok: true, totalJoin: ev.joiners.length });
+});
+
+socket.on('event-draw', (cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Cuma admin panel' });
+  if (!data.events || !data.events.current) return cb({ error: 'Gak ada event aktif' });
+  const ev = data.events.current;
+  if (ev.joiners.length === 0) return cb({ error: 'Belum ada yang join' });
+
+  // Acak pemenang
+  const pool = ev.joiners.slice().sort(() => Math.random() - 0.5);
+  const wCount = Math.min(ev.winners, pool.length);
+  const winnersList = pool.slice(0, wCount);
+
+  winnersList.forEach(w => {
+    const u = data.users[w.uid];
+    if (u) {
+      u.coins += ev.reward;
+      broadcastUserUpdate(w.uid);
+    }
+  });
+
+  // Sisa hold balik ke admin
+  const spent = ev.reward * wCount;
+  const refund = ev.totalHold - spent;
+  const admin = data.users[ev.adminUid];
+  if (admin && refund > 0) {
+    admin.coins += refund;
+    broadcastUserUpdate(ev.adminUid);
+  }
+
+  // Simpan history
+  const hist = {
+    id: ev.id,
+    name: ev.name,
+    reward: ev.reward,
+    winners: winnersList.map(w => w.username),
+    totalJoin: ev.joiners.length,
+    adminName: ev.adminName,
+    time: Date.now()
+  };
+  data.events.history.push(hist);
+  if (data.events.history.length > 30) data.events.history.shift();
+  data.events.current = null;
+  saveData();
+
+  io.emit('event-drawn', hist);
+  io.emit('system', '🎉 EVENT: ' + hist.name + ' — Pemenang: ' + winnersList.map(w => w.username).join(', ') + ' (masing-masing ' + ev.reward + ' coin)');
+  cb({ ok: true, winners: winnersList.map(w => w.username), refund: refund });
+});
+
+socket.on('event-cancel', (cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Cuma admin panel' });
+  if (!data.events || !data.events.current) return cb({ error: 'Gak ada event aktif' });
+  const ev = data.events.current;
+  const admin = data.users[ev.adminUid];
+  if (admin) {
+    admin.coins += ev.totalHold;
+    broadcastUserUpdate(ev.adminUid);
+  }
+  data.events.current = null;
+  saveData();
+  io.emit('event-updated', null);
+  io.emit('system', '❌ Event dibatalkan. Coin hold dikembalikan ke admin.');
+  cb({ ok: true });
+});
+
+socket.on('event-state', (cb) => {
+  if (typeof cb !== 'function') return;
+  cb({ ok: true, current: (data.events && data.events.current) || null, history: (data.events && data.events.history || []).slice(-10).reverse() });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
