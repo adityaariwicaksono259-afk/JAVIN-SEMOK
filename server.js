@@ -3,6 +3,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const helmet = require('helmet');
 const fs = require('fs');
 const multer = require('multer');
 const crypto = require('crypto');
@@ -76,6 +77,20 @@ const upload = multer({
   }
 });
 
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'", "ws:", "wss:"]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'File tidak ada' });
@@ -186,6 +201,22 @@ function saveData() {
 }
 
 // ===== SOCKET AUTH MIDDLEWARE =====
+// ===== CONNECTION LIMITER PER IP =====
+const connCount = new Map();
+io.use((socket, next) => {
+  const ip = socket.handshake.address || 'unknown';
+  const count = connCount.get(ip) || 0;
+  if (count >= 10) return next(new Error('TOO_MANY_CONNECTIONS'));
+  connCount.set(ip, count + 1);
+  socket.on('disconnect', () => {
+    const c = connCount.get(ip) || 1;
+    if (c <= 1) connCount.delete(ip);
+    else connCount.set(ip, c - 1);
+  });
+  // CONN-LIMIT
+  next();
+});
+
 io.use((socket, next) => {
   const auth = socket.handshake.auth || {};
   const userId = auth.userId;
