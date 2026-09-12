@@ -11,6 +11,7 @@ const db = require('./db');
 const rl = require('./ratelimit');
 
 const app = express();
+app.disable('x-powered-by');
 app.set('trust proxy', true);
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: ['https://javin-semok.onrender.com','https://javin-semok-*.onrender.com','http://localhost:3000','http://127.0.0.1:3000'], methods: ['GET','POST'], credentials: true } });
@@ -92,6 +93,20 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+// COOKIE-SEC — set cookie security flags
+app.use((req, res, next) => {
+  const origSetHeader = res.setHeader.bind(res);
+  res.setHeader = function(name, value) {
+    if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
+      value = value.map(c => c.replace(/;\s*$/g, '') + '; Secure; SameSite=Lax');
+    } else if (name.toLowerCase() === 'set-cookie' && typeof value === 'string') {
+      value = value.replace(/;\s*$/g, '') + '; Secure; SameSite=Lax';
+    }
+    return origSetHeader(name, value);
+  };
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'File tidak ada' });
@@ -233,6 +248,35 @@ io.use((socket, next) => {
   }
   // User baru / belum punya token — lolos (token bakal di-generate di 'join')
   socket._authUserId = userId;
+  next();
+});
+
+// ===== GLOBAL EVENT LIMIT =====
+const globalEvents = new Map();
+const RATE_WINDOW = 10000;
+const RATE_MAX = 30;
+const SKIP_EVENTS = ['join', 'typing', 'peek-online', 'disconnect'];
+io.use((socket, next) => {
+  const origOnevent = socket.onevent;
+  socket.onevent = function(packet) {
+    try {
+      const evName = packet.data && packet.data[0];
+      if (evName && !SKIP_EVENTS.includes(evName)) {
+        const now = Date.now();
+        const uid = socket._authUserId || socket.id;
+        let arr = globalEvents.get(uid) || [];
+        arr = arr.filter(t => now - t < RATE_WINDOW);
+        if (arr.length >= RATE_MAX) {
+          socket.emit('rate-limited', { msg: 'Kebanyakan aksi, tunggu bentar' });
+          return;
+        }
+        arr.push(now);
+        globalEvents.set(uid, arr);
+      }
+    } catch(e) {}
+    return origOnevent.apply(this, arguments);
+  };
+  // GLOBAL-EVENT-LIMIT
   next();
 });
 
