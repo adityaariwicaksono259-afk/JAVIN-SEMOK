@@ -79,6 +79,14 @@ const upload = multer({
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'File tidak ada' });
+
+// Upload error handler
+app.use((err, req, res, next) => {
+  if (req.path === '/upload' && err) {
+    return res.status(400).json({ error: err.message || 'Upload gagal' });
+  }
+  next(err);
+});
   res.json({ ok: true, url: '/uploads/' + req.file.filename });
 });
 
