@@ -141,6 +141,8 @@ function publicUser(u) {
     theme: u.theme || 'light',
     wallpaper: u.wallpaper || 'default',
     bubbleColor: u.bubbleColor || '#d9fdd3',
+    customBadge: u.customBadge || null,
+    ownedBadges: u.ownedBadges || [],
     ach: u.ach || { slotWins: 0, giftSent: 0, tebakWins: 0, daduWins: 0, unlocked: {} },
     messageCount: u.messageCount || 0,
     createdAt: u.createdAt
@@ -196,6 +198,15 @@ function checkAchievements(uid) {
   });
   if (changed) saveData();
 }
+
+const CUSTOM_BADGES = {
+  dragon:  { icon: '🐉', name: 'Naga',    price: 5000 },
+  alien:   { icon: '👽', name: 'Alien',   price: 10000 },
+  sultan:  { icon: '🔥', name: 'Sultan',  price: 25000 },
+  legend:  { icon: '🌟', name: 'Legend',  price: 50000 },
+  death:   { icon: '💀', name: 'Death',   price: 100000 },
+  emperor: { icon: '👑', name: 'Emperor', price: 250000 }
+};
 
 function broadcastUserUpdate(userId) {
   const u = data.users[userId];
@@ -352,6 +363,38 @@ socket.on('admin-kas-send', ({ targetUserId, amount } = {}, cb) => {
   cb({ ok: true, kas: data.kas, targetCoins: target.coins });
 });
 
+socket.on('badge-buy', ({ badgeId } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  const def = CUSTOM_BADGES[badgeId];
+  if (!def) return cb({ error: 'Badge tidak ada' });
+  if (!u.ownedBadges) u.ownedBadges = [];
+  if (u.ownedBadges.includes(badgeId)) return cb({ error: 'Udah punya' });
+  if (u.coins < def.price) return cb({ error: 'Coin kurang (' + def.price + ')' });
+  u.coins -= def.price;
+  u.ownedBadges.push(badgeId);
+  u.customBadge = badgeId;
+  saveData();
+  broadcastUserUpdate(uid);
+  io.emit('system', '🏅 ' + u.username + ' beli badge ' + def.icon + ' ' + def.name + '!');
+  cb({ ok: true, coins: u.coins });
+});
+
+socket.on('badge-set', ({ badgeId } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  if (badgeId === null) { u.customBadge = null; saveData(); broadcastUserUpdate(uid); return cb({ ok: true }); }
+  if (!u.ownedBadges || !u.ownedBadges.includes(badgeId)) return cb({ error: 'Belum punya badge ini' });
+  u.customBadge = badgeId;
+  saveData();
+  broadcastUserUpdate(uid);
+  cb({ ok: true });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
@@ -425,7 +468,7 @@ io.on('connection', (socket) => {
       const newToken = crypto.randomBytes(16).toString('hex');
       data.users[userId] = {
         userId, username: generateGuestName(userId),
-        coins: STARTER_COINS, renameCount: 0,
+        coins: STARTER_COINS, renameCount: 0, ownedBadges: [], customBadge: null,
         badge: 'member', lastDaily: 0, theme: 'light',
         messageCount: 0, banned: false, createdAt: Date.now(),
         authToken: newToken

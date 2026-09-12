@@ -52,10 +52,15 @@ function closeModal(id) { const e = $(id); if (e) e.classList.add('hidden'); }
 document.querySelectorAll('[data-close]').forEach(b => {
   b.onclick = () => closeModal(b.dataset.close);
 });
-function renderBadge(el, badge) {
-  if (!el) return;
+function renderBadge(el, badge, customBadge) {
   el.className = 'badge';
   el.textContent = '';
+  if (customBadge) {
+    var CUSTOM = { dragon:'🐉', alien:'👽', sultan:'🔥', legend:'🌟', death:'💀', emperor:'👑' };
+    el.classList.add('custom-badge');
+    el.textContent = CUSTOM[customBadge] || '';
+    return;
+  }
   if (badge === 'admin') { el.classList.add('admin'); el.textContent = '👑'; }
   else if (badge === 'vip') { el.classList.add('vip'); el.textContent = '💎'; }
 }
@@ -359,9 +364,9 @@ function renderMessage(msg) {
     const nameSpan = document.createElement('span');
     nameSpan.textContent = msg.user;
     u.appendChild(nameSpan);
-    if (msg.badge === 'vip' || msg.badge === 'admin') {
+    if (msg.customBadge || msg.badge === 'vip' || msg.badge === 'admin') {
       const b = document.createElement('span');
-      renderBadge(b, msg.badge);
+      renderBadge(b, msg.badge, msg.customBadge);
       b.style.fontSize = '10px';
       u.appendChild(b);
     }
