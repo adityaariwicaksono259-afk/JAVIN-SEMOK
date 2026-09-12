@@ -409,7 +409,10 @@ function renderReactionsInto(box, reactions) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'reaction-btn' + (users.includes(userId) ? ' mine' : '');
-    btn.innerHTML = '<span class="re-emoji">' + emoji + '</span><span class="re-count">' + users.length + '</span>';
+    btn.innerHTML = '';
+    const e1 = document.createElement('span'); e1.className = 're-emoji'; e1.textContent = emoji;
+    const c1 = document.createElement('span'); c1.className = 're-count'; c1.textContent = users.length;
+    btn.appendChild(e1); btn.appendChild(c1);
     btn.onclick = (e) => {
       e.stopPropagation();
       const msgId = btn.closest('.msg-wrapper').querySelector('.msg').dataset.msgId;
@@ -672,7 +675,10 @@ renderMessage = function(msg) {
     currentPinned = p;
     if (!p) { bar.classList.add('hidden'); return; }
     bar.classList.remove('hidden');
-    content.innerHTML = '<div class="pin-user">PIN - ' + (p.user || '') + '</div><div class="pin-text">' + (p.text || '') + '</div>';
+    content.innerHTML = '';
+    const u1 = document.createElement('div'); u1.className = 'pin-user'; u1.textContent = 'PIN - ' + (p.user || '');
+    const t1 = document.createElement('div'); t1.className = 'pin-text'; t1.textContent = p.text || '';
+    content.appendChild(u1); content.appendChild(t1);
     var adminLink = document.getElementById('adminBtn');
     var isAdmin = adminLink && !adminLink.classList.contains('hidden');
     unpinBtn.classList.toggle('hidden', !isAdmin);
