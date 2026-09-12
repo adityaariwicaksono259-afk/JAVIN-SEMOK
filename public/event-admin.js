@@ -41,12 +41,12 @@
     if (db) db.onclick = function() {
       if (!confirm('Draw sekarang?')) return;
       var sk = getSocket();
-      if (!sk) return showMsg('Socket belum siap', false);
+      if (!sk) { alert('Socket belum siap, tunggu bentar'); return; }
       db.disabled = true;
       sk.emit('event-draw', function(res) {
         db.disabled = false;
-        if (res && res.error) return showMsg('Error: ' + res.error, false);
-        showMsg('Menang: ' + res.winners.join(', '), true);
+        if (res && res.error) { alert('ERROR: ' + res.error); return; }
+        alert('🎉 Menang: ' + res.winners.join(', '));
       });
     };
     if (cb) cb.onclick = function() {
@@ -54,8 +54,8 @@
       var sk = getSocket();
       if (!sk) return showMsg('Socket belum siap', false);
       sk.emit('event-cancel', function(res) {
-        if (res && res.error) return showMsg('Error: ' + res.error, false);
-        showMsg('Dibatalkan', true);
+        if (res && res.error) { alert('ERROR: ' + res.error); return; }
+        alert('Dibatalkan');
       });
     };
   }
@@ -90,8 +90,8 @@
     btn.disabled = true;
     sk.emit('event-create', { name: name, reward: reward, winners: winners, durationMin: durationMin }, function(res) {
       btn.disabled = false;
-      if (res && res.error) return showMsg('Error: ' + res.error, false);
-      showMsg('Event dibuat!', true);
+      if (res && res.error) { alert('ERROR SERVER: ' + res.error); return; }
+      alert('✅ Event berhasil dibuat!');
       nameI.value = ''; rewardI.value = ''; winnersI.value = '1'; durationI.value = '10';
       setTimeout(refresh, 500);
     });
