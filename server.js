@@ -163,6 +163,10 @@ function broadcastUserUpdate(userId) {
 
 function dmKey(a, b) { return [a, b].sort().join('|'); }
 
+function saveData() {
+  db.saveToDB(data);
+}
+
 io.on('connection', (socket) => {
 
   socket.on('peek-online', () => {
