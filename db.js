@@ -12,7 +12,12 @@ const dataSchema = new mongoose.Schema({
   topups: { type: Array, default: [] },
   dms: { type: Object, default: {} },
   quests: { type: Object, default: {} },
-  pinned: { type: Object, default: null }
+  pinned: { type: Object, default: null },
+  maintenance: { type: Object, default: { active: false, message: '' } },
+  lottery: { type: Object, default: { tickets: [], pool: 0, history: [] } },
+  kas: { type: Number, default: 0 },
+  adminLog: { type: Array, default: [] },
+  adminTokens: { type: Object, default: {} }
 }, { minimize: false, timestamps: true });
 
 async function connectDB() {
@@ -48,7 +53,12 @@ async function loadFromDB() {
       topups: doc.topups || [],
       dms: doc.dms || {},
       quests: doc.quests || {},
-      pinned: doc.pinned || null
+      pinned: doc.pinned || null,
+      maintenance: doc.maintenance || { active: false, message: '' },
+      lottery: doc.lottery || { tickets: [], pool: 0, history: [] },
+      kas: doc.kas || 0,
+      adminLog: doc.adminLog || [],
+      adminTokens: doc.adminTokens || {}
     };
   } catch (e) {
     console.error('❌ Load error:', e.message);
@@ -68,7 +78,12 @@ function saveToDB(data) {
         topups: data.topups,
         dms: data.dms,
         quests: data.quests,
-        pinned: data.pinned
+        pinned: data.pinned,
+        maintenance: data.maintenance,
+        lottery: data.lottery,
+        kas: data.kas,
+        adminLog: data.adminLog,
+        adminTokens: data.adminTokens
       });
     } catch (e) {
       console.error('❌ Save error:', e.message);
