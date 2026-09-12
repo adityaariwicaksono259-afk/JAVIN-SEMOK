@@ -48,6 +48,22 @@
       }
     });
 
+
+  // Cek maintenance saat connect
+  socket.on('maintenance-changed', function(d) {
+    if (d && d.active) {
+      var isAdminPage = location.pathname.indexOf('admin') >= 0;
+      var isMaintenancePage = location.pathname.indexOf('maintenance') >= 0;
+      if (!isAdminPage && !isMaintenancePage) {
+        location.href = '/maintenance.html';
+      }
+    } else if (d && !d.active) {
+      if (location.pathname.indexOf('maintenance') >= 0) {
+        location.href = '/';
+      }
+    }
+  });
+
     return socket;
   };
 

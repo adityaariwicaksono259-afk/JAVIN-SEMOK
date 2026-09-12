@@ -150,3 +150,52 @@ socket.on('topup-new', () => { if (isAdmin) loadAdminList(); });
   };
   input.addEventListener('keydown', function(e){ if (e.key === 'Enter') btn.click(); });
 })();
+
+// ===== MAINTENANCE MODE =====
+(function(){
+  var toggle = document.getElementById('mtToggle');
+  var status = document.getElementById('mtStatus');
+  var input = document.getElementById('mtInput');
+  var msg = document.getElementById('mtMsg');
+  if (!toggle) return;
+  var mtActive = false;
+
+  function render() {
+    status.textContent = mtActive ? 'ON' : 'OFF';
+    status.className = mtActive ? 'mt-on' : 'mt-off';
+    toggle.textContent = mtActive ? 'MATIKAN' : 'AKTIFKAN';
+    toggle.className = 'mt-switch ' + (mtActive ? 'mt-switch-on' : '');
+  }
+
+  function showMsg(t, ok) {
+    msg.textContent = t;
+    msg.className = 'add-admin-msg ' + (ok ? 'ok' : 'err');
+    setTimeout(function(){ msg.textContent = ''; msg.className = 'add-admin-msg'; }, 4000);
+  }
+
+  socket.on('maintenance-changed', function(d) {
+    if (d) { mtActive = !!d.active; render(); }
+  });
+
+  // Cek status awal
+  setTimeout(function() {
+    socket.emit('maintenance-check', function(r) {
+      if (r && r.maintenance) { mtActive = !!r.maintenance.active; render(); }
+    });
+  }, 1500);
+
+  toggle.onclick = function() {
+    var target = !mtActive;
+    var text = input.value.trim();
+    if (target && !text) return showMsg('Isi pesan maintenance dulu', false);
+    if (target && !confirm('Aktifkan maintenance? Semua user bakal diblok.')) return;
+    if (!target && !confirm('Matikan maintenance?')) return;
+    socket.emit('admin-maintenance', { active: target, message: text }, function(res) {
+      if (res && res.error) return showMsg('Error: ' + res.error, false);
+      mtActive = !!(res && res.maintenance && res.maintenance.active);
+      render();
+      showMsg(mtActive ? 'Maintenance ON' : 'Maintenance OFF', true);
+      input.value = '';
+    });
+  };
+})();

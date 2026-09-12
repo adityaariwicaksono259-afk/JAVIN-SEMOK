@@ -225,7 +225,27 @@ io.use((socket, next) => {
   const count = connCount.get(ip) || 0;
   if (count >= 10) return next(new Error('TOO_MANY_CONNECTIONS'));
   connCount.set(ip, count + 1);
-  socket.on('disconnect', () => {
+  socket.on('admin-maintenance', ({ active, message } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Cuma admin panel' });
+  if (!data.maintenance) data.maintenance = { active: false, message: '' };
+  data.maintenance.active = !!active;
+  if (typeof message === 'string' && message.trim()) {
+    data.maintenance.message = message.trim().slice(0, 300);
+  }
+  saveData();
+  // Broadcast ke semua client
+  io.emit('maintenance-changed', data.maintenance);
+  console.log('[MT] Maintenance ' + (active ? 'ON' : 'OFF'));
+  cb({ ok: true, maintenance: data.maintenance });
+});
+
+socket.on('maintenance-check', (cb) => {
+  if (typeof cb !== 'function') return;
+  cb({ ok: true, maintenance: data.maintenance || { active: false } });
+});
+
+socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
     else connCount.set(ip, c - 1);

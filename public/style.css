@@ -1309,3 +1309,31 @@ body.wp-space .msg-user { color: #b5179e; }
 .chess-reward-info { text-align: center; font-size: 11px; color: #a78bfa; margin-bottom: 12px; font-family: 'JetBrains Mono', monospace; }
 .chess-restart { width: 100%; padding: 16px; background: linear-gradient(180deg,#a855f7,#7c3aed); color: #fff; border: 3px solid #c4b5fd; border-radius: 14px; font-size: 16px; font-weight: 900; letter-spacing: 2px; cursor: pointer; box-shadow: 0 6px 24px rgba(168,85,247,.5); }
 .chess-restart:active { transform: scale(.97); }
+
+/* ===== MAINTENANCE PAGE ===== */
+.mt-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a1a2e 0%, #0a0a14 100%); padding: 20px; }
+.mt-box { background: #fff; border-radius: 20px; padding: 40px 28px; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.5); animation: mtIn .5s ease-out; }
+@keyframes mtIn { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.mt-icon { font-size: 72px; margin-bottom: 16px; animation: mtSpin 3s linear infinite; }
+@keyframes mtSpin { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(20deg); } }
+.mt-title { font-size: 32px; font-weight: 900; letter-spacing: 4px; color: #d32f2f; margin-bottom: 20px; }
+.mt-msg { font-size: 15px; color: #54656f; line-height: 1.6; margin-bottom: 24px; min-height: 50px; }
+.mt-status { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; background: rgba(37,211,102,.1); border-radius: 20px; font-size: 13px; font-weight: 700; color: #25d366; margin-bottom: 24px; }
+.mt-dot { width: 8px; height: 8px; border-radius: 50%; background: #25d366; animation: mtPulse 1.5s infinite; }
+@keyframes mtPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.mt-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.mt-btn { padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #128c7e, #25d366); color: #fff; border: none; font-size: 14px; font-weight: 800; letter-spacing: 1px; cursor: pointer; text-decoration: none; display: block; }
+.mt-btn:active { transform: scale(.97); }
+.mt-btn-ghost { background: #f0f2f5; color: #54656f; }
+.mt-footer { font-size: 11px; color: #999; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; }
+
+/* ===== ADMIN MT BOX ===== */
+.mt-admin-box { background: linear-gradient(135deg, rgba(211,47,47,.1), rgba(255,152,0,.05)); border: 1px solid rgba(211,47,47,.3); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.mt-admin-box label { display: block; font-size: 11px; font-weight: 800; color: #d32f2f; letter-spacing: 2px; margin-bottom: 10px; }
+.mt-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.mt-on, .mt-off { font-size: 16px; font-weight: 900; letter-spacing: 1px; }
+.mt-on { color: #d32f2f; }
+.mt-off { color: #25d366; }
+.mt-switch { padding: 8px 16px; border-radius: 20px; background: #d32f2f; color: #fff; border: none; font-size: 12px; font-weight: 800; cursor: pointer; letter-spacing: 1px; }
+.mt-switch-on { background: #25d366; }
+.mt-admin-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: var(--bg-input); color: var(--text-input); box-sizing: border-box; }
