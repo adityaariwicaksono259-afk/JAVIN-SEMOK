@@ -435,6 +435,13 @@ socket.on('admin-verify-token', ({ token } = {}, cb) => {
   cb({ ok: true });
 });
 
+socket.on('admin-log-get', (cb) => {
+  if (typeof cb !== 'function') return;
+  if (!adminSockets.has(socket.id)) return cb({ error: 'Bukan admin' });
+  const logs = (data.adminLog || []).slice(-200).reverse();
+  cb({ ok: true, logs: logs, total: (data.adminLog || []).length });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);

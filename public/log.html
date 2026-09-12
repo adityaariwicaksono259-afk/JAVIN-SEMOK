@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Admin Log - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page log-page">
+  <header class="page-header">
+    <a href="/admin.html" class="header-btn">Kembali</a>
+    <h1>📝 Admin Log</h1>
+    <button id="logRefresh" class="header-btn" title="Refresh">🔄</button>
+  </header>
+  <div class="page-content log-content">
+
+    <div class="log-summary">
+      <span class="log-sum-label">TOTAL AKSI TERCATAT</span>
+      <span class="log-sum-val" id="logTotal">-</span>
+    </div>
+
+    <div class="log-filter">
+      <input id="logSearch" type="text" placeholder="Cari admin / target / aksi..." />
+      <select id="logActionFilter">
+        <option value="">Semua Aksi</option>
+        <option value="kick">👢 Kick</option>
+        <option value="ban">🚫 Ban</option>
+        <option value="unban">✅ Unban</option>
+        <option value="give-coin">💰 Give Coin</option>
+        <option value="kas-send">💵 Kas Send</option>
+      </select>
+    </div>
+
+    <div class="log-list" id="logList">
+      <div class="log-loading">Memuat log...</div>
+    </div>
+
+    <div class="log-footer" id="logFooter"></div>
+
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="log.js"></script>
+</body>
+</html>
