@@ -710,6 +710,11 @@ io.on('connection', (socket) => {
     }
     rl.resetLoginLimit(ip);
     adminSockets.add(socket.id);
+    // Generate admin token
+    const adminTok = crypto.randomBytes(24).toString('hex');
+    if (!data.adminTokens) data.adminTokens = {};
+    data.adminTokens[adminTok] = { time: Date.now() };
+    socket._adminToken = adminTok;
     const uid = onlineUsers.get(socket.id);
     if (uid && data.users[uid]) {
       data.users[uid].badge = 'admin';
