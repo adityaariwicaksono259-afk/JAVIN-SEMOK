@@ -926,6 +926,28 @@ socket.on('achievement-claim', ({ id } = {}, cb) => {
   cb({ ok: true, reward: def.reward, coins: u.coins });
 });
 
+socket.on('chess-finish', ({ result, difficulty } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  if (!u) return cb({ error: 'User tidak ada' });
+  const rewards = {
+    win: { easy: 8, medium: 17, hard: 35 },
+    lose: { easy: 2, medium: 4, hard: 7 },
+    draw: { easy: 0, medium: 0, hard: 0 }
+  };
+  if (!rewards[result] || !rewards[result][difficulty]) return cb({ error: 'Invalid' });
+  const reward = rewards[result][difficulty];
+  u.coins += reward;
+  saveData();
+  broadcastUserUpdate(uid);
+  if (result === 'win') {
+    io.emit('system', '♟️ ' + u.username + ' menang catur vs AI (' + difficulty + ') +' + reward + ' coin');
+  }
+  cb({ ok: true, reward, coins: u.coins });
+});
+
 socket.on('disconnect', () => {
     adminSockets.delete(socket.id);
     const uid = onlineUsers.get(socket.id);
