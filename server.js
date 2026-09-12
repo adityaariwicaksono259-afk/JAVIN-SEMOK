@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const crypto = require('crypto');
 const db = require('./db');
 const rl = require('./ratelimit');
 
@@ -167,6 +168,24 @@ function saveData() {
   db.saveToDB(data);
 }
 
+// ===== SOCKET AUTH MIDDLEWARE =====
+io.use((socket, next) => {
+  const auth = socket.handshake.auth || {};
+  const userId = auth.userId;
+  const token = auth.token;
+  if (!userId || typeof userId !== 'string' || userId.length < 8) {
+    return next(new Error('AUTH_REQUIRED'));
+  }
+  const user = data.users[userId];
+  // User udah ada & punya token — WAJIB match
+  if (user && user.authToken && token !== user.authToken) {
+    return next(new Error('INVALID_TOKEN'));
+  }
+  // User baru / belum punya token — lolos (token bakal di-generate di 'join')
+  socket._authUserId = userId;
+  next();
+});
+
 io.on('connection', (socket) => {
 
   socket.on('peek-online', () => {
@@ -177,14 +196,27 @@ io.on('connection', (socket) => {
     if (typeof userId !== 'string' || userId.length < 8) {
       return socket.emit('auth-fail', 'ID tidak valid');
     }
+    // Verify — userId harus sama dengan yang dikirim di handshake
+    if (userId !== socket._authUserId) {
+      return socket.emit('auth-fail', 'User ID mismatch');
+    }
     if (!data.users[userId]) {
+      const newToken = crypto.randomBytes(16).toString('hex');
       data.users[userId] = {
         userId, username: generateGuestName(userId),
         coins: STARTER_COINS, renameCount: 0,
         badge: 'member', lastDaily: 0, theme: 'light',
-        messageCount: 0, banned: false, createdAt: Date.now()
+        messageCount: 0, banned: false, createdAt: Date.now(),
+        authToken: newToken
       };
       saveData();
+      socket.emit('auth-token', newToken);
+    } else if (!data.users[userId].authToken) {
+      // Migrasi user lama — generate token
+      const newToken = crypto.randomBytes(16).toString('hex');
+      data.users[userId].authToken = newToken;
+      saveData();
+      socket.emit('auth-token', newToken);
     }
     const user = data.users[userId];
     if (user.banned) return socket.emit('auth-fail', 'Akun lo di-ban oleh admin.');
