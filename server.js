@@ -482,6 +482,7 @@ io.on('connection', (socket) => {
     const uid = onlineUsers.get(socket.id);
     if (!uid) return;
     if (!rl.checkMessageLimit(uid)) {
+      console.log('RATE-LIMIT-HIT user=' + uid);
       return socket.emit('rate-limited', { msg: 'Pelan dong, jangan spam!' });
     }
     const u = data.users[uid];

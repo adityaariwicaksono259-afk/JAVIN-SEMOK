@@ -5,8 +5,8 @@ const connectionLimits = new Map();// ip -> count
 
 function checkMessageLimit(userId) {
   const now = Date.now();
-  const windowMs = 10000;          // 10 detik
-  const maxMessages = 10;          // max 10 pesan / 10 detik
+  const windowMs = 5000;          // 10 detik
+  const maxMessages = 5;          // max 10 pesan / 10 detik
   let arr = messageLimits.get(userId) || [];
   arr = arr.filter(t => now - t < windowMs);
   if (arr.length >= maxMessages) return false;
