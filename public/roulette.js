@@ -76,6 +76,7 @@ $('rlSpin').onclick = () => {
 
   const wheel = $('rlWheel');
   let rot = 0;
+  wheel.style.transition = 'none';
   const spinAnim = setInterval(() => {
     rot += 40;
     wheel.style.transform = 'rotate(' + rot + 'deg)';
@@ -91,8 +92,11 @@ $('rlSpin').onclick = () => {
         return;
       }
       // Final rotation ke posisi angka hasil
-      const finalRot = rot + (360 * 3) + (res.result * (360 / 37));
-      wheel.style.transition = 'transform 1.5s cubic-bezier(.2,.8,.3,1)';
+      const slotAngle = 360 / 37;
+      const targetAngle = (360 - (res.result * slotAngle)) % 360;
+      const currentRot = rot % 360;
+      const finalRot = rot + (360 * 3) + ((targetAngle - currentRot + 360) % 360);
+      wheel.style.transition = 'transform 2s cubic-bezier(.17,.67,.35,1)';
       wheel.style.transform = 'rotate(' + finalRot + 'deg)';
 
       me.coins = res.coins;
