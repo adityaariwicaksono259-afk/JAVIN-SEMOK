@@ -237,6 +237,7 @@ function sendMessage() {
   msgInput.value = '';
   socket.emit('typing', false);
   clearReply();
+  msgInput.focus();
 }
 
 // ============ REPLY ============
@@ -760,3 +761,9 @@ socket.on('rate-limited', function(d) {
   if (window.__toast) window.__toast('⚠️ ' + (d.msg || 'Pelan dong!'));
   else alert(d.msg || 'Pelan dong!');
 });
+
+// Cegah tombol nyolong fokus dari input
+if (sendBtn) sendBtn.addEventListener('mousedown', function(e){ e.preventDefault(); });
+if (sendBtn) sendBtn.addEventListener('touchstart', function(e){ e.preventDefault(); }, { passive: false });
+if (imgBtn) imgBtn.addEventListener('mousedown', function(e){ e.preventDefault(); });
+if (emojiBtn) emojiBtn.addEventListener('mousedown', function(e){ e.preventDefault(); });
