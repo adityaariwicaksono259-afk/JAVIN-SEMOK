@@ -1496,3 +1496,23 @@ body.wp-space .msg-user { color: #b5179e; }
 .rl-h-red { background: #b71c1c; }
 .rl-h-black { background: #222; border: 1px solid #555; }
 .rl-h-green { background: #0a5e2a; }
+
+/* ===== ROULETTE RESPONSIVE FIX ===== */
+html, body, .rl-page { max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
+.rl-content { width: 100%; max-width: 480px; margin: 0 auto; padding: 12px 10px; box-sizing: border-box; }
+.rl-balance { width: 100%; box-sizing: border-box; }
+.rl-wheel-wrap { width: 100%; overflow: hidden; }
+.rl-wheel { width: 140px; height: 140px; }
+.rl-wheel::after { width: 85px; height: 85px; }
+.rl-result-num { font-size: 36px; }
+.rl-bet-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; width: 100%; }
+.rl-chip { padding: 10px 2px; font-size: 12px; min-width: 0; box-sizing: border-box; }
+.rl-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; }
+.rl-pick { padding: 10px 4px; min-width: 0; box-sizing: border-box; }
+.rl-pick.p-green { grid-column: span 2; }
+.rp-title { font-size: 11px; }
+.rp-sub { font-size: 9px; }
+.rl-nums { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; width: 100%; }
+.rl-num { padding: 7px 1px; font-size: 10px; min-width: 0; box-sizing: border-box; }
+.rl-spin-btn { width: 100%; box-sizing: border-box; }
+.rl-history { width: 100%; }
