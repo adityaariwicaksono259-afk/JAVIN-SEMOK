@@ -1,4 +1,5 @@
 const socket = io();
+window.__socket = socket;
 const $ = (id) => document.getElementById(id);
 let userId = window.__userId || localStorage.getItem('javachat_id');
 
