@@ -1613,3 +1613,7 @@ html, body, .rl-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
   text-shadow: 0 0 16px currentColor !important;
   pointer-events: none;
 }
+
+/* SPIN button rapat di bawah roda */
+.rl-wheel-wrap { margin-bottom: 8px !important; }
+.rl-spin-btn { margin-bottom: 12px !important; }
