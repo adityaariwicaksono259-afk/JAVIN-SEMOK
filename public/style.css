@@ -1617,3 +1617,45 @@ html, body, .rl-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
 /* SPIN button rapat di bawah roda */
 .rl-wheel-wrap { margin-bottom: 8px !important; }
 .rl-spin-btn { margin-bottom: 12px !important; }
+
+/* ===== BLACKJACK ===== */
+.bj-page { background: linear-gradient(180deg,#0a2e0a,#051409); min-height: 100vh; }
+.bj-page .page-header { background: linear-gradient(180deg,#1a4e1a,#0a2e0a); }
+.bj-content { padding: 12px; max-width: 500px; margin: 0 auto; }
+.bj-balance { display: flex; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg,#25d366,#128c7e); border-radius: 12px; margin-bottom: 16px; }
+.bj-label { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #d0ffd0; align-self: center; }
+.bj-value { font-size: 22px; font-weight: 900; color: #fff; font-family: 'Courier New', monospace; text-shadow: 1px 1px 0 #0a3d24; }
+.bj-table { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; margin-bottom: 12px; align-items: center; }
+.bj-side { background: linear-gradient(135deg, rgba(10,90,10,.5), rgba(5,30,5,.7)); border: 2px solid rgba(37,211,102,.4); border-radius: 12px; padding: 10px 8px; min-height: 130px; }
+.bj-side-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #80ffb0; margin-bottom: 4px; text-align: center; }
+.bj-score { text-align: center; font-size: 20px; font-weight: 900; color: #ffd700; font-family: 'Courier New', monospace; margin-bottom: 6px; text-shadow: 0 0 8px #ffd700; }
+.bj-hand { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; min-height: 60px; align-items: center; }
+.bj-vs { font-size: 12px; font-weight: 900; color: #25d366; text-shadow: 0 0 8px #25d366; letter-spacing: 1px; }
+.bj-card { width: 34px; height: 48px; background: linear-gradient(135deg,#fff,#f0f0f0); border: 1px solid #333; border-radius: 4px; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; }
+.bj-card-back { background: linear-gradient(135deg, #128c7e, #0a5e54); }
+.bj-card-back::before { content: '?'; color: #fff; font-size: 18px; font-weight: 900; }
+.bj-corner { position: absolute; display: flex; flex-direction: column; align-items: center; line-height: 1; font-weight: 900; font-size: 8px; }
+.bj-corner.tl { top: 2px; left: 3px; }
+.bj-corner.br { bottom: 2px; right: 3px; transform: rotate(180deg); }
+.bj-center { font-size: 18px; }
+.bj-status { text-align: center; font-size: 13px; font-weight: 700; color: #fff; padding: 12px; background: rgba(255,255,255,.08); border-radius: 10px; margin-bottom: 12px; min-height: 40px; }
+.bj-status.win { color: #25d366; background: rgba(37,211,102,.15); border: 1px solid #25d366; }
+.bj-status.lose { color: #ff5252; background: rgba(211,47,47,.15); border: 1px solid #d32f2f; }
+.bj-status.push { color: #ffd700; background: rgba(255,215,0,.15); border: 1px solid #ffd700; }
+.bj-bet-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-bottom: 10px; }
+.bj-chip { padding: 10px 2px; background: linear-gradient(180deg,#1a4e1a,#0a2e0a); color: #fff; border: 2px solid #2a6a2a; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; min-width: 0; }
+.bj-chip.active { background: linear-gradient(180deg,#25d366,#128c7e); border-color: #80ffb0; box-shadow: 0 0 16px rgba(37,211,102,.6); }
+.bj-chip-max { background: linear-gradient(180deg,#e53935,#b71c1c); border-color: #ff5252; }
+.bj-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.bj-btn { padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 900; letter-spacing: 1px; border: 3px solid; cursor: pointer; color: #fff; }
+.bj-hit { background: linear-gradient(180deg,#2196f3,#1565c0); border-color: #64b5f6; box-shadow: 0 4px 16px rgba(33,150,243,.4); }
+.bj-stand { background: linear-gradient(180deg,#ff9800,#e65100); border-color: #ffb74d; box-shadow: 0 4px 16px rgba(255,152,0,.4); }
+.bj-btn:active { transform: scale(.97); }
+.bj-start-btn { width: 100%; padding: 18px; background: linear-gradient(180deg,#25d366,#128c7e); color: #fff; border: 3px solid #80ffb0; border-radius: 14px; font-size: 16px; font-weight: 900; letter-spacing: 2px; cursor: pointer; margin-bottom: 16px; box-shadow: 0 6px 24px rgba(37,211,102,.5); }
+.bj-start-btn:disabled { opacity: .5; }
+.bj-history-title { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #80ffb0; margin-bottom: 8px; }
+.bj-history { display: flex; gap: 5px; flex-wrap: wrap; }
+.bj-h { padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; font-family: 'Courier New', monospace; }
+.bj-h.win { background: #128c7e; color: #fff; }
+.bj-h.lose { background: #b71c1c; color: #fff; }
+.bj-h.push { background: #ffd700; color: #5a2a00; }

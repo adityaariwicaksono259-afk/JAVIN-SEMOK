@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Blackjack - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page bj-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>🃏 Blackjack</h1>
+  </header>
+  <div class="page-content bj-content">
+
+    <div class="bj-balance">
+      <span class="bj-label">SALDO</span>
+      <span class="bj-value" id="bjBalance">0</span>
+    </div>
+
+    <div class="bj-table">
+      <div class="bj-side">
+        <div class="bj-side-label">DEALER</div>
+        <div class="bj-score" id="bjDealerScore">?</div>
+        <div class="bj-hand" id="bjDealerHand"></div>
+      </div>
+
+      <div class="bj-vs">VS</div>
+
+      <div class="bj-side">
+        <div class="bj-side-label">LO</div>
+        <div class="bj-score" id="bjPlayerScore">0</div>
+        <div class="bj-hand" id="bjPlayerHand"></div>
+      </div>
+    </div>
+
+    <div class="bj-status" id="bjStatus">Pilih bet, lalu mulai!</div>
+
+    <div class="bj-bet-row">
+      <button class="bj-chip" data-bet="10">10</button>
+      <button class="bj-chip active" data-bet="50">50</button>
+      <button class="bj-chip" data-bet="100">100</button>
+      <button class="bj-chip" data-bet="500">500</button>
+      <button class="bj-chip bj-chip-max" data-bet="max">MAX</button>
+    </div>
+
+    <div class="bj-actions hidden" id="bjActions">
+      <button class="bj-btn bj-hit" id="bjHit">👊 HIT</button>
+      <button class="bj-btn bj-stand" id="bjStand">✋ STAND</button>
+    </div>
+
+    <button class="bj-start-btn" id="bjStart">MULAI MAIN</button>
+
+    <div class="bj-history-title">Riwayat</div>
+    <div class="bj-history" id="bjHistory"></div>
+
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="blackjack.js"></script>
+</body>
+</html>

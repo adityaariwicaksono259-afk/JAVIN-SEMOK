@@ -487,6 +487,87 @@ socket.on('roulette-spin', ({ bet, pick } = {}, cb) => {
   cb({ ok: true, result, color, bet, pick: p, multiplier: mult, win, reward, coins: u.coins });
 });
 
+const BJ_SUITS = ['S','H','D','C'];
+const BJ_VALS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+function bjCard() {
+  return { v: BJ_VALS[Math.floor(Math.random()*13)], s: BJ_SUITS[Math.floor(Math.random()*4)] };
+}
+function bjValue(card) {
+  if (card.v === 'A') return 11;
+  if (['K','Q','J','10'].includes(card.v)) return 10;
+  return parseInt(card.v);
+}
+function bjTotal(hand) {
+  let total = 0, aces = 0;
+  hand.forEach(c => { total += bjValue(c); if (c.v === 'A') aces++; });
+  while (total > 21 && aces > 0) { total -= 10; aces--; }
+  return total;
+}
+
+const bjGames = new Map();
+
+socket.on('blackjack-start', ({ bet } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  bet = parseInt(bet);
+  if (!bet || bet < 10) return cb({ error: 'Minimal 10 coin' });
+  if (bet > 50000) return cb({ error: 'Max 50000 coin' });
+  if (u.coins < bet) return cb({ error: 'Saldo kurang' });
+  const now = Date.now();
+  if (u.lastBjAt && now - u.lastBjAt < 3000) return cb({ error: 'Tunggu bentar' });
+  u.lastBjAt = now;
+  u.coins -= bet;
+  saveData();
+  broadcastUserUpdate(uid);
+  const player = [bjCard(), bjCard()];
+  const dealer = [bjCard(), bjCard()];
+  bjGames.set(socket.id, { player, dealer, bet, uid });
+  const playerTotal = bjTotal(player);
+  const isBlackjack = playerTotal === 21 && player.length === 2;
+  cb({ ok: true, player, dealer: [dealer[0], { v: '?', s: '?' }], playerTotal, bet, coins: u.coins, isBlackjack });
+});
+
+socket.on('blackjack-hit', (cb) => {
+  if (typeof cb !== 'function') return;
+  const g = bjGames.get(socket.id);
+  if (!g) return cb({ error: 'Gak ada game aktif' });
+  g.player.push(bjCard());
+  const total = bjTotal(g.player);
+  if (total > 21) {
+    // Bust
+    const uid = g.uid;
+    const u = data.users[uid];
+    bjGames.delete(socket.id);
+    saveData();
+    broadcastUserUpdate(uid);
+    return cb({ ok: true, player: g.player, dealer: g.dealer, playerTotal: total, dealerTotal: bjTotal(g.dealer), bust: true, result: 'lose', win: 0, coins: u.coins });
+  }
+  cb({ ok: true, player: g.player, playerTotal: total });
+});
+
+socket.on('blackjack-stand', (cb) => {
+  if (typeof cb !== 'function') return;
+  const g = bjGames.get(socket.id);
+  if (!g) return cb({ error: 'Gak ada game aktif' });
+  while (bjTotal(g.dealer) < 17) g.dealer.push(bjCard());
+  const pT = bjTotal(g.player);
+  const dT = bjTotal(g.dealer);
+  const u = data.users[g.uid];
+  let result, mult = 0;
+  if (dT > 21 || pT > dT) { result = 'win'; mult = pT === 21 && g.player.length === 2 ? 2.5 : 2; }
+  else if (pT === dT) { result = 'push'; mult = 1; }
+  else { result = 'lose'; mult = 0; }
+  const win = Math.floor(g.bet * mult);
+  u.coins += win;
+  saveData();
+  broadcastUserUpdate(g.uid);
+  bjGames.delete(socket.id);
+  cb({ ok: true, player: g.player, dealer: g.dealer, playerTotal: pT, dealerTotal: dT, result, win, coins: u.coins });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
