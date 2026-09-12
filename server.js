@@ -442,6 +442,51 @@ socket.on('admin-log-get', (cb) => {
   cb({ ok: true, logs: logs, total: (data.adminLog || []).length });
 });
 
+socket.on('roulette-spin', ({ bet, pick } = {}, cb) => {
+  if (typeof cb !== 'function') return;
+  const uid = onlineUsers.get(socket.id);
+  if (!uid) return cb({ error: 'Belum join' });
+  const u = data.users[uid];
+  bet = parseInt(bet);
+  if (!bet || bet < 10) return cb({ error: 'Minimal 10 coin' });
+  if (bet > 50000) return cb({ error: 'Max 50000 coin' });
+  if (u.coins < bet) return cb({ error: 'Saldo kurang (' + u.coins + ')' });
+  // Anti-spam: cooldown 5 detik
+  const now = Date.now();
+  if (u.lastRouletteAt && now - u.lastRouletteAt < 5000) {
+    const wait = Math.ceil((5000 - (now - u.lastRouletteAt)) / 1000);
+    return cb({ error: 'Tunggu ' + wait + 's lagi' });
+  }
+  u.lastRouletteAt = now;
+
+  const RED = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+  const BLACK = [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
+
+  const result = Math.floor(Math.random() * 37); // 0-36
+  let mult = 0;
+  let win = false;
+
+  const p = String(pick);
+  if (p === 'red' && RED.includes(result)) { mult = 2; win = true; }
+  else if (p === 'black' && BLACK.includes(result)) { mult = 2; win = true; }
+  else if (p === 'green' && result === 0) { mult = 14; win = true; }
+  else if (p === 'low' && result >= 1 && result <= 18) { mult = 2; win = true; }
+  else if (p === 'high' && result >= 19 && result <= 36) { mult = 2; win = true; }
+  else if (!isNaN(parseInt(p)) && parseInt(p) === result) { mult = 36; win = true; }
+
+  u.coins -= bet;
+  const reward = win ? bet * mult : 0;
+  u.coins += reward;
+  saveData();
+  broadcastUserUpdate(uid);
+
+  const color = result === 0 ? 'green' : (RED.includes(result) ? 'red' : 'black');
+  if (win && mult >= 14) {
+    io.emit('system', '🎰 ' + u.username + ' JACKPOT roulette! ' + reward + ' coin (angka ' + result + ')');
+  }
+  cb({ ok: true, result, color, bet, pick: p, multiplier: mult, win, reward, coins: u.coins });
+});
+
 socket.on('disconnect', () => {
     const c = connCount.get(ip) || 1;
     if (c <= 1) connCount.delete(ip);
