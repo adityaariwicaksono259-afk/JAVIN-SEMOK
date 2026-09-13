@@ -28,17 +28,26 @@ function initSocket() {
   socket = io({ auth: { userId: userId, token: localStorage.getItem('javachat_token') || '' } });
   socket.on('connect', () => {
     socket.emit('join', userId);
+  });
+  // Tunggu 'me' event = tanda join sukses
+  socket.on('me', (u) => {
     if (viewUser) {
       renderPublicSend(viewUser);
     } else {
       checkMyProfile();
     }
   });
-  socket.on('connect_error', () => {
+  socket.on('auth-fail', (msg) => {
+    console.warn('[ANONIM] auth-fail:', msg);
+    $('sosMain').innerHTML = '<div class="sos-content"><div class="sos-card"><div class="sos-card-title">⚠️ Gagal Join</div><div class="sos-card-sub">' + esc(msg) + '</div><a href="/" class="sos-btn" style="display:block;text-align:center;text-decoration:none">Kembali ke Home</a></div></div>';
+  });
+  socket.on('connect_error', (err) => {
+    console.warn('[ANONIM] connect_error:', err.message);
     setTimeout(() => {
+      if (socket.connected) return;
       if (viewUser) renderPublicSend(viewUser);
       else checkMyProfile();
-    }, 1000);
+    }, 1500);
   });
   socket.on('anonim-new', (d) => {
     const b = $('inboxBadge');
