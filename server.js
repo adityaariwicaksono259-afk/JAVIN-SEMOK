@@ -126,7 +126,10 @@ app.post('/api/ai/chat', express.json({ limit: '100kb' }), async (req, res) => {
       },
       body: JSON.stringify({
         model: 'openai/gpt-oss-120b',
-        messages: messages.slice(-20),
+        messages: [
+          { role: 'system', content: 'Kamu adalah Asisten Javin, AI assistant ramah buatan Javin Semok. PENTING: Selalu jawab pakai bahasa yang sama dengan yang dipakai user. Kalau user chat pakai Bahasa Indonesia, jawab pakai Bahasa Indonesia. Kalau user pakai English, jawab English. Kalau user pakai bahasa daerah (Jawa, Sunda, dll), jawab pakai bahasa itu. Selalu sesuaiin bahasa user. Jawab dengan jelas, singkat, dan helpful. Jangan pernah pakai bahasa Vietnam atau bahasa lain yang bukan bahasa user.' },
+          ...messages.slice(-20)
+        ],
         temperature: 0.7,
         max_tokens: 1024
       })
