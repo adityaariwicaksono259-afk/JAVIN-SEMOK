@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>QR Generator - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page qr-page">
+  <header class="page-header">
+    <a href="/tools.html" class="header-btn">←</a>
+    <h1>📱 QR Generator</h1>
+  </header>
+  <div class="page-content qr-content">
+
+    <div class="qr-info">Bikin QR code dari link / teks. Langsung download PNG.</div>
+
+    <div class="qr-input-box">
+      <label class="qr-label">LINK / TEKS</label>
+      <textarea id="qrText" placeholder="https://contoh.com atau teks apapun..." rows="3"></textarea>
+    </div>
+
+    <div class="qr-options">
+      <label class="qr-label">UKURAN</label>
+      <div class="qr-size-row">
+        <button class="qr-size" data-size="200">200px</button>
+        <button class="qr-size active" data-size="400">400px</button>
+        <button class="qr-size" data-size="600">600px</button>
+        <button class="qr-size" data-size="1000">1000px</button>
+      </div>
+
+      <label class="qr-label">WARNA</label>
+      <div class="qr-color-row">
+        <button class="qr-color active" data-dark="#000000" data-light="#ffffff"><span style="background:#000"></span></button>
+        <button class="qr-color" data-dark="#128c7e" data-light="#ffffff"><span style="background:#128c7e"></span></button>
+        <button class="qr-color" data-dark="#2196f3" data-light="#ffffff"><span style="background:#2196f3"></span></button>
+        <button class="qr-color" data-dark="#d32f2f" data-light="#ffffff"><span style="background:#d32f2f"></span></button>
+        <button class="qr-color" data-dark="#a855f7" data-light="#ffffff"><span style="background:#a855f7"></span></button>
+        <button class="qr-color" data-dark="#000000" data-light="#fff9c4"><span style="background:#fff9c4"></span></button>
+      </div>
+    </div>
+
+    <button class="qr-generate-btn" id="qrGenerate">🔲 GENERATE QR</button>
+
+    <div class="qr-result hidden" id="qrResult">
+      <div class="qr-preview" id="qrPreview"></div>
+      <div class="qr-actions">
+        <button class="rbg-btn rbg-btn-preview" id="qrPreviewBtn">👁️ Preview Full</button>
+        <button class="rbg-btn rbg-btn-download" id="qrDownloadBtn">⬇️ Download PNG</button>
+      </div>
+    </div>
+
+    <div class="rbg-error hidden" id="qrError"></div>
+
+  </div>
+</div>
+
+<div id="qrViewer" class="rbg-viewer hidden">
+  <div class="qr-viewer-box">
+    <div id="qrViewerCanvas"></div>
+  </div>
+  <button id="qrViewerClose" class="rbg-viewer-close">✕</button>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="qr.js"></script>
+</body>
+</html>
