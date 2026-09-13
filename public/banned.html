@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Akun Di-Ban - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+.ban-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a0a0a, #0a0505); padding: 20px; }
+.ban-box { background: #fff; border-radius: 20px; padding: 40px 24px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 40px rgba(211,47,47,.2); border-top: 6px solid #d32f2f; animation: banIn .5s ease-out; }
+@keyframes banIn { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.ban-icon { font-size: 80px; margin-bottom: 12px; animation: banShake 2s ease-in-out infinite; }
+@keyframes banShake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+.ban-title { font-size: 26px; font-weight: 900; letter-spacing: 3px; color: #d32f2f; margin-bottom: 16px; }
+.ban-sub { font-size: 14px; color: #54656f; line-height: 1.6; margin-bottom: 20px; }
+.ban-alert { background: rgba(211,47,47,.08); border-left: 4px solid #d32f2f; border-radius: 10px; padding: 14px 16px; text-align: left; margin-bottom: 20px; }
+.ban-alert-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #d32f2f; margin-bottom: 6px; }
+.ban-alert-text { font-size: 13.5px; color: #333; line-height: 1.5; font-weight: 600; word-wrap: break-word; }
+.ban-info { font-size: 12px; color: #999; margin-bottom: 24px; line-height: 1.6; }
+.ban-info b { color: #54656f; }
+.ban-actions { display: flex; flex-direction: column; gap: 10px; }
+.ban-btn { padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 800; letter-spacing: 1px; cursor: pointer; text-decoration: none; display: block; transition: .15s; }
+.ban-btn-primary { background: linear-gradient(135deg, #128c7e, #25d366); color: #fff; }
+.ban-btn-primary:active { transform: scale(.97); }
+.ban-btn-ghost { background: #f0f2f5; color: #54656f; }
+.ban-footer { margin-top: 20px; font-size: 11px; color: #bbb; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="ban-page">
+  <div class="ban-box">
+    <div class="ban-icon">🚫</div>
+    <div class="ban-title">AKUN DI-BAN</div>
+    <div class="ban-sub">Akun lo gak bisa diakses karena di-ban oleh admin.</div>
+
+    <div class="ban-alert">
+      <div class="ban-alert-label">ALASAN</div>
+      <div class="ban-alert-text" id="banReason">Melanggar aturan yang berlaku.</div>
+    </div>
+
+    <div class="ban-info" id="banInfo">
+      <b>User ID:</b> <span id="banUid">-</span><br>
+      <b>Waktu:</b> <span id="banTime">-</span>
+    </div>
+
+    <div class="ban-actions">
+      <a href="https://wa.me/" class="ban-btn ban-btn-primary" id="banContact">📩 HUBUNGI ADMIN</a>
+      <button class="ban-btn ban-btn-ghost" id="banRetry">🔄 Coba Lagi</button>
+    </div>
+
+    <div class="ban-footer">© 2026 JAVIN SEMOK</div>
+  </div>
+</div>
+
+<script>
+  // Ambil info dari sessionStorage
+  try {
+    var reason = sessionStorage.getItem('ban_reason') || 'Melanggar aturan yang berlaku.';
+    var uid = sessionStorage.getItem('ban_uid') || '-';
+    var time = sessionStorage.getItem('ban_time') || '-';
+    document.getElementById('banReason').textContent = reason;
+    document.getElementById('banUid').textContent = uid;
+    document.getElementById('banTime').textContent = time;
+  } catch(e) {}
+
+  document.getElementById('banRetry').onclick = function() {
+    try {
+      sessionStorage.removeItem('ban_reason');
+      sessionStorage.removeItem('ban_uid');
+      sessionStorage.removeItem('ban_time');
+      sessionStorage.removeItem('auth_reloaded');
+    } catch(e) {}
+    location.href = '/';
+  };
+</script>
+</body>
+</html>

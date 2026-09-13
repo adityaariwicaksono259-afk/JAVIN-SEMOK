@@ -53,6 +53,21 @@
 
     socket.on('auth-fail', function(msg) {
       console.warn('[AUTH] auth-fail:', msg);
+      var isBan = msg && (msg.toLowerCase().indexOf('ban') >= 0);
+      var isMaintenancePage = location.pathname.indexOf('maintenance') >= 0;
+      var isBannedPage = location.pathname.indexOf('banned') >= 0;
+
+      if (isBan && !isBannedPage) {
+        try {
+          var uid = localStorage.getItem('javachat_id') || '-';
+          sessionStorage.setItem('ban_reason', msg.replace(/^Akun lo di-ban oleh admin\.?\s*/, '') || 'Melanggar aturan yang berlaku.');
+          sessionStorage.setItem('ban_uid', uid);
+          sessionStorage.setItem('ban_time', new Date().toLocaleString('id-ID'));
+        } catch(e) {}
+        location.href = '/banned.html';
+        return;
+      }
+
       if (msg === 'User ID mismatch') {
         localStorage.removeItem('javachat_id');
         localStorage.removeItem('javachat_token');
