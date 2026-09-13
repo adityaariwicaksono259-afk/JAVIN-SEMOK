@@ -17,7 +17,12 @@ function esc(s) {
 
 // URL params
 const params = new URLSearchParams(location.search);
-const viewUser = params.get('u'); // kalau link anonim milik orang lain
+let viewUser = params.get('u');
+// Support pretty URL: /u/javin
+if (!viewUser) {
+  const m = location.pathname.match(/^\/u\/([a-z0-9_]+)/i);
+  if (m) viewUser = m[1].toLowerCase();
+}
 
 function initSocket() {
   socket = io({ auth: { userId: userId, token: localStorage.getItem('javachat_token') || '' } });
@@ -67,7 +72,7 @@ function renderCreateForm() {
         <div class="sos-card-sub">Username ini jadi <b>link anonim lo</b> yang bisa dishare ke orang lain. Cuma sekali bikin, gak bisa diganti.</div>
         <label class="sos-label">USERNAME (huruf kecil, angka, _)</label>
         <input id="anonUsername" class="sos-select" type="text" placeholder="contoh: javin" maxlength="20" autocomplete="off" />
-        <div class="sos-hint">Link lo nanti: <b>${location.origin}/sosial.html?u=<span id="previewUsername">username</span></b></div>
+        
         <button id="anonCreate" class="sos-btn">✨ BUAT USERNAME</button>
         <div id="anonErr" class="err"></div>
       </div>
@@ -99,7 +104,7 @@ function renderCreateForm() {
 
 // ===== HALAMAN 2: MAIN (Inbox + Link) =====
 function renderMain() {
-  const link = location.origin + '/sosial.html?u=' + profile.username;
+  const link = location.origin + '/u/' + profile.username;
   $('sosMain').innerHTML = `
     <div class="sos-tabs">
       <button class="sos-tab active" data-tab="inbox">📥 Inbox <span class="sos-badge hidden" id="inboxBadge">0</span></button>
@@ -160,7 +165,7 @@ function renderInbox() {
 }
 
 function renderLink() {
-  const link = location.origin + '/sosial.html?u=' + profile.username;
+  const link = location.origin + '/u/' + profile.username;
   const shareText = 'Kirim pesan anonim ke gue yuk! Klik link ini: ' + link;
   const waUrl = 'https://wa.me/?text=' + encodeURIComponent(shareText);
   const tgUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent('Kirim pesan anonim ke gue!');

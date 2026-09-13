@@ -179,6 +179,78 @@ app.get('/api/sholat', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ===== ANONIM PRETTY URL =====
+// ===== ANONIM PRETTY URL + OG TAGS =====
+app.get('/u/:username', (req, res) => {
+  const username = String(req.params.username || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+  const host = req.get('host') || 'javin-semok.onrender.com';
+  const proto = req.get('x-forwarded-proto') || 'https';
+  const siteUrl = proto + '://' + host;
+  const ogImage = siteUrl + '/og-anonim.png';
+  const shareUrl = siteUrl + '/u/' + username;
+
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  res.send('<!DOCTYPE html>' +
+'<html lang="id">' +
+'<head>' +
+'<meta charset="UTF-8">' +
+'<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+'<title>Kirim pesan anonim ke @' + username + ' - JAVIN SEMOK</title>' +
+'<meta property="og:type" content="website">' +
+'<meta property="og:site_name" content="JAVIN SEMOK">' +
+'<meta property="og:url" content="' + shareUrl + '">' +
+'<meta property="og:title" content="Kirimi aku pesan anonim!">' +
+'<meta property="og:description" content="Klik linknya 👇 Kirim apa aja, aku gak bakal tau siapa lo 🕶️">' +
+'<meta property="og:image" content="' + ogImage + '">' +
+'<meta property="og:image:width" content="1200">' +
+'<meta property="og:image:height" content="630">' +
+'<meta property="og:locale" content="id_ID">' +
+'<meta name="twitter:card" content="summary_large_image">' +
+'<meta name="twitter:title" content="Kirimi aku pesan anonim!">' +
+'<meta name="twitter:description" content="Klik linknya 👇">' +
+'<meta name="twitter:image" content="' + ogImage + '">' +
+'<meta name="theme-color" content="#128c7e">' +
+'<style>html,body{margin:0;padding:0;height:100%;font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(135deg,#128c7e,#25d366);display:flex;align-items:center;justify-content:center;color:#fff}</style>' +
+'</head>' +
+'<body>' +
+'<div style="text-align:center;padding:20px">' +
+'<div style="font-size:60px">🕶️</div>' +
+'<div style="font-size:18px;font-weight:800;margin-top:12px">Membuka form anonim...</div>' +
+'<div style="margin-top:20px"><a href="/sosial.html?u=' + username + '" style="color:#fff;text-decoration:underline">Klik di sini kalo gak otomatis</a></div>' +
+'</div>' +
+'<script>setTimeout(function(){ location.replace("/sosial.html?u=' + username + '"); }, 80);</script>' +
+'</body></html>');
+});
+
+// ===== OG IMAGE (SVG → PNG via placeholder) =====
+app.get('/og-anonim.png', (req, res) => {
+  // Redirect ke SVG biar WhatsApp bisa render
+  res.set('Content-Type', 'image/svg+xml');
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.send('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">' +
+    '<defs>' +
+    '<linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">' +
+      '<stop offset="0%" stop-color="#ff6b9d"/>' +
+      '<stop offset="50%" stop-color="#ff8c42"/>' +
+      '<stop offset="100%" stop-color="#ffb84d"/>' +
+    '</linearGradient>' +
+    '<linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">' +
+      '<stop offset="0%" stop-color="#128c7e"/>' +
+      '<stop offset="100%" stop-color="#25d366"/>' +
+    '</linearGradient>' +
+    '</defs>' +
+    '<rect width="1200" height="630" rx="40" fill="url(#g2)"/>' +
+    '<circle cx="180" cy="180" r="90" fill="#fff" opacity="0.15"/>' +
+    '<circle cx="1020" cy="480" r="120" fill="#fff" opacity="0.1"/>' +
+    '<circle cx="1000" cy="120" r="50" fill="#fff" opacity="0.12"/>' +
+    '<text x="600" y="260" font-family="system-ui,-apple-system,Arial,sans-serif" font-size="60" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">KIRIM PESAN ANONIM</text>' +
+    '<text x="600" y="360" font-family="system-ui,-apple-system,Arial,sans-serif" font-size="32" font-weight="600" fill="#ffffff" text-anchor="middle" opacity="0.9">Klik linknya, kirim rahasia lo 🕶️</text>' +
+    '<text x="600" y="500" font-family="system-ui,-apple-system,Arial,sans-serif" font-size="28" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="4">JAVIN SEMOK</text>' +
+    '<text x="600" y="545" font-family="system-ui,-apple-system,Arial,sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" opacity="0.7">javin-semok.onrender.com</text>' +
+  '</svg>');
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'File tidak ada' });
