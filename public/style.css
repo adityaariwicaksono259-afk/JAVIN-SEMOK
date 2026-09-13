@@ -1937,3 +1937,11 @@ html, body, .bj-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
 .qr-preview canvas, .qr-preview img { max-width: 100%; height: auto !important; border-radius: 8px; }
 .qr-actions { display: flex; flex-direction: column; gap: 8px; }
 .qr-viewer-box { background: #fff; border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: center; }
+
+/* FIX tombol kepotong di HP */
+.qr-page, .qr-content, .tools-content { overflow-x: hidden !important; max-width: 100vw !important; }
+.qr-actions { width: 100% !important; box-sizing: border-box !important; padding: 0 !important; }
+.qr-actions .rbg-btn { width: 100% !important; box-sizing: border-box !important; max-width: 100% !important; }
+.rbg-btn { box-shadow: none !important; }
+.rbg-btn-download { background: linear-gradient(135deg, #128c7e, #25d366) !important; color: #fff !important; }
+.qr-content { padding: 16px 12px 30px !important; }
