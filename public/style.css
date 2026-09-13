@@ -2118,3 +2118,19 @@ html, body, .bj-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
 .anon-flag { font-size: 11px; color: #d32f2f; font-weight: 700; margin-right: auto; }
 
 .sos-sent { text-align: center; padding: 20px 0 0; animation: rbgPop .3s; }
+
+/* ===== NGL-STYLE SOSIAL ===== */
+.sos-status { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-bottom: 12px; }
+.sos-status.on { background: rgba(37,211,102,.15); color: #25d366; border: 1px solid #25d366; }
+.sos-status.off { background: rgba(211,47,47,.15); color: #d32f2f; border: 1px solid #d32f2f; }
+.sos-toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; margin-top: 14px; border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); }
+.sos-toggle-label { font-size: 13px; font-weight: 800; color: var(--text-primary); }
+.sos-toggle-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.sos-switch { position: relative; display: inline-block; width: 52px; height: 30px; }
+.sos-switch input { opacity: 0; width: 0; height: 0; }
+.sos-slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 30px; transition: .3s; }
+.sos-slider:before { content: ''; position: absolute; height: 24px; width: 24px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .3s; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+.sos-switch input:checked + .sos-slider { background: linear-gradient(135deg, #128c7e, #25d366); }
+.sos-switch input:checked + .sos-slider:before { transform: translateX(22px); }
+.sos-public-title { font-size: 22px; font-weight: 900; color: var(--text-title); text-align: center; margin-bottom: 10px; line-height: 1.3; }
+.anon-share { background: #d4edda; color: #155724; }

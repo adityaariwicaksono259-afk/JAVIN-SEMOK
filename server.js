@@ -180,49 +180,115 @@ app.get('/api/sholat', async (req, res) => {
 });
 
 
-// ===== ANONIM PRETTY URL + OG =====
+// ===== NGL-STYLE ANONIM =====
+function escXml(t) { return String(t||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c])); }
+
+function renderOGImage(title, msgText, owner) {
+  const wrap = (str, len) => {
+    const words = String(str).split(' ');
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      if ((cur + ' ' + w).trim().length > len) { lines.push(cur.trim()); cur = w; }
+      else cur = (cur + ' ' + w).trim();
+    }
+    if (cur) lines.push(cur);
+    return lines.slice(0, 3);
+  };
+  const titleLines = wrap(title || 'kirimi aku pesan anonim!', 18);
+  const msgLines = wrap(msgText || '', 20);
+  let titleY = 190;
+  let titleEls = '';
+  titleLines.forEach(l => { titleEls += '<text x="600" y="' + titleY + '" font-family="Arial,sans-serif" font-size="54" font-weight="900" fill="#fff" text-anchor="middle">' + escXml(l) + '</text>'; titleY += 62; });
+  let msgY = 380;
+  let msgEls = '';
+  msgLines.forEach(l => { msgEls += '<text x="600" y="' + msgY + '" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#111" text-anchor="middle">' + escXml(l) + '</text>'; msgY += 50; });
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">' +
+    '<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff6b9d"/><stop offset="50%" stop-color="#ff8c42"/><stop offset="100%" stop-color="#ffb84d"/></linearGradient></defs>' +
+    '<rect width="1200" height="630" fill="url(#g)"/>' +
+    '<rect x="100" y="80" width="1000" height="470" rx="30" fill="#ffffff"/>' +
+    '<rect x="100" y="80" width="1000" height="180" rx="30" fill="url(#g)" opacity="0.35"/>' +
+    titleEls + msgEls +
+    '<text x="600" y="520" font-family="Arial,sans-serif" font-size="26" font-weight="800" fill="#54656f" text-anchor="middle">- ' + escXml(owner) + '</text>' +
+    '<text x="600" y="595" font-family="Arial,sans-serif" font-size="20" fill="#fff" text-anchor="middle" opacity="0.9">JAVIN SEMOK · Kirim anonim ke gue di link bio</text>' +
+    '</svg>';
+}
+
+function findMsg(msgId) {
+  for (const uid in (data.anonim || {})) {
+    const m = (data.anonim[uid] || []).find(x => x.id === msgId);
+    if (m) return { msg: m, ownerUid: uid, profile: (data.anonimProfiles||{})[uid] };
+  }
+  return null;
+}
+
+// Profile pretty URL
 app.get('/u/:username', (req, res) => {
   const username = String(req.params.username || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
   const host = req.get('host') || 'javin-semok.onrender.com';
   const proto = req.get('x-forwarded-proto') || 'https';
   const siteUrl = proto + '://' + host;
-  const ogImage = siteUrl + '/og-anonim.png';
   const shareUrl = siteUrl + '/u/' + username;
+  const profile = Object.values(data.anonimProfiles || {}).find(p => p.username === username);
+  const customTitle = (profile && profile.customTitle) || 'kirimi aku pesan anonim!';
   res.set('Content-Type', 'text/html; charset=utf-8');
-  res.send('<!DOCTYPE html><html lang="id"><head>' +
-    '<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' +
-    '<title>Kirim pesan anonim ke @' + username + ' - JAVIN SEMOK</title>' +
-    '<meta property="og:type" content="website">' +
-    '<meta property="og:site_name" content="JAVIN SEMOK">' +
+  res.send('<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    '<title>' + escXml(customTitle) + '</title>' +
+    '<meta property="og:type" content="website"><meta property="og:site_name" content="JAVIN SEMOK">' +
     '<meta property="og:url" content="' + shareUrl + '">' +
-    '<meta property="og:title" content="Kirimi aku pesan anonim!">' +
+    '<meta property="og:title" content="' + escXml(customTitle) + '">' +
     '<meta property="og:description" content="Klik linknya, kirim rahasia lo 🕶️">' +
-    '<meta property="og:image" content="' + ogImage + '">' +
-    '<meta property="og:image:width" content="1200">' +
-    '<meta property="og:image:height" content="630">' +
+    '<meta property="og:image" content="' + siteUrl + '/ogp/' + username + '.png">' +
+    '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">' +
     '<meta name="twitter:card" content="summary_large_image">' +
-    '<meta name="twitter:title" content="Kirimi aku pesan anonim!">' +
-    '<meta name="twitter:description" content="Klik linknya, kirim rahasia lo 🕶️">' +
-    '<meta name="twitter:image" content="' + ogImage + '">' +
-    '<style>html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:linear-gradient(135deg,#128c7e,#25d366);display:flex;align-items:center;justify-content:center;color:#fff}</style>' +
-    '</head><body><div style="text-align:center;padding:20px">' +
-    '<div style="font-size:60px">🕶️</div>' +
-    '<div style="font-size:18px;font-weight:800;margin-top:12px">Membuka form anonim...</div>' +
-    '</div><script>location.replace("/sosial.html?u=' + username + '");</script></body></html>');
+    '<meta name="twitter:title" content="' + escXml(customTitle) + '">' +
+    '<meta name="twitter:image" content="' + siteUrl + '/ogp/' + username + '.png">' +
+    '<style>html,body{margin:0;height:100%;font-family:system-ui;background:linear-gradient(135deg,#128c7e,#25d366);display:flex;align-items:center;justify-content:center;color:#fff}</style>' +
+    '</head><body><div style="text-align:center"><div style="font-size:60px">🕶️</div><div style="margin-top:12px">Buka form anonim...</div></div>' +
+    '<script>location.replace("/sosial.html?u=' + username + '");</script></body></html>');
 });
 
-app.get('/og-anonim.png', (req, res) => {
+// Message pretty URL  
+app.get('/m/:msgId', (req, res) => {
+  const msgId = String(req.params.msgId).slice(0, 60);
+  const found = findMsg(msgId);
+  const host = req.get('host');
+  const proto = req.get('x-forwarded-proto') || 'https';
+  const siteUrl = proto + '://' + host;
+  if (!found || !found.profile) {
+    return res.status(404).send('Message not found');
+  }
+  const customTitle = found.profile.customTitle || 'kirimi aku pesan anonim!';
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  res.send('<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    '<title>' + escXml(customTitle) + '</title>' +
+    '<meta property="og:type" content="website"><meta property="og:site_name" content="JAVIN SEMOK">' +
+    '<meta property="og:url" content="' + siteUrl + '/m/' + msgId + '">' +
+    '<meta property="og:title" content="' + escXml(customTitle) + '">' +
+    '<meta property="og:description" content="' + escXml(found.msg.text.slice(0, 150)) + '">' +
+    '<meta property="og:image" content="' + siteUrl + '/ogm/' + msgId + '.png">' +
+    '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">' +
+    '<meta name="twitter:card" content="summary_large_image">' +
+    '<meta name="twitter:title" content="' + escXml(customTitle) + '">' +
+    '<meta name="twitter:image" content="' + siteUrl + '/ogm/' + msgId + '.png">' +
+    '<style>html,body{margin:0;height:100%;font-family:system-ui;background:#0a1420;display:flex;align-items:center;justify-content:center;color:#fff;padding:20px}</style>' +
+    '</head><body><div style="text-align:center;max-width:400px"><div style="font-size:60px">🕶️</div><div style="margin-top:12px;font-size:15px">Buka form anonim ke @' + escXml(found.profile.username) + '...</div><a href="/sosial.html?u=' + found.profile.username + '" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#25d366;color:#fff;text-decoration:none;border-radius:12px;font-weight:800">KIRIM ANONIM</a></div></body></html>');
+});
+
+app.get('/ogm/:msgId.png', (req, res) => {
+  const found = findMsg(String(req.params.msgId).slice(0, 60));
   res.set('Content-Type', 'image/svg+xml');
   res.set('Cache-Control', 'public, max-age=86400');
-  res.send('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">' +
-    '<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#128c7e"/><stop offset="100%" stop-color="#25d366"/></linearGradient></defs>' +
-    '<rect width="1200" height="630" fill="url(#g)"/>' +
-    '<circle cx="150" cy="150" r="80" fill="#fff" opacity="0.1"/>' +
-    '<circle cx="1050" cy="500" r="120" fill="#fff" opacity="0.08"/>' +
-    '<text x="600" y="270" font-family="Arial,sans-serif" font-size="64" font-weight="900" fill="#fff" text-anchor="middle">KIRIM PESAN ANONIM</text>' +
-    '<text x="600" y="360" font-family="Arial,sans-serif" font-size="32" fill="#fff" text-anchor="middle" opacity="0.9">Klik linknya, kirim rahasia lo 🕶️</text>' +
-    '<text x="600" y="510" font-family="Arial,sans-serif" font-size="28" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="4">JAVIN SEMOK</text>' +
-    '</svg>');
+  if (!found) return res.send('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="#128c7e"/><text x="600" y="320" font-family="Arial" font-size="60" fill="#fff" text-anchor="middle">JAVIN SEMOK</text></svg>');
+  res.send(renderOGImage(found.profile.customTitle || 'kirimi aku pesan anonim!', found.msg.text, found.profile.username));
+});
+
+app.get('/ogp/:username.png', (req, res) => {
+  const uname = String(req.params.username).toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+  const profile = Object.values(data.anonimProfiles || {}).find(p => p.username === uname);
+  res.set('Content-Type', 'image/svg+xml');
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.send(renderOGImage((profile && profile.customTitle) || 'kirimi aku pesan anonim!', 'Klik link buat kirim pesan rahasia 🕶️', uname));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -401,6 +467,29 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
+  socket.on('anonim-public-info', ({ username } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    username = String(username || '').toLowerCase().trim();
+    const p = Object.values(data.anonimProfiles || {}).find(x => x.username === username);
+    if (!p) return cb({ ok: false, error: 'User gak ada' });
+    if (p.isActive === false) return cb({ ok: false, error: 'Owner lagi matiin anonim-nya' });
+    cb({ ok: true, username: p.username, customTitle: p.customTitle || null });
+  });
+
+
+  socket.on('anonim-settings', ({ customTitle, isActive } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = onlineUsers.get(socket.id);
+    if (!uid) return cb({ error: 'Belum join' });
+    if (!data.anonimProfiles || !data.anonimProfiles[uid]) return cb({ error: 'Bikin username dulu' });
+    const p = data.anonimProfiles[uid];
+    if (typeof customTitle === 'string') p.customTitle = customTitle.trim().slice(0, 80) || 'kirimi aku pesan anonim!';
+    if (typeof isActive === 'boolean') p.isActive = isActive;
+    saveData();
+    cb({ ok: true, profile: p });
+  });
+
+
   // ===== ANONIM (NGL-style) =====
   socket.on('anonim-create', ({ username } = {}, cb) => {
     if (typeof cb !== 'function') return;
@@ -434,6 +523,7 @@ io.on('connection', (socket) => {
     if (!data.anonimProfiles) return cb({ error: 'User gak ada' });
     const target = Object.values(data.anonimProfiles).find(p => p.username === username);
     if (!target) return cb({ error: 'Link gak valid' });
+    if (target.isActive === false) return cb({ error: 'Owner lagi matiin anonim-nya' });
     const senderUid = onlineUsers.get(socket.id);
     if (senderUid === target.userId) return cb({ error: 'Gak bisa kirim ke diri sendiri' });
 
