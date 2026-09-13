@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Meta Llama 7.1 - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="ai-page">
+  <header class="ai-header">
+    <a href="/tools.html" class="header-btn" title="Kembali">←</a>
+    <div class="ai-avatar">🦙</div>
+    <div class="ai-header-info">
+      <div class="ai-title">Meta Llama 7.1</div>
+      <div class="ai-sub">AI Assistant • Online</div>
+    </div>
+    <button id="aiClearBtn" class="header-btn" title="Reset Chat">🗑️</button>
+  </header>
+
+  <main id="aiMessages" class="ai-messages">
+    <div class="ai-welcome">
+      <div class="ai-welcome-icon">🦙</div>
+      <div class="ai-welcome-title">Halo! Gue Meta Llama 7.1</div>
+      <div class="ai-welcome-sub">Tanya apa aja, gue siap bantu 🔥</div>
+    </div>
+  </main>
+
+  <div class="ai-typing hidden" id="aiTyping">
+    <div class="ai-bubble ai-bubble-ai">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+  </div>
+
+  <footer class="ai-input-bar">
+    <textarea id="aiInput" placeholder="Ketik pesan..." rows="1"></textarea>
+    <button id="aiSend" aria-label="Kirim">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </footer>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="llama.js"></script>
+</body>
+</html>
