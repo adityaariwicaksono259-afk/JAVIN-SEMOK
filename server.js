@@ -152,7 +152,11 @@ app.get('/api/brat', async (req, res) => {
   if (!text || typeof text !== 'string') return res.status(400).json({ error: 'Text kosong' });
   if (text.length > 200) return res.status(400).json({ error: 'Max 200 karakter' });
   try {
-    const r = await fetch('https://apii.nexadev.my.id/bratvid2?text=' + encodeURIComponent(text));
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 55000);
+    const r = await fetch('https://apii.nexadev.my.id/bratvid2?text=' + encodeURIComponent(text), { signal: controller.signal });
+    clearTimeout(timeoutId);
+    console.log('[BRAT] API status:', r.status);
     if (!r.ok) return res.status(r.status).json({ error: 'API error ' + r.status });
     const buf = Buffer.from(await r.arrayBuffer());
     res.setHeader('Content-Type', 'video/mp4');

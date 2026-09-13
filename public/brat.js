@@ -40,13 +40,17 @@ generateBtn.onclick = async () => {
   if (lastVideoUrl) { URL.revokeObjectURL(lastVideoUrl); lastVideoUrl = null; }
 
   try {
-    const res = await fetch('/api/brat?text=' + encodeURIComponent(text));
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const res = await fetch('/api/brat?text=' + encodeURIComponent(text), { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'HTTP ' + res.status }));
       throw new Error(err.error || 'Gagal generate');
     }
     const blob = await res.blob();
-    if (blob.size < 1000) throw new Error('Video terlalu kecil, coba lagi');
+    console.log('[BRAT] size:', blob.size, 'type:', blob.type);
+    if (blob.size < 1000) throw new Error('Video kosong. Coba lagi.');
 
     lastVideoUrl = URL.createObjectURL(blob);
     player.src = lastVideoUrl;
