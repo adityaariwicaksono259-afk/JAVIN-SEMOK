@@ -33,6 +33,14 @@
         console.log('[AUTH] token saved');
       }
     });
+    // Server rotate token (device baru) — dengerin dari socket langsung
+    socket.on('auth-token', function(t) {
+      if (t && typeof t === 'string') {
+        localStorage.setItem('javachat_token', t);
+        console.log('[AUTH] token rotated');
+      }
+    });
+
 
     // Kalau token invalid — reset identitas
     socket.on('connect_error', function(err) {

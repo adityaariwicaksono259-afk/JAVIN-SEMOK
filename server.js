@@ -314,11 +314,18 @@ io.use((socket, next) => {
     return next(new Error('AUTH_REQUIRED'));
   }
   const user = data.users[userId];
-  // User udah ada & punya token — WAJIB match
-  if (user && user.authToken && token !== user.authToken) {
+  // Kalo user ada + punya token + client kirim token BEDA → reject
+  if (user && user.authToken && token && token !== user.authToken) {
     return next(new Error('INVALID_TOKEN'));
   }
-  // User baru / belum punya token — lolos (token bakal di-generate di 'join')
+  // Kalo user ada + punya token + client gak kirim token (device reset) → rotate
+  if (user && user.authToken && !token) {
+    const newTok = require('crypto').randomBytes(16).toString('hex');
+    user.authToken = newTok;
+    try { saveData(); } catch(e) {}
+    socket._newAuthToken = newTok;
+    console.log('[AUTH] Token rotated for ' + userId.slice(0,8));
+  }
   socket._authUserId = userId;
   next();
 });
@@ -913,6 +920,11 @@ socket.on('event-state', (cb) => {
   });
 
   socket.on('join', (userId) => {
+    // Kalo ada token baru dari rotate, kirim ke client
+    if (socket._newAuthToken) {
+      socket.emit('auth-token', socket._newAuthToken);
+      socket._newAuthToken = null;
+    }
     if (typeof userId !== 'string' || userId.length < 8) {
       return socket.emit('auth-fail', 'ID tidak valid');
     }
