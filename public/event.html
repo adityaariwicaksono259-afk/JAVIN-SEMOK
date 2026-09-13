@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Event - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+.event-page { display: flex; flex-direction: column; height: 100dvh; background: var(--bg-chat); }
+.event-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: linear-gradient(135deg, #075e54, #128c7e); color: #fff; flex-shrink: 0; }
+.event-header .header-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; border: none; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+.event-header h1 { font-size: 16px; font-weight: 700; flex: 1; }
+.event-tabs { display: flex; background: var(--bg-modal); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.event-tab { flex: 1; padding: 14px 8px; border: none; background: transparent; font-size: 13px; font-weight: 700; color: var(--text-secondary); cursor: pointer; position: relative; }
+.event-tab.active { color: var(--accent); }
+.event-tab.active::after { content: ''; position: absolute; bottom: 0; left: 15%; right: 15%; height: 3px; background: var(--accent); border-radius: 3px 3px 0 0; }
+.event-frame { flex: 1; border: none; width: 100%; }
+</style>
+</head>
+<body>
+<div class="event-page">
+  <header class="event-header">
+    <a href="/" class="header-btn">🏠</a>
+    <h1>🎉 Event Center</h1>
+  </header>
+  <div class="event-tabs">
+    <button class="event-tab active" data-tab="lottery">🎟️ Lottery</button>
+    <button class="event-tab" data-tab="leaderboard">🏆 Leaderboard</button>
+    <button class="event-tab" data-tab="achievement">🏅 Achievement</button>
+  </div>
+  <iframe id="eventFrame" class="event-frame" src="/lottery.html"></iframe>
+</div>
+<script src="common.js"></script>
+<script>
+  document.querySelectorAll('.event-tab').forEach(function(tab) {
+    tab.onclick = function() {
+      document.querySelectorAll('.event-tab').forEach(function(x) { x.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById('eventFrame').src = '/' + tab.dataset.tab + '.html';
+    };
+  });
+</script>
+</body>
+</html>
