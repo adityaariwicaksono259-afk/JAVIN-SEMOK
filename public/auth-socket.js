@@ -110,6 +110,26 @@
   });
 
 
+
+    // Auto-check ban di setiap connect (semua halaman termasuk landing)
+    socket.on('connect', function() {
+      socket.emit('check-ban', function(r) {
+        if (r && r.banned) {
+          var isBannedPage = location.pathname.indexOf('banned') >= 0;
+          var isAdminPage = location.pathname.indexOf('admin') >= 0;
+          if (!isBannedPage && !isAdminPage) {
+            try {
+              var uid = localStorage.getItem('javachat_id') || '-';
+              sessionStorage.setItem('ban_reason', r.reason || 'Melanggar aturan yang berlaku.');
+              sessionStorage.setItem('ban_uid', uid);
+              sessionStorage.setItem('ban_time', new Date().toLocaleString('id-ID'));
+            } catch(e) {}
+            location.href = '/banned.html';
+          }
+        }
+      });
+    });
+
     return socket;
   };
 

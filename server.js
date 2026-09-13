@@ -344,6 +344,18 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
+  // Cek status ban tanpa harus join
+  socket.on('check-ban', (cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = socket._authUserId;
+    if (!uid) return cb({ banned: false });
+    const u = data.users[uid];
+    if (u && u.banned) {
+      return cb({ banned: true, reason: 'Akun lo di-ban oleh admin.' });
+    }
+    cb({ banned: false });
+  });
+
 
   socket.on('admin-maintenance', ({ active, message } = {}, cb) => {
   if (typeof cb !== 'function') return;
