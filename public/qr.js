@@ -11,22 +11,17 @@ const toastEl = $('toast');
 let currentSize = 400;
 let currentDark = '#000000';
 let currentLight = '#ffffff';
-let lastQRCode = null;
 
 function toast(m) {
   toastEl.textContent = m;
   toastEl.classList.remove('hidden');
   setTimeout(() => toastEl.classList.add('hidden'), 2200);
 }
-
 function showError(msg) {
   errorBox.textContent = '⚠️ ' + msg;
   errorBox.classList.remove('hidden');
 }
-
-function hideError() {
-  errorBox.classList.add('hidden');
-}
+function hideError() { errorBox.classList.add('hidden'); }
 
 document.querySelectorAll('.qr-size').forEach(b => {
   b.onclick = () => {
@@ -35,7 +30,6 @@ document.querySelectorAll('.qr-size').forEach(b => {
     currentSize = parseInt(b.dataset.size);
   };
 });
-
 document.querySelectorAll('.qr-color').forEach(b => {
   b.onclick = () => {
     document.querySelectorAll('.qr-color').forEach(x => x.classList.remove('active'));
@@ -50,13 +44,9 @@ generateBtn.onclick = () => {
   hideError();
   if (!text) return showError('Isi link atau teks dulu');
   if (text.length > 1000) return showError('Maksimal 1000 karakter');
-
-  // Clear dulu
   previewBox.innerHTML = '';
-  lastQRCode = null;
-
   try {
-    lastQRCode = new QRCode(previewBox, {
+    new QRCode(previewBox, {
       text: text,
       width: currentSize,
       height: currentSize,
@@ -94,11 +84,7 @@ $('qrPreviewBtn').onclick = () => {
   bigCanvas.height = canvas.height;
   bigCanvas.style.maxWidth = '90vw';
   bigCanvas.style.maxHeight = '85vh';
-  bigCanvas.style.width = 'auto';
-  bigCanvas.style.height = 'auto';
   bigCanvas.style.borderRadius = '12px';
-  bigCanvas.style.background = '#fff';
-  bigCanvas.style.padding = '12px';
   const ctx = bigCanvas.getContext('2d');
   ctx.drawImage(canvas, 0, 0);
   viewerCanvas.appendChild(bigCanvas);
@@ -108,7 +94,6 @@ $('qrPreviewBtn').onclick = () => {
 $('qrViewerClose').onclick = () => viewer.classList.add('hidden');
 viewer.onclick = (e) => { if (e.target === viewer) viewer.classList.add('hidden'); };
 
-// Auto generate kalau user tekan Enter di textarea (Ctrl+Enter)
 textInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
