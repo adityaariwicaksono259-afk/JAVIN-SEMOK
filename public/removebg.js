@@ -38,6 +38,35 @@ function showError(msg) {
   hideLoading();
 }
 
+
+function resizeImage(file, maxSize) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.onload = () => {
+        let { width, height } = img;
+        if (width <= maxSize && height <= maxSize) return resolve(file);
+        if (width > height) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 uploadBox.onclick = () => fileInput.click();
 
 fileInput.onchange = async (e) => {
@@ -49,13 +78,16 @@ fileInput.onchange = async (e) => {
   showLoading('Memuat AI model...');
 
   try {
-    const blob = await removeBackground(file, {
+    // Resize gambar dulu biar HP gak berat
+    const resized = await resizeImage(file, 800);
+    const blob = await removeBackground(resized, {
+      model: 'isnet_quint8',
       progress: (key, current, total) => {
         if (total > 0) {
           const pct = Math.round((current / total) * 100);
           progress.style.width = pct + '%';
-          if (key.includes('fetch')) loadingText.textContent = 'Download model AI: ' + pct + '%';
-          else if (key.includes('compute')) loadingText.textContent = 'Proses AI: ' + pct + '%';
+          if (key.includes('fetch')) loadingText.textContent = 'Download model: ' + pct + '%';
+          else if (key.includes('compute')) loadingText.textContent = 'Proses AI: ' + pct + '% (sabar ya, tergantung HP)';
         }
       }
     });
