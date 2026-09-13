@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Ibadah - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page sh-page">
+  <header class="page-header">
+    <a href="/harian.html" class="header-btn">←</a>
+    <h1 id="ibTitle">Ibadah</h1>
+  </header>
+  <div class="page-content sh-content">
+
+    <div class="ib-hero" id="ibHero">
+      <div class="ib-hero-icon" id="ibIcon">✝️</div>
+      <div class="ib-hero-name" id="ibName">-</div>
+      <div class="ib-hero-sub">Jadwal & Doa</div>
+    </div>
+
+    <div class="ib-alert">
+      ⚠️ Konten ini referensi umum. Praktik bisa bervariasi antar aliran/gereja/pura/vihara/litang. Untuk panduan resmi, tanya pemuka agama lo.
+    </div>
+
+    <div class="ib-section-title">📅 JADWAL IBADAH</div>
+    <div class="ib-jadwal-list" id="ibJadwalList"></div>
+
+    <div class="ib-section-title">📖 DOA & MANTRA</div>
+    <div class="sh-doa-list" id="ibDoaList"></div>
+
+  </div>
+</div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="doa-data.js"></script>
+<script src="ibadah.js"></script>
+</body>
+</html>

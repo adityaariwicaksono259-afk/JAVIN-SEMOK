@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Fitur Harian - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+.hr-page { display: flex; flex-direction: column; height: 100dvh; background: var(--bg-chat); }
+.hr-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: linear-gradient(135deg, #075e54, #128c7e); color: #fff; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.hr-header .header-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; border: none; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.hr-header h1 { font-size: 16px; font-weight: 700; flex: 1; }
+.hr-tabs { display: flex; overflow-x: auto; background: var(--bg-modal); border-bottom: 1px solid var(--border); flex-shrink: 0; scrollbar-width: none; }
+.hr-tabs::-webkit-scrollbar { display: none; }
+.hr-tab { flex: 0 0 auto; padding: 14px 12px; border: none; background: transparent; font-size: 12px; font-weight: 700; color: var(--text-secondary); cursor: pointer; position: relative; transition: .2s; white-space: nowrap; }
+.hr-tab.active { color: var(--accent); }
+.hr-tab.active::after { content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 3px; background: var(--accent); border-radius: 3px 3px 0 0; }
+.hr-frame { flex: 1; border: none; width: 100%; background: transparent; }
+</style>
+</head>
+<body>
+<div class="hr-page">
+  <header class="hr-header">
+    <a href="/" class="header-btn">🏠</a>
+    <h1>📅 Fitur Harian</h1>
+  </header>
+  <div class="hr-tabs" id="hrTabs"></div>
+  <iframe id="hrFrame" class="hr-frame"></iframe>
+</div>
+<script src="common.js"></script>
+<script>
+  var tabs = [
+    { key:'workout', label:'💪 Workout', url:'/workout.html' },
+    { key:'islam', label:'🕌 Islam', url:'/sholat.html' },
+    { key:'kristen', label:'✝️ Kristen', url:'/ibadah.html?agama=kristen' },
+    { key:'katolik', label:'✝️ Katolik', url:'/ibadah.html?agama=katolik' },
+    { key:'hindu', label:'🕉️ Hindu', url:'/ibadah.html?agama=hindu' },
+    { key:'buddha', label:'☸️ Buddha', url:'/ibadah.html?agama=buddha' },
+    { key:'konghucu', label:'☯️ Konghucu', url:'/ibadah.html?agama=konghucu' }
+  ];
+  var tabsBox = document.getElementById('hrTabs');
+  var frame = document.getElementById('hrFrame');
+
+  tabs.forEach(function(t, i) {
+    var b = document.createElement('button');
+    b.className = 'hr-tab' + (i === 0 ? ' active' : '');
+    b.textContent = t.label;
+    b.onclick = function() {
+      document.querySelectorAll('.hr-tab').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      frame.src = t.url;
+    };
+    tabsBox.appendChild(b);
+  });
+
+  frame.src = tabs[0].url;
+</script>
+</body>
+</html>
