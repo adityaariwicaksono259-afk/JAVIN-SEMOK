@@ -297,6 +297,63 @@ io.use((socket, next) => {
   const count = connCount.get(ip) || 0;
   if (count >= 999999) return next(new Error('TOO_MANY_CONNECTIONS')); // disabled (Render proxy)
   connCount.set(ip, count + 1);
+socket.on('disconnect', () => {
+    const c = connCount.get(ip) || 1;
+    if (c <= 1) connCount.delete(ip);
+    else connCount.set(ip, c - 1);
+  });
+  // CONN-LIMIT
+  next();
+});
+
+io.use((socket, next) => {
+  const auth = socket.handshake.auth || {};
+  const userId = auth.userId;
+  const token = auth.token;
+  if (!userId || typeof userId !== 'string' || userId.length < 8) {
+    return next(new Error('AUTH_REQUIRED'));
+  }
+  const user = data.users[userId];
+  // User udah ada & punya token — WAJIB match
+  if (user && user.authToken && token !== user.authToken) {
+    return next(new Error('INVALID_TOKEN'));
+  }
+  // User baru / belum punya token — lolos (token bakal di-generate di 'join')
+  socket._authUserId = userId;
+  next();
+});
+
+// ===== GLOBAL EVENT LIMIT =====
+const globalEvents = new Map();
+const RATE_WINDOW = 10000;
+const RATE_MAX = 30;
+const SKIP_EVENTS = ['join', 'typing', 'peek-online', 'disconnect'];
+io.use((socket, next) => {
+  const origOnevent = socket.onevent;
+  socket.onevent = function(packet) {
+    try {
+      const evName = packet.data && packet.data[0];
+      if (evName && !SKIP_EVENTS.includes(evName)) {
+        const now = Date.now();
+        const uid = socket._authUserId || socket.id;
+        let arr = globalEvents.get(uid) || [];
+        arr = arr.filter(t => now - t < RATE_WINDOW);
+        if (arr.length >= RATE_MAX) {
+          socket.emit('rate-limited', { msg: 'Kebanyakan aksi, tunggu bentar' });
+          return;
+        }
+        arr.push(now);
+        globalEvents.set(uid, arr);
+      }
+    } catch(e) {}
+    return origOnevent.apply(this, arguments);
+  };
+  // GLOBAL-EVENT-LIMIT
+  next();
+});
+
+io.on('connection', (socket) => {
+
   socket.on('admin-maintenance', ({ active, message } = {}, cb) => {
   if (typeof cb !== 'function') return;
   if (!adminSockets.has(socket.id)) return cb({ error: 'Cuma admin panel' });
@@ -849,62 +906,7 @@ socket.on('event-state', (cb) => {
   cb({ ok: true, current: (data.events && data.events.current) || null, history: (data.events && data.events.history || []).slice(-10).reverse() });
 });
 
-socket.on('disconnect', () => {
-    const c = connCount.get(ip) || 1;
-    if (c <= 1) connCount.delete(ip);
-    else connCount.set(ip, c - 1);
-  });
-  // CONN-LIMIT
-  next();
-});
 
-io.use((socket, next) => {
-  const auth = socket.handshake.auth || {};
-  const userId = auth.userId;
-  const token = auth.token;
-  if (!userId || typeof userId !== 'string' || userId.length < 8) {
-    return next(new Error('AUTH_REQUIRED'));
-  }
-  const user = data.users[userId];
-  // User udah ada & punya token — WAJIB match
-  if (user && user.authToken && token !== user.authToken) {
-    return next(new Error('INVALID_TOKEN'));
-  }
-  // User baru / belum punya token — lolos (token bakal di-generate di 'join')
-  socket._authUserId = userId;
-  next();
-});
-
-// ===== GLOBAL EVENT LIMIT =====
-const globalEvents = new Map();
-const RATE_WINDOW = 10000;
-const RATE_MAX = 30;
-const SKIP_EVENTS = ['join', 'typing', 'peek-online', 'disconnect'];
-io.use((socket, next) => {
-  const origOnevent = socket.onevent;
-  socket.onevent = function(packet) {
-    try {
-      const evName = packet.data && packet.data[0];
-      if (evName && !SKIP_EVENTS.includes(evName)) {
-        const now = Date.now();
-        const uid = socket._authUserId || socket.id;
-        let arr = globalEvents.get(uid) || [];
-        arr = arr.filter(t => now - t < RATE_WINDOW);
-        if (arr.length >= RATE_MAX) {
-          socket.emit('rate-limited', { msg: 'Kebanyakan aksi, tunggu bentar' });
-          return;
-        }
-        arr.push(now);
-        globalEvents.set(uid, arr);
-      }
-    } catch(e) {}
-    return origOnevent.apply(this, arguments);
-  };
-  // GLOBAL-EVENT-LIMIT
-  next();
-});
-
-io.on('connection', (socket) => {
 
   socket.on('peek-online', () => {
     socket.emit('online', onlineUsers.size);

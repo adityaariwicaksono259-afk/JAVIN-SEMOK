@@ -9,8 +9,19 @@
 
   window.io = function(opts) {
     opts = opts || {};
+    var uid = window.__userId || localStorage.getItem('javachat_id') || '';
+    if (!uid || uid.length < 8) {
+      uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0;
+        var v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+      window.__userId = uid;
+      try { localStorage.setItem('javachat_id', uid); } catch(e) {}
+      try { document.cookie = 'javachat_id=' + encodeURIComponent(uid) + ';expires=' + new Date(Date.now() + 730*864e5).toUTCString() + ';path=/;SameSite=Lax'; } catch(e) {}
+    }
     opts.auth = {
-      userId: window.__userId || localStorage.getItem('javachat_id') || '',
+      userId: uid,
       token: localStorage.getItem('javachat_token') || ''
     };
     const socket = originalIo(opts);
