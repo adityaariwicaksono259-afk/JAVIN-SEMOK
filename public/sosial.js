@@ -269,3 +269,11 @@ function renderPublicSend(username) {
 
 // Init
 initSocket();
+setTimeout(function() {
+  var main = document.getElementById('sosMain');
+  if (main && main.innerHTML.trim() === '') {
+    if (viewUser) renderPublicSend(viewUser);
+    else if (socket && socket.connected) checkMyProfile();
+    else renderCreateForm();
+  }
+}, 3000);
