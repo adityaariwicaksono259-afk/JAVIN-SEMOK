@@ -306,27 +306,11 @@ socket.on('disconnect', () => {
   next();
 });
 
+// AUTH MIDDLEWARE DISABLED — bikin loop reconnect
+// Aktifkan lagi nanti kalo udah stabil
 io.use((socket, next) => {
   const auth = socket.handshake.auth || {};
-  const userId = auth.userId;
-  const token = auth.token;
-  if (!userId || typeof userId !== 'string' || userId.length < 8) {
-    return next(new Error('AUTH_REQUIRED'));
-  }
-  const user = data.users[userId];
-  // Kalo user ada + punya token + client kirim token BEDA → reject
-  if (user && user.authToken && token && token !== user.authToken) {
-    return next(new Error('INVALID_TOKEN'));
-  }
-  // Kalo user ada + punya token + client gak kirim token (device reset) → rotate
-  if (user && user.authToken && !token) {
-    const newTok = require('crypto').randomBytes(16).toString('hex');
-    user.authToken = newTok;
-    try { saveData(); } catch(e) {}
-    socket._newAuthToken = newTok;
-    console.log('[AUTH] Token rotated for ' + userId.slice(0,8));
-  }
-  socket._authUserId = userId;
+  socket._authUserId = auth.userId || '';
   next();
 });
 
