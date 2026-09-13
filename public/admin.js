@@ -363,7 +363,7 @@ socket.on('topup-new', () => { if (isAdmin) loadAdminList(); });
   };
 
   document.getElementById('evOpenBtn').onclick = function() {
-    window.open('/event.html', '_blank');
+    window.location.href = '/event.html';
   };
 
   // Load awal
