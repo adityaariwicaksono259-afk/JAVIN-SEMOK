@@ -8,7 +8,7 @@ const toastEl = $('toast');
 
 let history = [];
 const STORAGE_KEY = 'llama_history_v1';
-const API_URL = 'https://api.nexadev.my.id/ai/llama?q=';
+const API_URL = '/api/ai/llama?q=';
 
 function loadHistory() {
   try {

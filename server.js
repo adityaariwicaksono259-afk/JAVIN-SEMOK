@@ -107,6 +107,22 @@ app.use((req, res, next) => {
   next();
 });
 
+
+// ===== AI PROXY (bypass CORS) =====
+app.get('/api/ai/llama', async (req, res) => {
+  const q = req.query.q;
+  if (!q || typeof q !== 'string') return res.status(400).json({ error: 'Query kosong' });
+  const url = 'https://api.nexadev.my.id/ai/llama?q=' + encodeURIComponent(q);
+  try {
+    const r = await fetch(url);
+    const text = await r.text();
+    res.setHeader('Content-Type', 'application/json');
+    res.send(text);
+  } catch (e) {
+    res.status(500).json({ error: 'AI error: ' + e.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'File tidak ada' });
