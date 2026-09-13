@@ -108,16 +108,33 @@ app.use((req, res, next) => {
 });
 
 
-// ===== AI PROXY (bypass CORS) =====
-app.get('/api/ai/llama', async (req, res) => {
-  const q = req.query.q;
-  if (!q || typeof q !== 'string') return res.status(400).json({ error: 'Query kosong' });
-  const url = 'https://api.nexadev.my.id/ai/llama?q=' + encodeURIComponent(q);
+
+// ===== AI PROXY (Groq) =====
+app.post('/api/ai/chat', express.json({ limit: '100kb' }), async (req, res) => {
+  const messages = req.body && req.body.messages;
+  if (!Array.isArray(messages) || !messages.length) {
+    return res.status(400).json({ error: 'Messages kosong' });
+  }
+  const KEY = process.env.GROQ_API_KEY;
+  if (!KEY) return res.status(500).json({ error: 'GROQ_API_KEY belum diset di Environment' });
   try {
-    const r = await fetch(url);
-    const text = await r.text();
-    res.setHeader('Content-Type', 'application/json');
-    res.send(text);
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + KEY
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: messages.slice(-20),
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
+    const j = await r.json();
+    if (j.error) return res.status(500).json({ error: j.error.message || 'Groq error' });
+    const answer = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+    res.json({ ok: true, answer: answer || 'Maaf, gak ada jawaban.' });
   } catch (e) {
     res.status(500).json({ error: 'AI error: ' + e.message });
   }
