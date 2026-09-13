@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Brat Video - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page brat-page">
+  <header class="page-header">
+    <a href="/tools.html" class="header-btn">←</a>
+    <h1>💚 Brat Video</h1>
+  </header>
+  <div class="page-content brat-content">
+
+    <div class="brat-info">Bikin video brat dari teks lo sendiri. Preview + download MP4.</div>
+
+    <div class="brat-input-box">
+      <label class="qr-label">TEKS LO</label>
+      <textarea id="bratText" placeholder="contoh: halo ges, apa kabar?" maxlength="200" rows="3"></textarea>
+      <div class="brat-count"><span id="bratCount">0</span>/200</div>
+    </div>
+
+    <button class="qr-generate-btn" id="bratGenerate">💚 GENERATE VIDEO</button>
+
+    <div class="brat-loading hidden" id="bratLoading">
+      <div class="rbg-spinner"></div>
+      <div class="rbg-loading-text">Membuat video... (3-5 detik)</div>
+    </div>
+
+    <div class="brat-result hidden" id="bratResult">
+      <video id="bratPlayer" class="brat-video" controls playsinline loop preload="metadata"></video>
+      <div class="qr-actions">
+        <button class="rbg-btn rbg-btn-preview" id="bratPreviewBtn">👁️ Fullscreen</button>
+        <button class="rbg-btn rbg-btn-download" id="bratDownloadBtn">⬇️ Download MP4</button>
+        <button class="rbg-btn rbg-btn-reset" id="bratResetBtn">🔄 Ganti Teks</button>
+      </div>
+    </div>
+
+    <div class="rbg-error hidden" id="bratError"></div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="brat.js"></script>
+</body>
+</html>

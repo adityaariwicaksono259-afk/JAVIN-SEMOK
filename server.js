@@ -145,6 +145,25 @@ app.post('/api/ai/chat', express.json({ limit: '100kb' }), async (req, res) => {
   }
 });
 
+
+// ===== BRAT VIDEO PROXY =====
+app.get('/api/brat', async (req, res) => {
+  const text = req.query.text;
+  if (!text || typeof text !== 'string') return res.status(400).json({ error: 'Text kosong' });
+  if (text.length > 200) return res.status(400).json({ error: 'Max 200 karakter' });
+  try {
+    const r = await fetch('https://apii.nexadev.my.id/bratvid2?text=' + encodeURIComponent(text));
+    if (!r.ok) return res.status(r.status).json({ error: 'API error ' + r.status });
+    const buf = Buffer.from(await r.arrayBuffer());
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Length', buf.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(buf);
+  } catch (e) {
+    res.status(500).json({ error: 'Brat error: ' + e.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'File tidak ada' });
