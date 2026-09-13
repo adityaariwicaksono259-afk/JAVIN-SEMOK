@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Workout - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page wk-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>💪 Workout</h1>
+  </header>
+  <div class="page-content wk-content">
+
+    <div class="wk-hero">
+      <div class="wk-hero-icon">🏋️</div>
+      <div class="wk-hero-title">7-DAY WORKOUT PLAN</div>
+      <div class="wk-hero-sub">Latihan harian, gerakan 3D interaktif</div>
+    </div>
+
+    <div class="wk-day-tabs" id="wkDayTabs"></div>
+
+    <div class="wk-today">
+      <div class="wk-today-title" id="wkTodayTitle">-</div>
+      <div class="wk-today-focus" id="wkTodayFocus">-</div>
+    </div>
+
+    <div class="wk-list" id="wkList"></div>
+
+    <div class="wk-footer">
+      <p>💡 Tap gerakan buat liat animasi 3D + timer</p>
+    </div>
+
+  </div>
+</div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script src="workout-data.js"></script>
+<script src="workout.js"></script>
+</body>
+</html>

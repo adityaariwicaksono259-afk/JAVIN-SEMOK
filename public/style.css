@@ -1965,3 +1965,61 @@ html, body, .bj-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
 .brat-result { margin-top: 12px; animation: rbgPop .3s; }
 .brat-video { width: 100%; max-width: 100%; border-radius: 14px; display: block; margin-bottom: 12px; background: #000; box-shadow: 0 4px 20px rgba(0,0,0,.2); }
 .brat-result .qr-actions { padding-bottom: 20px; }
+
+/* ===== WORKOUT PAGE ===== */
+.wk-page { background: linear-gradient(180deg, #0a1420, #050a10); min-height: 100vh; }
+.wk-page .page-header { background: linear-gradient(180deg, #1a2e4e, #0a1420); }
+.wk-content { padding: 12px; max-width: 520px; margin: 0 auto; overflow-x: hidden; }
+.wk-hero { text-align: center; padding: 24px 16px; background: linear-gradient(135deg, #128c7e, #25d366); border-radius: 18px; margin-bottom: 16px; color: #fff; box-shadow: 0 4px 20px rgba(18,140,126,.3); }
+.wk-hero-icon { font-size: 48px; margin-bottom: 8px; animation: rbgFloat 3s ease-in-out infinite; }
+.wk-hero-title { font-size: 18px; font-weight: 900; letter-spacing: 2px; }
+.wk-hero-sub { font-size: 12px; opacity: .9; margin-top: 4px; }
+.wk-day-tabs { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 16px; }
+.wk-day-tab { padding: 12px 2px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.1); color: #a0e0b0; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; transition: .15s; position: relative; }
+.wk-day-tab.today::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: #ffd700; border-radius: 50%; }
+.wk-day-tab.active { background: linear-gradient(135deg, #128c7e, #25d366); color: #fff; border-color: #25d366; box-shadow: 0 4px 12px rgba(37,211,102,.4); }
+.wk-today { background: var(--bg-modal); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; border-left: 4px solid #25d366; }
+.wk-today-title { font-size: 18px; font-weight: 900; color: #25d366; }
+.wk-today-focus { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
+.wk-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.wk-card { display: flex; align-items: center; gap: 12px; background: var(--bg-modal); border-radius: 14px; padding: 14px; text-decoration: none; color: var(--text-primary); transition: .15s; border: 2px solid transparent; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.wk-card:hover { border-color: #25d366; transform: translateX(3px); }
+.wk-card-num { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #128c7e, #25d366); color: #fff; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.wk-card-icon { font-size: 30px; flex-shrink: 0; }
+.wk-card-info { flex: 1; min-width: 0; }
+.wk-card-name { font-size: 14.5px; font-weight: 800; }
+.wk-card-desc { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+.wk-card-target { font-size: 11px; color: #25d366; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.wk-card-arrow { font-size: 20px; color: #25d366; flex-shrink: 0; }
+.wk-footer { text-align: center; font-size: 12px; color: #6a8a7a; padding: 20px 0; }
+
+/* ===== EXERCISE 3D PAGE ===== */
+.ex-page { background: #0a0e14; min-height: 100vh; }
+.ex-page .page-header { background: linear-gradient(180deg, #1a2e4e, #0a1420); }
+.ex-content { padding: 12px; max-width: 520px; margin: 0 auto; }
+.ex-3d-wrap { position: relative; background: radial-gradient(ellipse at center, #1a2e3e 0%, #0a0e14 80%); border-radius: 18px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 0 40px rgba(18,140,126,.15); border: 2px solid rgba(37,211,102,.2); }
+.ex-3d-wrap canvas { display: block; width: 100%; height: auto; }
+.ex-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(10,14,20,.9); color: #a0e0b0; font-size: 13px; }
+.ex-badge { position: absolute; top: 12px; right: 12px; background: rgba(18,140,126,.8); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 2px; padding: 4px 10px; border-radius: 20px; }
+.ex-controls { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.ex-btn { padding: 12px 8px; background: var(--bg-modal); color: var(--text-primary); border: 2px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: .15s; }
+.ex-btn:hover { border-color: #25d366; }
+.ex-btn:active { transform: scale(.97); }
+.ex-info { display: flex; gap: 12px; background: var(--bg-modal); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.ex-info-icon { font-size: 44px; flex-shrink: 0; }
+.ex-info-body { flex: 1; min-width: 0; }
+.ex-name { font-size: 17px; font-weight: 900; color: var(--text-title); margin-bottom: 4px; }
+.ex-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 6px; }
+.ex-target { font-size: 12px; font-weight: 800; color: #25d366; font-family: 'JetBrains Mono', monospace; }
+.ex-timer-wrap { background: linear-gradient(135deg, #0a2e1a, #051409); border: 2px solid #25d366; border-radius: 14px; padding: 16px; text-align: center; }
+.ex-timer-label { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #80ffb0; margin-bottom: 8px; }
+.ex-timer-display { font-size: 48px; font-weight: 900; font-family: 'Courier New', monospace; color: #25d366; text-shadow: 0 0 20px #25d366; margin-bottom: 12px; line-height: 1; }
+.ex-timer-btns { display: flex; gap: 8px; justify-content: center; }
+.ex-timer-btn { flex: 1; padding: 12px; border-radius: 10px; background: linear-gradient(135deg, #128c7e, #25d366); color: #fff; border: none; font-size: 14px; font-weight: 800; cursor: pointer; letter-spacing: 1px; }
+.ex-timer-btn:active { transform: scale(.97); }
+.ex-timer-ghost { flex: 0 0 60px; background: rgba(37,211,102,.15); color: #25d366; border: 1px solid #25d366; }
+
+@media (max-width: 500px) {
+  .wk-day-tab { font-size: 10px; padding: 10px 1px; }
+  .ex-timer-display { font-size: 40px; }
+}

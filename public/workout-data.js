@@ -1,0 +1,40 @@
+window.WORKOUT_DATA = {
+  days: [
+    { key: 'senin',   name: 'Senin',   focus: 'Dada & Trisep',   exercises: ['pushup','diamond','plank','dips','pike'] },
+    { key: 'selasa',  name: 'Selasa',  focus: 'Punggung & Bisep', exercises: ['pullup','superman','row','curl','plank'] },
+    { key: 'rabu',    name: 'Rabu',    focus: 'Kardio',          exercises: ['jumpingjack','burpees','mountain','highknee','skater'] },
+    { key: 'kamis',   name: 'Kamis',   focus: 'Kaki',            exercises: ['squat','lunges','calf','wall-sit','glute'] },
+    { key: 'jumat',   name: 'Jumat',   focus: 'Perut',           exercises: ['crunch','situp','legraise','russian','plank'] },
+    { key: 'sabtu',   name: 'Sabtu',   focus: 'Full Body',       exercises: ['burpees','squat','pushup','jumpingjack','plank'] },
+    { key: 'minggu',  name: 'Minggu',  focus: 'Rest / Stretching', exercises: ['stretch','yoga','walk','breathe'] }
+  ],
+  exercises: {
+    pushup:      { name: 'Push-Up',            icon: '💪', desc: 'Turun-naikin badan dengan lengan', target: '3 set × 15 reps', anim: 'pushup' },
+    diamond:     { name: 'Diamond Push-Up',    icon: '💎', desc: 'Push-up tangan segitiga (trisep)', target: '3 set × 10 reps', anim: 'pushup' },
+    plank:       { name: 'Plank',              icon: '🧘', desc: 'Tahan posisi papan', target: '3 set × 30 detik', anim: 'plank' },
+    dips:        { name: 'Tricep Dips',        icon: '🪑', desc: 'Turun-naik pake kursi', target: '3 set × 12 reps', anim: 'dips' },
+    pike:        { name: 'Pike Push-Up',       icon: '🔺', desc: 'Push-up posisi V terbalik', target: '3 set × 10 reps', anim: 'pushup' },
+    pullup:      { name: 'Pull-Up',            icon: '🆙', desc: 'Angkat badan ke atas', target: '3 set × 8 reps', anim: 'pullup' },
+    superman:    { name: 'Superman',           icon: '🦸', desc: 'Angkat tangan + kaki bareng', target: '3 set × 12 reps', anim: 'superman' },
+    row:         { name: 'Bent-Over Row',      icon: '🚣', desc: 'Tarik beban ke perut', target: '3 set × 12 reps', anim: 'row' },
+    curl:        { name: 'Bicep Curl',         icon: '💪', desc: 'Angkat beban tekuk siku', target: '3 set × 12 reps', anim: 'curl' },
+    jumpingjack: { name: 'Jumping Jack',       icon: '⭐', desc: 'Lompat buka-tutup tangan kaki', target: '3 set × 30 detik', anim: 'jumpingjack' },
+    burpees:     { name: 'Burpees',            icon: '🔥', desc: 'Push-up + lompat', target: '3 set × 10 reps', anim: 'burpees' },
+    mountain:    { name: 'Mountain Climber',   icon: '⛰️', desc: 'Lari posisi plank', target: '3 set × 30 detik', anim: 'mountain' },
+    highknee:    { name: 'High Knees',         icon: '🦵', desc: 'Lari angkat lutut tinggi', target: '3 set × 30 detik', anim: 'highknee' },
+    skater:      { name: 'Skater',             icon: '⛸️', desc: 'Lompat sisi ke sisi', target: '3 set × 20 detik', anim: 'skater' },
+    squat:       { name: 'Squat',              icon: '🦵', desc: 'Turun-naik jongkok', target: '3 set × 15 reps', anim: 'squat' },
+    lunges:      { name: 'Lunges',             icon: '👟', desc: 'Langkah panjang depan-belakang', target: '3 set × 12 reps', anim: 'lunges' },
+    calf:        { name: 'Calf Raise',         icon: '🦶', desc: 'Angkat tumit berdiri', target: '3 set × 20 reps', anim: 'calf' },
+    'wall-sit':  { name: 'Wall Sit',           icon: '🧱', desc: 'Duduk di dinding tahan', target: '3 set × 45 detik', anim: 'wallsit' },
+    glute:       { name: 'Glute Bridge',       icon: '🍑', desc: 'Angkat pinggul berbaring', target: '3 set × 15 reps', anim: 'bridge' },
+    crunch:      { name: 'Crunch',             icon: '🔥', desc: 'Angkat bahu dari lantai', target: '3 set × 20 reps', anim: 'crunch' },
+    situp:       { name: 'Sit-Up',             icon: '🎯', desc: 'Duduk dari posisi berbaring', target: '3 set × 15 reps', anim: 'situp' },
+    legraise:    { name: 'Leg Raise',          icon: '🦵', desc: 'Angkat kaki lurus', target: '3 set × 15 reps', anim: 'legraise' },
+    russian:     { name: 'Russian Twist',      icon: '🌀', desc: 'Putar badan kiri-kanan', target: '3 set × 20 reps', anim: 'russian' },
+    stretch:     { name: 'Full Body Stretch',  icon: '🧘', desc: 'Peregangan seluruh badan', target: '10 menit', anim: 'stretch' },
+    yoga:        { name: 'Yoga Flow',          icon: '🕉️', desc: 'Aliran yoga dasar', target: '15 menit', anim: 'yoga' },
+    walk:        { name: 'Walking',            icon: '🚶', desc: 'Jalan santai', target: '30 menit', anim: 'walk' },
+    breathe:     { name: 'Deep Breathing',     icon: '🌬️', desc: 'Napas dalam relaksasi', target: '5 menit', anim: 'breathe' }
+  }
+};
