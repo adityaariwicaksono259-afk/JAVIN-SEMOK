@@ -39,31 +39,33 @@ document.querySelectorAll('.qr-color').forEach(b => {
   };
 });
 
-generateBtn.onclick = async () => {
+generateBtn.onclick = () => {
   const text = textInput.value.trim();
   hideError();
   if (!text) return showError('Isi link atau teks dulu');
   if (text.length > 1000) return showError('Maksimal 1000 karakter');
 
-  previewBox.innerHTML = '';
-  const canvas = document.createElement('canvas');
-  previewBox.appendChild(canvas);
+  if (typeof QRCode === 'undefined') {
+    return showError('Library QR belum ke-load, refresh halaman');
+  }
 
+  previewBox.innerHTML = '';
   try {
-    await QRCode.toCanvas(canvas, text, {
+    new QRCode(previewBox, {
+      text: text,
       width: currentSize,
-      margin: 2,
-      color: {
-        dark: currentDark,
-        light: currentLight
-      },
-      errorCorrectionLevel: 'M'
+      height: currentSize,
+      colorDark: currentDark,
+      colorLight: currentLight,
+      correctLevel: QRCode.CorrectLevel.M
     });
-    // Force ukuran tampil biar konsisten
-    canvas.style.width = '100%';
-    canvas.style.maxWidth = '300px';
-    canvas.style.height = 'auto';
-    canvas.style.imageRendering = 'pixelated';
+    // Force display
+    setTimeout(() => {
+      const c = previewBox.querySelector('canvas');
+      const i = previewBox.querySelector('img');
+      if (c) { c.style.width = '100%'; c.style.maxWidth = '300px'; c.style.height = 'auto'; c.style.imageRendering = 'pixelated'; }
+      if (i) { i.style.width = '100%'; i.style.maxWidth = '300px'; i.style.height = 'auto'; i.style.imageRendering = 'pixelated'; }
+    }, 50);
     resultBox.classList.remove('hidden');
     toast('✅ QR berhasil dibuat!');
   } catch (err) {
@@ -74,31 +76,53 @@ generateBtn.onclick = async () => {
 
 $('qrDownloadBtn').onclick = () => {
   const canvas = previewBox.querySelector('canvas');
-  if (!canvas) return showError('Generate QR dulu');
-  canvas.toBlob((blob) => {
-    const url = URL.createObjectURL(blob);
+  if (canvas) {
+    canvas.toBlob((blob) => downloadBlob(blob), 'image/png');
+    return;
+  }
+  const img = previewBox.querySelector('img');
+  if (img) {
     const a = document.createElement('a');
-    a.href = url;
+    a.href = img.src;
     a.download = 'qr-' + Date.now() + '.png';
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }, 'image/png');
+    return;
+  }
+  showError('Generate QR dulu');
 };
+
+function downloadBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'qr-' + Date.now() + '.png';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 $('qrPreviewBtn').onclick = () => {
   const canvas = previewBox.querySelector('canvas');
-  if (!canvas) return showError('Generate QR dulu');
+  const img = previewBox.querySelector('img');
+  if (!canvas && !img) return showError('Generate QR dulu');
   viewerCanvas.innerHTML = '';
-  const bigCanvas = document.createElement('canvas');
-  bigCanvas.width = canvas.width;
-  bigCanvas.height = canvas.height;
-  bigCanvas.style.maxWidth = '85vw';
-  bigCanvas.style.maxHeight = '80vh';
-  bigCanvas.style.borderRadius = '12px';
-  bigCanvas.style.imageRendering = 'pixelated';
-  const ctx = bigCanvas.getContext('2d');
-  ctx.drawImage(canvas, 0, 0);
-  viewerCanvas.appendChild(bigCanvas);
+  if (canvas) {
+    const big = document.createElement('canvas');
+    big.width = canvas.width;
+    big.height = canvas.height;
+    big.style.maxWidth = '85vw';
+    big.style.maxHeight = '80vh';
+    big.style.borderRadius = '12px';
+    big.style.imageRendering = 'pixelated';
+    big.getContext('2d').drawImage(canvas, 0, 0);
+    viewerCanvas.appendChild(big);
+  } else {
+    const big = document.createElement('img');
+    big.src = img.src;
+    big.style.maxWidth = '85vw';
+    big.style.maxHeight = '80vh';
+    big.style.borderRadius = '12px';
+    viewerCanvas.appendChild(big);
+  }
   viewer.classList.remove('hidden');
 };
 
