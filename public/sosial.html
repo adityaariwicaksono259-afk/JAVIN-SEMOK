@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Sosial - JAVIN SEMOK</title>
+<title>Sosial Anonim - JAVIN SEMOK</title>
 <link rel="stylesheet" href="style.css" />
 <style>
 .sos-page { display: flex; flex-direction: column; min-height: 100dvh; background: var(--bg-chat); }
 .sos-tabs { display: flex; background: var(--bg-modal); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
-.sos-tab { flex: 1; padding: 14px 8px; border: none; background: transparent; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); cursor: pointer; position: relative; }
+.sos-tab { flex: 1; padding: 14px 8px; border: none; background: transparent; font-size: 13px; font-weight: 700; color: var(--text-secondary); cursor: pointer; position: relative; }
 .sos-tab.active { color: var(--accent); }
 .sos-tab.active::after { content: ''; position: absolute; bottom: 0; left: 15%; right: 15%; height: 3px; background: var(--accent); border-radius: 3px 3px 0 0; }
 .sos-content { padding: 14px 12px 40px; max-width: 520px; margin: 0 auto; width: 100%; box-sizing: border-box; }
@@ -19,16 +19,10 @@
 <div class="sos-page">
   <header class="page-header">
     <a href="/" class="header-btn">Home</a>
-    <h1>💬 Sosial</h1>
+    <h1>💬 Sosial Anonim</h1>
   </header>
 
-  <div class="sos-tabs">
-    <button class="sos-tab active" data-tab="inbox">📥 Inbox <span class="sos-badge hidden" id="inboxBadge">0</span></button>
-    <button class="sos-tab" data-tab="kirim">📤 Kirim</button>
-    <button class="sos-tab" data-tab="link">🔗 Link Gua</button>
-  </div>
-
-  <div class="sos-content" id="sosContent"></div>
+  <div id="sosMain"></div>
 </div>
 
 <div id="toast" class="toast hidden"></div>
