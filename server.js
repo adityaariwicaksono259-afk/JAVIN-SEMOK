@@ -168,6 +168,17 @@ app.get('/api/brat', async (req, res) => {
   }
 });
 
+app.get('/api/sholat', async (req, res) => {
+  const city = String(req.query.city || 'Jakarta').slice(0, 40);
+  try {
+    const url = 'https://api.aladhan.com/v1/timingsByCity?city=' + encodeURIComponent(city) + '&country=Indonesia&method=20';
+    const r = await fetch(url);
+    const j = await r.json();
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(j));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'File tidak ada' });
