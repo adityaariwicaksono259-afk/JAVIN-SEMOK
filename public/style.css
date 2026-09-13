@@ -1945,3 +1945,10 @@ html, body, .bj-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
 .rbg-btn { box-shadow: none !important; }
 .rbg-btn-download { background: linear-gradient(135deg, #128c7e, #25d366) !important; color: #fff !important; }
 .qr-content { padding: 16px 12px 30px !important; }
+
+/* ===== FIX QR LAYOUT ===== */
+.qr-page { padding-bottom: 40px !important; }
+.qr-content { padding-bottom: 100px !important; overflow-x: hidden !important; }
+.qr-actions { width: 100% !important; padding-bottom: 20px !important; box-sizing: border-box !important; }
+.qr-actions .rbg-btn { width: 100% !important; box-sizing: border-box !important; }
+.qr-preview canvas, .qr-preview img { image-rendering: pixelated; display: block; margin: 0 auto; }

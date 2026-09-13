@@ -39,21 +39,31 @@ document.querySelectorAll('.qr-color').forEach(b => {
   };
 });
 
-generateBtn.onclick = () => {
+generateBtn.onclick = async () => {
   const text = textInput.value.trim();
   hideError();
   if (!text) return showError('Isi link atau teks dulu');
   if (text.length > 1000) return showError('Maksimal 1000 karakter');
+
   previewBox.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  previewBox.appendChild(canvas);
+
   try {
-    new QRCode(previewBox, {
-      text: text,
+    await QRCode.toCanvas(canvas, text, {
       width: currentSize,
-      height: currentSize,
-      colorDark: currentDark,
-      colorLight: currentLight,
-      correctLevel: QRCode.CorrectLevel.H
+      margin: 2,
+      color: {
+        dark: currentDark,
+        light: currentLight
+      },
+      errorCorrectionLevel: 'M'
     });
+    // Force ukuran tampil biar konsisten
+    canvas.style.width = '100%';
+    canvas.style.maxWidth = '300px';
+    canvas.style.height = 'auto';
+    canvas.style.imageRendering = 'pixelated';
     resultBox.classList.remove('hidden');
     toast('✅ QR berhasil dibuat!');
   } catch (err) {
@@ -82,9 +92,10 @@ $('qrPreviewBtn').onclick = () => {
   const bigCanvas = document.createElement('canvas');
   bigCanvas.width = canvas.width;
   bigCanvas.height = canvas.height;
-  bigCanvas.style.maxWidth = '90vw';
-  bigCanvas.style.maxHeight = '85vh';
+  bigCanvas.style.maxWidth = '85vw';
+  bigCanvas.style.maxHeight = '80vh';
   bigCanvas.style.borderRadius = '12px';
+  bigCanvas.style.imageRendering = 'pixelated';
   const ctx = bigCanvas.getContext('2d');
   ctx.drawImage(canvas, 0, 0);
   viewerCanvas.appendChild(bigCanvas);
