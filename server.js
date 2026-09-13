@@ -355,6 +355,101 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
+  // ===== ANONIM MESSAGES (rate limit 30/hari) =====
+  socket.on('anonim-send', ({ toUserId, text } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = onlineUsers.get(socket.id);
+    if (!uid) return cb({ error: 'Belum join' });
+    if (!data.users[toUserId]) return cb({ error: 'User gak ada' });
+    if (toUserId === uid) return cb({ error: 'Gak bisa kirim ke diri sendiri' });
+    text = String(text || '').trim().slice(0, 500);
+    if (!text) return cb({ error: 'Pesan kosong' });
+
+    if (!data.anonim) data.anonim = {};
+    if (!data.anonimRate) data.anonimRate = {};
+    const rk = uid + '_' + toUserId;
+    const now = Date.now();
+    const rate = (data.anonimRate[rk] || []).filter(t => now - t < 24 * 3600 * 1000);
+    if (rate.length >= 30) return cb({ error: 'Max 30 pesan/hari ke user ini' });
+    rate.push(now);
+    data.anonimRate[rk] = rate;
+
+    const msg = {
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      text: text,
+      time: now,
+      read: false,
+      reported: false
+    };
+    if (!data.anonim[toUserId]) data.anonim[toUserId] = [];
+    data.anonim[toUserId].push(msg);
+    if (data.anonim[toUserId].length > 100) data.anonim[toUserId].shift();
+    saveData();
+
+    onlineUsers.forEach((ouid, sid) => {
+      if (ouid === toUserId) {
+        const s2 = io.sockets.sockets.get(sid);
+        if (s2) s2.emit('anonim-new', { count: data.anonim[toUserId].filter(m => !m.read).length });
+      }
+    });
+    cb({ ok: true });
+  });
+
+  socket.on('anonim-inbox', (cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = onlineUsers.get(socket.id);
+    if (!uid) return cb({ error: 'Belum join' });
+    if (!data.anonim) data.anonim = {};
+    const list = (data.anonim[uid] || []).slice().reverse();
+    cb({ ok: true, messages: list, userId: uid });
+  });
+
+  socket.on('anonim-mark-read', ({ msgId } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = onlineUsers.get(socket.id);
+    if (!uid) return cb({ error: 'Belum join' });
+    const list = (data.anonim && data.anonim[uid]) || [];
+    const m = list.find(x => x.id === msgId);
+    if (m) { m.read = true; saveData(); }
+    cb({ ok: true });
+  });
+
+  socket.on('anonim-delete', ({ msgId } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = onlineUsers.get(socket.id);
+    if (!uid) return cb({ error: 'Belum join' });
+    if (!data.anonim || !data.anonim[uid]) return cb({ error: 'Gak ada' });
+    data.anonim[uid] = data.anonim[uid].filter(m => m.id !== msgId);
+    saveData();
+    cb({ ok: true });
+  });
+
+  socket.on('anonim-report', ({ msgId } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = onlineUsers.get(socket.id);
+    if (!uid) return cb({ error: 'Belum join' });
+    const list = (data.anonim && data.anonim[uid]) || [];
+    const m = list.find(x => x.id === msgId);
+    if (m) {
+      m.reported = true;
+      saveData();
+      io.emit('system', '⚠️ Ada 1 laporan pesan anonim toxic — admin bisa cek panel');
+    }
+    cb({ ok: true });
+  });
+
+  socket.on('anonim-users', (cb) => {
+    if (typeof cb !== 'function') return;
+    const uid = onlineUsers.get(socket.id);
+    if (!uid) return cb({ error: 'Belum join' });
+    const list = Object.values(data.users || {})
+      .filter(u => u.userId !== uid && !u.banned)
+      .map(u => ({ userId: u.userId, username: u.username, badge: u.badge || 'member' }))
+      .slice(0, 200);
+    cb({ ok: true, users: list });
+  });
+
+
   // Cek status ban tanpa harus join
   socket.on('check-ban', (cb) => {
     if (typeof cb !== 'function') return;
