@@ -29,15 +29,8 @@
     // Simpan token yang dikasih server (sekali doang)
     socket.on('auth-token', function(t) {
       if (t && typeof t === 'string') {
-        localStorage.setItem('javachat_token', t);
-        console.log('[AUTH] token saved');
-      }
-    });
-    // Server rotate token (device baru) — dengerin dari socket langsung
-    socket.on('auth-token', function(t) {
-      if (t && typeof t === 'string') {
-        localStorage.setItem('javachat_token', t);
-        console.log('[AUTH] token rotated');
+        try { localStorage.setItem('javachat_token', t); } catch(e) {}
+        console.log('[AUTH] token saved/rotated');
       }
     });
 
@@ -45,12 +38,15 @@
     // Kalau token invalid — reset identitas
     socket.on('connect_error', function(err) {
       console.warn('[AUTH] connect_error:', err.message);
+      var box = document.createElement('div');
+      box.style.cssText = 'position:fixed;top:60px;left:10px;right:10px;background:#d32f2f;color:#fff;padding:12px;border-radius:8px;font-size:13px;z-index:99999;font-family:monospace;white-space:pre-wrap;word-break:break-all';
+      box.textContent = 'AUTH ERROR: ' + err.message;
+      document.body.appendChild(box);
       if (err.message === 'INVALID_TOKEN') {
-        localStorage.removeItem('javachat_id');
-        localStorage.removeItem('javachat_token');
+        try { localStorage.removeItem('javachat_id'); localStorage.removeItem('javachat_token'); } catch(e){}
         if (!sessionStorage.getItem('auth_reloaded')) {
           sessionStorage.setItem('auth_reloaded', '1');
-          setTimeout(function() { location.reload(); }, 500);
+          setTimeout(function() { location.reload(); }, 1000);
         }
       }
     });
