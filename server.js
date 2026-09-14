@@ -11,6 +11,79 @@ const db = require('./db');
 const rl = require('./ratelimit');
 
 const app = express();
+app.use(express.json({ limit: '100kb' }));
+
+/* JAVIN-ANALOG-API-V2 */
+app.post('/api/javin-analog/magic-link', async (req, res) => {
+  try {
+    const email =
+      typeof req.body?.email === 'string'
+        ? req.body.email.trim()
+        : '';
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email wajib diisi.'
+      });
+    }
+
+    if (
+      email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Format email tidak valid.'
+      });
+    }
+
+    const API_URL =
+      'https://anita-studio.netlify.app/.netlify/functions/amprem';
+
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'send-magiclink',
+        email
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        success: false,
+        message:
+          data.message ||
+          'API Javin Analog mengembalikan error.'
+      });
+    }
+
+    return res.json({
+      success: !!data.success,
+      message:
+        data.message ||
+        (data.success
+          ? 'Magic link berhasil dikirim.'
+          : 'Magic link gagal dikirim.')
+    });
+
+  } catch (error) {
+    console.error('JAVIN ANALOG API:', error);
+
+    return res.status(502).json({
+      success: false,
+      message: 'Gagal menghubungi API Javin Analog.'
+    });
+  }
+});
+/* /JAVIN-ANALOG-API-V2 */
+
+
 
 /* JAVACHAT-INFO-GEMPA-NEXA-BMKG-FALLBACK-V1 */
 

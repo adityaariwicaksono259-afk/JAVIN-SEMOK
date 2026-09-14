@@ -340,7 +340,18 @@
 </script>
 
 <div class="tools-grid">
-      
+
+      <!-- JAVIN-ANALOG-V1 -->
+<a href="#javinAnalogBox"
+   class="tool-card"
+   onclick="document.getElementById('javinAnalogBox')?.scrollIntoView({behavior:'smooth',block:'start'}); return false;">
+  <div class="tool-icon">✉️</div>
+  <div class="tool-name">Javin Analog</div>
+  <div class="tool-desc">Kirim magic link</div>
+  <div class="tool-badge">ACCOUNT</div>
+</a>
+
+
       <a href="#javinSpotifyBox" class="tool-card" onclick="document.getElementById('javinSpotifyBox')?.scrollIntoView({behavior:'smooth',block:'start'}); return false;">
         <div class="tool-icon">🎵</div>
         <div class="tool-name">Spotify</div>
@@ -372,6 +383,109 @@
 <script src="common.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="auth-socket.js"></script>
+
+
+<!-- JAVIN-ANALOG-FORM-V1 -->
+<section id="javinAnalogBox" style="margin-top:24px;padding:20px;border:1px solid #292929;border-radius:15px;background:#101010;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:6px;">
+    ✉️ Javin Analog
+  </div>
+
+  <div style="font-size:13px;opacity:.7;margin-bottom:16px;">
+    Masukkan email untuk mengirim magic link.
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <input
+      id="javinAnalogEmail"
+      type="email"
+      autocomplete="email"
+      placeholder="Email kamu"
+      style="flex:1;min-width:220px;padding:12px;border-radius:10px;border:1px solid #444;background:#181818;color:#fff;"
+    >
+
+    <button
+      id="javinAnalogSend"
+      type="button"
+      style="padding:12px 18px;border:0;border-radius:10px;cursor:pointer;font-weight:700;"
+    >
+      Kirim Magic Link
+    </button>
+  </div>
+
+  <div
+    id="javinAnalogStatus"
+    style="margin-top:14px;font-size:13px;line-height:1.5;"
+  ></div>
+</section>
+
+<script>
+(function () {
+  var emailInput = document.getElementById('javinAnalogEmail');
+  var sendButton = document.getElementById('javinAnalogSend');
+  var status = document.getElementById('javinAnalogStatus');
+
+  if (!emailInput || !sendButton || !status) return;
+
+  sendButton.addEventListener('click', function () {
+    var email = emailInput.value.trim();
+
+    if (!email) {
+      status.textContent = '❌ Email wajib diisi.';
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.textContent = '❌ Format email tidak valid.';
+      return;
+    }
+
+    sendButton.disabled = true;
+    sendButton.textContent = 'Mengirim...';
+    status.textContent = '⏳ Mengirim magic link...';
+
+    fetch('/api/javin-analog/magic-link', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email
+      })
+    })
+    .then(function (response) {
+      return response.json().then(function (data) {
+        return {
+          ok: response.ok,
+          data: data
+        };
+      });
+    })
+    .then(function (result) {
+      if (!result.ok || !result.data.success) {
+        throw new Error(
+          result.data.message || 'Gagal mengirim magic link'
+        );
+      }
+
+      status.textContent =
+        '✅ Berhasil! Magic link sudah dikirim.';
+    })
+    .catch(function (error) {
+      console.error('JAVIN ANALOG:', error);
+
+      status.textContent =
+        '❌ Gagal: ' + error.message;
+    })
+    .finally(function () {
+      sendButton.disabled = false;
+      sendButton.textContent = 'Kirim Magic Link';
+    });
+  });
+})();
+</script>
+
+
 
 </body>
 </html>
