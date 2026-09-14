@@ -19,6 +19,7 @@
       <div class="tools-hero-sub">Kumpulan tools buat lo pake sehari-hari</div>
     </div>
 
+    
 <div class="javin-spotify-box" id="javinSpotifyBox">
   <div class="javin-spotify-heading">
     <div class="javin-spotify-icon">🎵</div>
@@ -340,7 +341,12 @@
 </script>
 
 <div class="tools-grid">
-      
+      <a href="/info" class="tool-card">
+        <div class="tool-icon">🌏</div>
+        <div class="tool-name">Info Gempa</div>
+        <div class="tool-desc">Info gempa terkini & data BMKG</div>
+        <div class="tool-badge">INFO</div>
+      </a>
       <a href="#javinSpotifyBox" class="tool-card" onclick="document.getElementById('javinSpotifyBox')?.scrollIntoView({behavior:'smooth',block:'start'}); return false;">
         <div class="tool-icon">🎵</div>
         <div class="tool-name">Spotify</div>
@@ -355,8 +361,7 @@
       </a>
       <a href="/qr.html" class="tool-card"><div class="tool-icon">📱</div><div class="tool-name">QR Generator</div><div class="tool-desc">Bikin QR code dari link / teks</div><div class="tool-badge">UTILITY</div></a>
       <a href="/brat.html" class="tool-card"><div class="tool-icon">💚</div><div class="tool-name">Brat Video</div><div class="tool-desc">Bikin video brat dari teks</div><div class="tool-badge">VIDEO</div></a>
-            <a href="/api-tool.html" class="tool-card"><div class="tool-icon">🔧</div><div class="tool-name">API Tool</div><div class="tool-desc">Testing endpoint API</div><div class="tool-badge">DEV</div></a>
-      <div class="tool-card tool-soon">
+            <div class="tool-card tool-soon">
         <div class="tool-icon">✨</div>
         <div class="tool-name">Coming Soon</div>
         <div class="tool-desc">Tools baru segera hadir</div>

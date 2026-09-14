@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>Info — JAVACHAT</title>
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0b0f14;
+  color: #f4f7fb;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.info-wrap {
+  width: min(1100px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 18px 0 40px;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.info-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.info-subtitle {
+  margin: 5px 0 0;
+  color: #9ca8b7;
+  font-size: 13px;
+}
+
+.info-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.info-btn {
+  border: 1px solid #273241;
+  background: #151c26;
+  color: #fff;
+  border-radius: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.info-btn:hover {
+  background: #1c2633;
+}
+
+.info-card {
+  background: #111821;
+  border: 1px solid #202b38;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.18);
+}
+
+.info-card-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid #202b38;
+}
+
+.info-card-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.info-card-head p {
+  margin: 5px 0 0;
+  color: #8e9bab;
+  font-size: 12px;
+}
+
+#gempaMap {
+  width: 100%;
+  height: 430px;
+  background: #d9e1e8;
+}
+
+.gempa-status {
+  padding: 10px 14px;
+  color: #9ca8b7;
+  font-size: 12px;
+  border-bottom: 1px solid #202b38;
+}
+
+.gempa-list {
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.gempa-item {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px;
+  background: #0d131b;
+  border: 1px solid #202b38;
+  border-radius: 12px;
+}
+
+.gempa-mag {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #263241;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.gempa-mag.small {
+  background: #183b2b;
+}
+
+.gempa-mag.medium {
+  background: #594819;
+}
+
+.gempa-mag.large {
+  background: #59251f;
+}
+
+.gempa-location {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.gempa-meta {
+  margin-top: 4px;
+  color: #8e9bab;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.gempa-time {
+  color: #9ca8b7;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 25px;
+  text-align: center;
+  color: #8995a4;
+  font-size: 13px;
+}
+
+.source {
+  text-align: center;
+  color: #778392;
+  font-size: 11px;
+  margin-top: 15px;
+}
+
+.source a {
+  color: #9dbfff;
+  text-decoration: none;
+}
+
+@media (max-width: 650px) {
+  .info-wrap {
+    width: min(100% - 16px, 1100px);
+    padding-top: 12px;
+  }
+
+  .info-header {
+    align-items: flex-start;
+  }
+
+  .info-title {
+    font-size: 21px;
+  }
+
+  #gempaMap {
+    height: 330px;
+  }
+
+  .gempa-item {
+    grid-template-columns: 54px 1fr;
+  }
+
+  .gempa-mag {
+    width: 48px;
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .gempa-time {
+    grid-column: 2;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="info-wrap">
+
+  <header class="info-header">
+    <div>
+      <h1 class="info-title">Info Gempa</h1>
+      <p class="info-subtitle">
+        Informasi gempa bumi Indonesia
+      </p>
+    </div>
+
+    <div class="info-actions">
+      <button class="info-btn" id="refreshGempa">
+        ↻ Refresh
+      </button>
+
+      <button
+        class="info-btn"
+        onclick="location.href='/'"
+      >
+        ← Kembali
+      </button>
+    </div>
+  </header>
+
+  <section class="info-card">
+
+    <div class="info-card-head">
+      <h2>🌏 Peta Gempa</h2>
+      <p>
+        Posisi episenter ditampilkan pada peta Indonesia.
+      </p>
+    </div>
+
+    <div id="gempaStatus" class="gempa-status">
+      Memuat data gempa...
+    </div>
+
+    <div id="gempaMap"></div>
+
+  </section>
+
+  <section class="info-card">
+
+    <div class="info-card-head">
+      <h2>⚡ Gempa Terbaru</h2>
+      <p>
+        Data diperbarui saat halaman di-refresh.
+      </p>
+    </div>
+
+    <div id="gempaList" class="gempa-list">
+      <div class="empty">
+        Memuat data...
+      </div>
+    </div>
+
+  </section>
+
+  <div class="source">
+    Sumber data gempa:
+    <a
+      href="https://www.bmkg.go.id/gempabumi"
+      target="_blank"
+      rel="noopener"
+    >
+      BMKG — Badan Meteorologi, Klimatologi, dan Geofisika
+    </a>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const map = L.map('gempaMap', {
+  zoomControl: true,
+  minZoom: 3,
+  maxZoom: 12
+}).setView([-2.5, 118], 5);
+
+L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }
+).addTo(map);
+
+let markers = [];
+
+function clearMarkers() {
+  markers.forEach(marker => map.removeLayer(marker));
+  markers = [];
+}
+
+function numberValue(value) {
+  const n = Number(
+    String(value ?? '')
+      .replace(',', '.')
+      .replace(/[^\d.-]/g, '')
+  );
+
+  return Number.isFinite(n) ? n : null;
+}
+
+function findArray(obj) {
+  if (Array.isArray(obj)) return obj;
+
+  if (!obj || typeof obj !== 'object') {
+    return [];
+  }
+
+  const keys = [
+    'result',
+    'results',
+    'data',
+    'gempa',
+    'earthquake',
+    'earthquakes',
+    'items'
+  ];
+
+  for (const key of keys) {
+    if (Array.isArray(obj[key])) {
+      return obj[key];
+    }
+  }
+
+  for (const value of Object.values(obj)) {
+    if (Array.isArray(value) && value.length) {
+      return value;
+    }
+  }
+
+  return [];
+}
+
+function getValue(item, keys) {
+  for (const key of keys) {
+    if (
+      item &&
+      item[key] !== undefined &&
+      item[key] !== null &&
+      item[key] !== ''
+    ) {
+      return item[key];
+    }
+  }
+
+  return '-';
+}
+
+function coordinates(item) {
+
+  const lat = numberValue(
+    getValue(item, [
+      'latitude',
+      'lat',
+      'lintang',
+      'Latitude',
+      'Lintang'
+    ])
+  );
+
+  const lon = numberValue(
+    getValue(item, [
+      'longitude',
+      'lon',
+      'lng',
+      'bujur',
+      'Longitude',
+      'Bujur'
+    ])
+  );
+
+  if (
+    lat !== null &&
+    lon !== null &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  ) {
+    return { lat, lon };
+  }
+
+  const coord = String(
+    getValue(item, [
+      'coordinates',
+      'koordinat',
+      'Koordinat',
+      'coord'
+    ])
+  );
+
+  const matches = coord.match(
+    /(-?\d+(?:[.,]\d+)?)\s*[, ]+\s*(-?\d+(?:[.,]\d+)?)/
+  );
+
+  if (matches) {
+    const a = numberValue(matches[1]);
+    const b = numberValue(matches[2]);
+
+    if (
+      a !== null &&
+      b !== null &&
+      Math.abs(a) <= 90 &&
+      Math.abs(b) <= 180
+    ) {
+      return {
+        lat: a,
+        lon: b
+      };
+    }
+  }
+
+  return null;
+}
+
+function magnitudeClass(mag) {
+  if (mag >= 5) return 'large';
+  if (mag >= 4) return 'medium';
+  return 'small';
+}
+
+function createMarker(item) {
+
+  const pos = coordinates(item);
+
+  if (!pos) return;
+
+  const mag = numberValue(
+    getValue(item, [
+      'magnitude',
+      'mag',
+      'Magnitude',
+      'Magnitudo'
+    ])
+  );
+
+  const depth = getValue(item, [
+    'depth',
+    'kedalaman',
+    'Kedalaman'
+  ]);
+
+  const location = getValue(item, [
+    'location',
+    'wilayah',
+    'Wilayah',
+    'place',
+    'lokasi',
+    'Lokasi'
+  ]);
+
+  const time = getValue(item, [
+    'datetime',
+    'DateTime',
+    'date',
+    'tanggal',
+    'Tanggal',
+    'time',
+    'jam',
+    'Jam'
+  ]);
+
+  const radius = Math.max(
+    5,
+    Math.min(15, 5 + ((mag || 1) * 1.5))
+  );
+
+  const marker = L.circleMarker(
+    [pos.lat, pos.lon],
+    {
+      radius,
+      weight: 2,
+      opacity: 0.9,
+      fillOpacity: 0.65
+    }
+  ).addTo(map);
+
+  marker.bindPopup(`
+    <div style="min-width:190px">
+      <strong>Gempa M ${mag ?? '-'}</strong>
+      <hr>
+      <b>Lokasi:</b> ${escapeHtml(location)}<br>
+      <b>Kedalaman:</b> ${escapeHtml(depth)}<br>
+      <b>Koordinat:</b> ${pos.lat}, ${pos.lon}<br>
+      <b>Waktu:</b> ${escapeHtml(time)}
+    </div>
+  `);
+
+  markers.push(marker);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function renderList(items) {
+
+  const el = document.getElementById('gempaList');
+
+  if (!items.length) {
+    el.innerHTML = `
+      <div class="empty">
+        Tidak ada data gempa.
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = items.slice(0, 30).map(item => {
+
+    const mag = numberValue(
+      getValue(item, [
+        'magnitude',
+        'mag',
+        'Magnitude',
+        'Magnitudo'
+      ])
+    );
+
+    const depth = getValue(item, [
+      'depth',
+      'kedalaman',
+      'Kedalaman'
+    ]);
+
+    const location = getValue(item, [
+      'location',
+      'wilayah',
+      'Wilayah',
+      'place',
+      'lokasi',
+      'Lokasi'
+    ]);
+
+    const time = getValue(item, [
+      'datetime',
+      'DateTime',
+      'date',
+      'tanggal',
+      'Tanggal',
+      'time',
+      'jam',
+      'Jam'
+    ]);
+
+    return `
+      <div class="gempa-item">
+
+        <div class="gempa-mag ${magnitudeClass(mag || 0)}">
+          M ${mag ?? '-'}
+        </div>
+
+        <div>
+          <div class="gempa-location">
+            ${escapeHtml(location)}
+          </div>
+
+          <div class="gempa-meta">
+            Kedalaman: ${escapeHtml(depth)}
+          </div>
+        </div>
+
+        <div class="gempa-time">
+          ${escapeHtml(time)}
+        </div>
+
+      </div>
+    `;
+
+  }).join('');
+}
+
+async function loadGempa() {
+
+  const status = document.getElementById('gempaStatus');
+
+  status.textContent = 'Mengambil data gempa...';
+
+  try {
+
+    const response = await fetch(
+      '/api/info-gempa?t=' + Date.now(),
+      {
+        cache: 'no-store'
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        'HTTP ' + response.status
+      );
+    }
+
+    const data = await response.json();
+
+    console.log('INFO GEMPA:', data);
+
+    const items = findArray(data);
+
+    if (!items.length) {
+      throw new Error(
+        'Format data gempa tidak dikenali'
+      );
+    }
+
+    clearMarkers();
+
+    items.forEach(createMarker);
+
+    renderList(items);
+
+    status.textContent =
+      `Menampilkan ${items.length} data gempa`;
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      'Gagal mengambil data gempa.';
+
+    document.getElementById('gempaList').innerHTML = `
+      <div class="empty">
+        Data gempa tidak dapat dimuat.<br>
+        Coba tekan Refresh.
+      </div>
+    `;
+  }
+}
+
+document
+  .getElementById('refreshGempa')
+  .addEventListener('click', loadGempa);
+
+loadGempa();
+</script>
+
+</body>
+</html>
