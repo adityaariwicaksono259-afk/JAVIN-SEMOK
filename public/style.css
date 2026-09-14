@@ -3203,3 +3203,34 @@ html, body, .bj-page { max-width: 100%; overflow-x: hidden; box-sizing: border-b
 .apitool-hist-url { font-size: 12px; font-weight: 700; color: var(--text-primary); word-break: break-all; font-family: 'JetBrains Mono', monospace; }
 .apitool-hist-meta { font-size: 10.5px; color: var(--text-secondary); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
 .apitool-empty { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 12px; font-style: italic; }
+
+/* ===== JAVIN GUNA ===== */
+.jg-page { background: var(--bg-chat); min-height: 100vh; }
+.jg-content { padding: 14px; max-width: 520px; margin: 0 auto; }
+.jg-hero { text-align: center; padding: 22px 16px; background: linear-gradient(135deg, #128c7e, #25d366); border-radius: 16px; margin-bottom: 16px; color: #fff; box-shadow: 0 4px 20px rgba(18,140,126,.3); }
+.jg-hero-icon { font-size: 46px; margin-bottom: 6px; }
+.jg-hero-title { font-size: 20px; font-weight: 900; letter-spacing: 3px; }
+.jg-hero-sub { font-size: 12px; opacity: .9; margin-top: 4px; }
+.jg-form { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.jg-label { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; color: var(--text-secondary); margin-top: 8px; }
+.jg-input, .jg-select { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 13.5px; outline: none; background: var(--bg-input); color: var(--text-input); box-sizing: border-box; font-family: inherit; }
+.jg-input:focus, .jg-select:focus { border-color: var(--accent); }
+.jg-create { margin-top: 14px; padding: 15px; background: linear-gradient(135deg, #128c7e, #25d366); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 900; letter-spacing: 2px; cursor: pointer; box-shadow: 0 4px 16px rgba(37,211,102,.35); }
+.jg-create:active { transform: scale(.97); }
+.jg-create:disabled { opacity: .5; }
+.jg-reset { margin-top: 6px; padding: 11px; background: var(--bg-info); color: var(--text-secondary); border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.jg-response { background: #0a0e14; border-radius: 12px; padding: 14px; margin-bottom: 18px; border: 2px solid var(--accent); }
+.jg-resp-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(37,211,102,.2); }
+.jg-resp-status { font-size: 13px; font-weight: 800; font-family: 'JetBrains Mono', monospace; padding: 4px 10px; border-radius: 6px; }
+.jg-resp-status.ok { background: rgba(37,211,102,.15); color: #25d366; }
+.jg-resp-status.err { background: rgba(211,47,47,.15); color: #ff5252; }
+.jg-resp-time { font-size: 11px; color: #8696a0; font-family: 'JetBrains Mono', monospace; }
+.jg-copy { padding: 5px 10px; border-radius: 6px; background: rgba(37,211,102,.15); color: #25d366; border: none; font-size: 11px; font-weight: 700; cursor: pointer; }
+.jg-resp-body { color: #00ff41; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; }
+.jg-hist-title { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--text-secondary); margin-bottom: 8px; }
+.jg-hist { display: flex; flex-direction: column; gap: 6px; }
+.jg-hist-item { padding: 10px 12px; background: var(--bg-modal); border-radius: 10px; border-left: 3px solid var(--accent); }
+.jg-hist-name { font-size: 12.5px; font-weight: 800; color: var(--text-title); }
+.jg-hist-meta { font-size: 10.5px; color: var(--text-secondary); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+.jg-hist-input { font-size: 11px; color: var(--text-secondary); margin-top: 3px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }
+.jg-empty { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 12px; font-style: italic; }
