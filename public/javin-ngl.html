@@ -42,6 +42,23 @@
 .ngl-spinner { width: 16px; height: 16px; border: 2px solid rgba(128,128,128,.3); border-top-color: #7c5cff; border-radius: 50%; animation: ngl-spin 0.7s linear infinite; }
 @keyframes ngl-spin { to { transform: rotate(360deg); } }
 .ngl-meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.72rem; opacity: 0.55; padding: 0 4px; }
+
+/* === FIX SCROLL === */
+html, body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  position: relative !important;
+}
+.page.tools-page {
+  overflow-y: visible !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+.ngl-wrap {
+  padding-bottom: 120px !important;  /* ruang buat scroll sampe bawah */
+}
 </style>
 </head>
 <body>
@@ -54,7 +71,7 @@
     <div class="ngl-card">
       <h2>NGL Sender</h2>
       <p class="ngl-sub">kirim pesan secara bertubi-tubi</p>
-      <label class="ngl-label" for="nglTarget">Masukan Link/User NGL <span class="req">*</span> <span class="ngl-hint">contoh: javin54818</span></label>
+      <label class="ngl-label" for="nglTarget">Masukan Link/User NGL <span class="req">*</span></label>
       <input id="nglTarget" class="ngl-input" type="text" placeholder="javin54818" autocomplete="off" />
       <label class="ngl-label" for="nglPesan">Isi Pesan yang Ingin Dikirim <span class="req">*</span></label>
       <textarea id="nglPesan" class="ngl-textarea" placeholder="masukan teks" maxlength="500"></textarea>
