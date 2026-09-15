@@ -1445,6 +1445,8 @@ socket.on('event-state', (cb) => {
       socket.emit('auth-token', newToken);
     }
     const user = data.users[userId];
+    // Emit token existing biar client simpen di localStorage
+    if (user.authToken) socket.emit('auth-token', user.authToken);
     if (user.banned) return socket.emit('auth-fail', 'Akun lo di-ban oleh admin.');
 
     onlineUsers.forEach((u, sid) => {
