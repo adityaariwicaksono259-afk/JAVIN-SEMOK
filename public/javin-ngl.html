@@ -59,6 +59,25 @@ html, body {
 .ngl-wrap {
   padding-bottom: 120px !important;  /* ruang buat scroll sampe bawah */
 }
+
+/* === FIX SCROLL & LAYOUT === */
+html, body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  position: static !important;
+  display: block !important;
+}
+.page.ngl-page {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  display: block !important;
+}
+.ngl-wrap {
+  padding-bottom: 150px !important; /* Kasih ruang biar bisa scroll sampe bawah */
+}
 </style>
 </head>
 <body>
@@ -159,8 +178,8 @@ pesanIn.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey
 nglUpdateCounter();
 targetIn.focus();
 </script>
-<script src="/common.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-<script src="/auth-socket.js"></script>
+
+
+
 </body>
 </html>
