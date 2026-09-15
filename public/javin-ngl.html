@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NGL Sender - JAVACHAT</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+.ngl-wrap { max-width: 620px; margin: 0 auto; padding: 20px; }
+.ngl-card { background: var(--card-bg, rgba(255,255,255,.06)); border-radius: 18px; padding: 22px; }
+.ngl-card h2 { margin-top: 0; margin-bottom: 6px; }
+.ngl-sub { opacity: 0.7; font-size: 0.85rem; margin-top: 0; margin-bottom: 18px; }
+.ngl-label { display: block; margin: 16px 0 7px; font-weight: 600; font-size: 0.9rem; }
+.ngl-label .req { color: #ff4d6d; margin-left: 2px; }
+.ngl-hint { font-weight: 400; opacity: 0.65; font-size: 0.78rem; margin-left: 6px; }
+.ngl-input, .ngl-textarea { width: 100%; box-sizing: border-box; border: 1px solid rgba(128,128,128,.3); border-radius: 12px; padding: 12px; font: inherit; background: rgba(128,128,128,.08); color: inherit; transition: border-color 0.15s; }
+.ngl-input:focus, .ngl-textarea:focus { outline: none; border-color: #7c5cff; }
+.ngl-textarea { min-height: 110px; resize: vertical; font-family: inherit; }
+.ngl-counter { text-align: right; font-size: 0.75rem; opacity: 0.6; margin-top: 4px; }
+.ngl-counter.warn { color: #ffb020; opacity: 1; }
+.ngl-counter.over { color: #ff4d6d; opacity: 1; }
+.ngl-actions { display: flex; gap: 10px; margin-top: 20px; }
+.ngl-btn { flex: 1; border: 0; border-radius: 12px; padding: 13px; font: inherit; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.15s; }
+.ngl-btn:active { transform: scale(0.97); }
+.ngl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ngl-btn-primary { background: linear-gradient(135deg, #7c5cff, #9d7cff); color: white; }
+.ngl-btn-secondary { flex: 0 0 auto; background: rgba(128,128,128,.15); color: inherit; border: 1px solid rgba(128,128,128,.3); padding: 13px 18px; }
+.ngl-result-section { margin-top: 22px; }
+.ngl-result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ngl-result-head > span:first-child { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; font-weight: 600; }
+.ngl-badge { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+.ngl-badge.idle { background: rgba(128,128,128,.2); opacity: 0.8; }
+.ngl-badge.loading { background: #ffb020; color: #000; }
+.ngl-badge.success { background: #00d4aa; color: #000; }
+.ngl-badge.error { background: #ff4d6d; color: #fff; }
+.ngl-result-box { background: rgba(0,0,0,.3); border: 1px solid rgba(128,128,128,.2); border-radius: 12px; padding: 14px; font-family: monospace; font-size: 0.78rem; line-height: 1.6; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; color: #a8ffd4; margin: 0; display: none; }
+.ngl-result-box.show { display: block; }
+.ngl-error-box { margin-top: 10px; background: rgba(255,77,109,.1); border: 1px solid #ff4d6d; border-radius: 12px; padding: 12px; font-size: 0.83rem; color: #ff8fa3; display: none; }
+.ngl-error-box.show { display: block; }
+.ngl-loading { display: none; align-items: center; gap: 10px; padding: 14px 0; opacity: 0.75; font-size: 0.85rem; }
+.ngl-loading.show { display: flex; }
+.ngl-spinner { width: 16px; height: 16px; border: 2px solid rgba(128,128,128,.3); border-top-color: #7c5cff; border-radius: 50%; animation: ngl-spin 0.7s linear infinite; }
+@keyframes ngl-spin { to { transform: rotate(360deg); } }
+.ngl-meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.72rem; opacity: 0.55; padding: 0 4px; }
+</style>
+</head>
+<body>
+<div class="page tools-page">
+  <header class="page-header">
+    <a href="/tools.html" class="header-btn">← Tools</a>
+    <h1>📨 NGL Sender</h1>
+  </header>
+  <div class="ngl-wrap">
+    <div class="ngl-card">
+      <h2>NGL Sender</h2>
+      <p class="ngl-sub">Kirim pesan anonim ke NGL lewat API Nexa</p>
+      <label class="ngl-label" for="nglTarget">Link NGL / Username <span class="req">*</span> <span class="ngl-hint">bisa: javin54818 atau https://ngl.link/javin54818</span></label>
+      <input id="nglTarget" class="ngl-input" type="text" placeholder="javin54818" autocomplete="off" />
+      <label class="ngl-label" for="nglPesan">Isi Pesan <span class="req">*</span> <span class="ngl-hint">max 500 karakter</span></label>
+      <textarea id="nglPesan" class="ngl-textarea" placeholder="Tulis pesan anonim lu di sini..." maxlength="500"></textarea>
+      <div class="ngl-counter" id="nglCounter">0 / 500</div>
+      <label class="ngl-label" for="nglJumlah">Jumlah Kirim <span class="req">*</span> <span class="ngl-hint">1 – 1000</span></label>
+      <input id="nglJumlah" class="ngl-input" type="number" value="1" min="1" max="1000" step="1" />
+      <div class="ngl-actions">
+        <button id="nglSend" class="ngl-btn ngl-btn-primary" type="button">🚀 KIRIM</button>
+        <button id="nglClear" class="ngl-btn ngl-btn-secondary" type="button">🗑️</button>
+      </div>
+      <div class="ngl-result-section">
+        <div class="ngl-result-head">
+          <span>Response</span>
+          <span id="nglBadge" class="ngl-badge idle">IDLE</span>
+        </div>
+        <div id="nglLoading" class="ngl-loading"><div class="ngl-spinner"></div><span>Mengirim pesan...</span></div>
+        <pre id="nglResult" class="ngl-result-box"></pre>
+        <div id="nglError" class="ngl-error-box"></div>
+        <div class="ngl-meta">
+          <span id="nglApiUrl">—</span>
+          <span id="nglLatency">— ms</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const NGL_BASE_URL = 'https://api.nexadev.my.id/tools/';
+const NGL_ENDPOINT = 'nglspam';
+const NGL_TIMEOUT_MS = 120000;
+const $ = (id) => document.getElementById(id);
+const targetIn = $('nglTarget'), pesanIn = $('nglPesan'), jumlahIn = $('nglJumlah');
+const counterEl = $('nglCounter'), sendBtn = $('nglSend'), clearBtn = $('nglClear');
+const resultBox = $('nglResult'), errorBox = $('nglError'), badge = $('nglBadge');
+const loadingEl = $('nglLoading'), latencyEl = $('nglLatency'), apiUrlEl = $('nglApiUrl');
+let nglRequesting = false;
+function nglSetBadge(s, t) { badge.className = 'ngl-badge ' + s; badge.textContent = t; }
+function nglShowLoading(s) { loadingEl.classList.toggle('show', s); sendBtn.disabled = s; sendBtn.textContent = s ? '⏳ MENGIRIM...' : '🚀 KIRIM'; }
+function nglShowError(m) { errorBox.textContent = '❌ ' + m; errorBox.classList.add('show'); }
+function nglClearError() { errorBox.classList.remove('show'); errorBox.textContent = ''; }
+function nglPrettyJSON(d) { try { return JSON.stringify(d, null, 2); } catch (e) { return String(d); } }
+function nglNormalizeTarget(r) { let s = (r || '').trim(); if (!s) return ''; if (/^https?:\/\//i.test(s)) return s; s = s.replace(/^@/, ''); return 'https://ngl.link/' + s; }
+function nglIsValidURL(s) { try { const u = new URL(s); return u.protocol === 'http:' || u.protocol === 'https:'; } catch (e) { return false; } }
+function nglUpdateCounter() { const l = pesanIn.value.length; counterEl.textContent = l + ' / 500'; counterEl.className = 'ngl-counter'; if (l > 450) counterEl.classList.add('warn'); if (l >= 500) counterEl.classList.add('over'); }
+function nglBuildURL() { const b = new URL(NGL_BASE_URL + NGL_ENDPOINT + '/'); b.searchParams.set('url', nglNormalizeTarget(targetIn.value)); b.searchParams.set('pesan', pesanIn.value.trim()); b.searchParams.set('jumlah', jumlahIn.value.trim()); return b.toString(); }
+async function nglFetch(u, m) { const c = new AbortController(); const t = setTimeout(() => c.abort(), m || NGL_TIMEOUT_MS); try { return await fetch(u, { signal: c.signal }); } finally { clearTimeout(t); } }
+async function nglSend() {
+  if (nglRequesting) return;
+  const raw = targetIn.value.trim(), pesan = pesanIn.value.trim(), jumlah = parseInt(jumlahIn.value, 10);
+  if (!raw) { nglShowError('Username / link NGL masih kosong.'); targetIn.focus(); return; }
+  const targetURL = nglNormalizeTarget(raw);
+  if (!nglIsValidURL(targetURL)) { nglShowError('Link NGL gak valid.'); targetIn.focus(); return; }
+  if (!pesan) { nglShowError('Pesan masih kosong.'); pesanIn.focus(); return; }
+  if (!jumlah || jumlah < 1) { nglShowError('Jumlah minimal 1.'); jumlahIn.focus(); return; }
+  if (jumlah > 1000) { nglShowError('Jumlah maksimal 1000.'); jumlahIn.focus(); return; }
+  nglRequesting = true; nglClearError(); nglShowLoading(true); nglSetBadge('loading', 'LOADING');
+  resultBox.classList.remove('show'); resultBox.textContent = ''; latencyEl.textContent = '— ms';
+  const apiURL = nglBuildURL();
+  apiUrlEl.textContent = apiURL.length > 55 ? apiURL.slice(0, 50) + '...' : apiURL;
+  apiUrlEl.title = apiURL;
+  const start = performance.now();
+  try {
+    const res = await nglFetch(apiURL);
+    const elapsed = Math.round(performance.now() - start);
+    latencyEl.textContent = elapsed + ' ms';
+    const text = await res.text(); let data;
+    try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
+    if (!res.ok) { nglSetBadge('error', 'HTTP ' + res.status); nglShowError('Server balikin ' + res.status + ' ' + res.statusText); }
+    else if (data && data.status === false) { nglSetBadge('error', 'API ERR'); nglShowError(data.message || data.msg || 'API status false'); }
+    else { nglSetBadge('success', 'SUCCESS'); }
+    resultBox.textContent = nglPrettyJSON(data); resultBox.classList.add('show');
+  } catch (err) {
+    const elapsed = Math.round(performance.now() - start);
+    latencyEl.textContent = elapsed + ' ms';
+    if (err.name === 'AbortError') { nglSetBadge('error', 'TIMEOUT'); nglShowError('Timeout ' + (NGL_TIMEOUT_MS/1000) + 's.'); }
+    else { nglSetBadge('error', 'NET ERR'); nglShowError('Gagal konek: ' + err.message); }
+  } finally { nglRequesting = false; nglShowLoading(false); }
+}
+function nglClearAll() { targetIn.value = ''; pesanIn.value = ''; jumlahIn.value = '1'; resultBox.textContent = ''; resultBox.classList.remove('show'); nglClearError(); nglSetBadge('idle', 'IDLE'); latencyEl.textContent = '— ms'; apiUrlEl.textContent = '—'; nglUpdateCounter(); targetIn.focus(); }
+sendBtn.addEventListener('click', nglSend);
+clearBtn.addEventListener('click', nglClearAll);
+pesanIn.addEventListener('input', nglUpdateCounter);
+targetIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); pesanIn.focus(); } });
+pesanIn.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); nglSend(); } });
+nglUpdateCounter();
+targetIn.focus();
+</script>
+<script src="/common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/auth-socket.js"></script>
+</body>
+</html>
