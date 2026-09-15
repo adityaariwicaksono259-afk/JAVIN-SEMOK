@@ -2265,6 +2265,79 @@ setInterval(() => {
 }, 60 * 1000);
 
 
+// === LOGIN BY GMAIL ===
+app.post('/api/auth/gmail', express.json({ limit: '1kb' }), (req, res) => {
+  const { email } = req.body || {};
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ status: false, message: 'Email wajib diisi' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ status: false, message: 'Format email tidak valid' });
+  }
+  if (!cleanEmail.endsWith('@gmail.com') && !cleanEmail.endsWith('@googlemail.com')) {
+    return res.status(400).json({ status: false, message: 'Harus pakai email Gmail' });
+  }
+
+  // Cari user dengan email ini
+  for (const uid in data.users) {
+    if (data.users[uid].email === cleanEmail) {
+      const u = data.users[uid];
+      if (u.banned) {
+        return res.status(403).json({ status: false, message: 'Akun di-ban' });
+      }
+      if (!u.authToken) {
+        u.authToken = crypto.randomBytes(16).toString('hex');
+        saveData();
+      }
+      console.log('[AUTH] Login existing:', cleanEmail, '| coins:', u.coins);
+      return res.json({
+        status: true,
+        userId: uid,
+        token: u.authToken,
+        username: u.username,
+        email: u.email,
+        coins: u.coins || 0,
+        isNew: false
+      });
+    }
+  }
+
+  // Bikin user baru
+  const uid = crypto.randomUUID();
+  const token = crypto.randomBytes(16).toString('hex');
+  const prefix = cleanEmail.split('@')[0].slice(0, 12).replace(/[^a-z0-9]/g, '');
+  const shortId = uid.slice(0, 4);
+  data.users[uid] = {
+    userId: uid,
+    username: prefix + '_' + shortId,
+    email: cleanEmail,
+    coins: 100,
+    badge: 'newbie',
+    theme: 'light',
+    messageCount: 0,
+    banned: false,
+    createdAt: Date.now(),
+    authToken: token,
+    ach: { slotWins: 0, giftSent: 0, tebakWins: 0, daduWins: 0, unlocked: {}, claimed: {} }
+  };
+  saveData();
+  console.log('[AUTH] New user:', cleanEmail, '| coins: 100');
+
+  res.json({
+    status: true,
+    userId: uid,
+    token: token,
+    username: prefix + '_' + shortId,
+    email: cleanEmail,
+    coins: 100,
+    isNew: true
+  });
+});
+// === END LOGIN GMAIL ===
+
 // === PROXY NGL SENDER + COIN SYSTEM ===
 const NGL_COIN_PER_PESAN = 3;
 

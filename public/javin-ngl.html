@@ -243,6 +243,17 @@ body {
   </div>
 </div>
 
+<!-- LOGIN MODAL -->
+<div id="nglLoginOverlay" class="ngl-login-overlay">
+  <div class="ngl-login-box">
+    <h3>🔐 Login</h3>
+    <p>Masuk pakai Gmail untuk pakai NGL Sender</p>
+    <input id="nglLoginEmail" type="email" placeholder="email@gmail.com" autocomplete="email" />
+    <button id="nglLoginBtn" type="button">Masuk</button>
+    <div id="nglLoginError" class="ngl-login-error"></div>
+  </div>
+</div>
+
 <script>
 /* === KONFIGURASI === */
 const NGL_PROXY_URL = '/api/ngl';
@@ -258,9 +269,13 @@ const sendBtn = $('nglSend');
 const clearBtn = $('nglClear');
 const loadingEl = $('nglLoading');
 const statusBox = $('nglStatusBox');
+const loginOverlay = $('nglLoginOverlay');
+const loginEmail = $('nglLoginEmail');
+const loginBtn = $('nglLoginBtn');
+const loginError = $('nglLoginError');
 const coinBar = $('nglCoinBar');
-const saldoEl = $('nglSaldo');
-const biayaEl = $('nglBiaya');
+let saldoEl = $('nglSaldo');
+let biayaEl = $('nglBiaya');
 
 /* === COIN === */
 const NGL_COIN_PER_PESAN = 3;
@@ -271,32 +286,136 @@ function getToken() {
   catch (e) { return ''; }
 }
 
+function getUserName() {
+  try { return localStorage.getItem('javachat_username') || ''; }
+  catch (e) { return ''; }
+}
+
+function getEmail() {
+  try { return localStorage.getItem('javachat_email') || ''; }
+  catch (e) { return ''; }
+}
+
+function saveAuth(d) {
+  try {
+    localStorage.setItem('javachat_id', d.userId);
+    localStorage.setItem('javachat_token', d.token);
+    localStorage.setItem('javachat_username', d.username);
+    localStorage.setItem('javachat_email', d.email);
+  } catch (e) {}
+}
+
+function logout() {
+  try {
+    localStorage.removeItem('javachat_id');
+    localStorage.removeItem('javachat_token');
+    localStorage.removeItem('javachat_username');
+    localStorage.removeItem('javachat_email');
+  } catch (e) {}
+  location.reload();
+}
+
+function showLogin() {
+  loginOverlay.classList.add('show');
+  setTimeout(function() { loginEmail.focus(); }, 100);
+}
+
+function hideLogin() {
+  loginOverlay.classList.remove('show');
+  loginError.textContent = '';
+}
+
+async function loginWithGmail() {
+  var email = loginEmail.value.trim().toLowerCase();
+  loginError.textContent = '';
+
+  if (!email) {
+    loginError.textContent = 'Email wajib diisi';
+    return;
+  }
+  if (email.indexOf('@gmail.com') === -1 && email.indexOf('@googlemail.com') === -1) {
+    loginError.textContent = 'Harus pakai email Gmail';
+    return;
+  }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Memproses...';
+
+  try {
+    var r = await fetch('/api/auth/gmail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+    var d = await r.json();
+
+    if (!r.ok || !d.status) {
+      loginError.textContent = d.message || 'Login gagal';
+      return;
+    }
+
+    saveAuth(d);
+    hideLogin();
+    await loadBalance();
+  } catch (e) {
+    loginError.textContent = 'Error: ' + e.message;
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Masuk';
+  }
+}
+
 async function loadBalance() {
-  const token = getToken();
+  var token = getToken();
   if (!token) {
-    saldoEl.textContent = '?';
+    showLogin();
     return;
   }
   try {
-    const r = await fetch('/api/ngl/balance', {
+    var r = await fetch('/api/ngl/balance', {
       headers: { 'x-auth-token': token }
     });
+    if (r.status === 401) {
+      logout();
+      return;
+    }
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
+    var d = await r.json();
     nglSaldo = d.coins || 0;
-    saldoEl.textContent = nglSaldo.toLocaleString('id-ID');
+    renderCoinBar();
     updateBiaya();
   } catch (e) {
-    saldoEl.textContent = '?';
     console.error('Load balance error:', e.message);
   }
 }
 
+function renderCoinBar() {
+  var username = getUserName() || getEmail() || 'User';
+  coinBar.classList.remove('low');
+  coinBar.style.display = 'block';
+  coinBar.innerHTML =
+    '<div class="ngl-user-bar">' +
+      '<span>👤 ' + username + '</span>' +
+      '<button type="button" id="nglLogoutBtn">Keluar</button>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;padding:8px 4px;">' +
+      '<span>💰 Saldo: <strong id="nglSaldo">' + nglSaldo.toLocaleString('id-ID') + '</strong> coin</span>' +
+      '<span>Biaya: <strong id="nglBiaya">' + ((parseInt(jumlahIn.value) || 1) * NGL_COIN_PER_PESAN) + '</strong> coin</span>' +
+    '</div>';
+
+  saldoEl = document.getElementById('nglSaldo');
+  biayaEl = document.getElementById('nglBiaya');
+
+  var lb = document.getElementById('nglLogoutBtn');
+  if (lb) lb.addEventListener('click', logout);
+}
+
 function updateBiaya() {
-  const jumlah = parseInt(jumlahIn.value, 10) || 0;
-  const biaya = jumlah * NGL_COIN_PER_PESAN;
+  if (!biayaEl) return;
+  var jumlah = parseInt(jumlahIn.value, 10) || 0;
+  var biaya = jumlah * NGL_COIN_PER_PESAN;
   biayaEl.textContent = biaya.toLocaleString('id-ID');
-  const kurang = biaya > nglSaldo;
+  var kurang = biaya > nglSaldo;
   coinBar.classList.toggle('low', kurang);
 }
 
@@ -473,6 +592,11 @@ pesanIn.addEventListener('keydown', (e) => {
     e.preventDefault();
     sendRequest();
   }
+});
+
+loginBtn.addEventListener('click', loginWithGmail);
+loginEmail.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); loginWithGmail(); }
 });
 
 updateCounter();
