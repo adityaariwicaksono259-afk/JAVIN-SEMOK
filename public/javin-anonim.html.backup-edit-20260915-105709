@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Javin Anonim - JAVACHAT</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+.javin-anonim-wrap {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.javin-anonim-card {
+  background: var(--card-bg, rgba(255,255,255,.06));
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.javin-anonim-card h2 {
+  margin-top: 0;
+}
+
+.javin-anonim-label {
+  display: block;
+  margin: 16px 0 7px;
+  font-weight: 600;
+}
+
+.javin-anonim-input,
+.javin-anonim-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(128,128,128,.3);
+  border-radius: 12px;
+  padding: 12px;
+  font: inherit;
+  background: rgba(128,128,128,.08);
+}
+
+.javin-anonim-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.javin-anonim-btn {
+  width: 100%;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.javin-anonim-result {
+  margin-top: 18px;
+  padding: 13px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(128,128,128,.08);
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="page tools-page">
+
+  <header class="page-header">
+    <a href="/tools.html" class="header-btn">Tools</a>
+    <h1>🕵️ Javin Anonim</h1>
+  </header>
+
+  <div class="javin-anonim-wrap">
+
+    <div class="javin-anonim-card">
+
+      <h2>Javin Anonim</h2>
+      <p>Kirim satu pesan anonim melalui API yang lu gunakan.</p>
+
+      <label class="javin-anonim-label" for="username">
+        Username
+      </label>
+
+      <input
+        id="username"
+        class="javin-anonim-input"
+        type="text"
+        placeholder="Masukkan username"
+        autocomplete="off"
+      >
+
+      <label class="javin-anonim-label" for="pesan">
+        Pesan
+      </label>
+
+      <textarea
+        id="pesan"
+        class="javin-anonim-textarea"
+        placeholder="Masukkan pesan"
+      ></textarea>
+
+      <label class="javin-anonim-label" for="jumlah">
+        Jumlah
+      </label>
+
+      <input
+        id="jumlah"
+        class="javin-anonim-input"
+        type="number"
+        value="1"
+        min="1"
+        max="1000"
+        readonly
+      >
+
+      <button
+        id="kirimAnonim"
+        class="javin-anonim-btn"
+        type="button"
+      >
+        KIRIM
+      </button>
+
+      <div id="hasilAnonim" class="javin-anonim-result"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/*
+==================================================
+ JAVIN ANONIM - API CONFIG
+==================================================
+
+GANTI BAGIAN DI BAWAH INI DENGAN API LU.
+
+Contoh format:
+
+const API_URL =
+  "https://api.nexadev.my.id/tools/nglspam/?url=&pesan=&jumlah=";
+
+JANGAN ubah kode lainnya.
+==================================================
+*/
+
+const API_URL =
+  "https://api.nexadev.my.id/tools/nglspam/?url=&pesan=&jumlah=";
+
+
+const usernameInput = document.getElementById("username");
+const pesanInput = document.getElementById("pesan");
+const jumlahInput = document.getElementById("jumlah");
+const kirimBtn = document.getElementById("kirimAnonim");
+const hasil = document.getElementById("hasilAnonim");
+
+
+kirimBtn.addEventListener("click", async () => {
+
+  const username = usernameInput.value.trim();
+  const pesan = pesanInput.value.trim();
+  const jumlah = "1";
+
+  if (!username) {
+    hasil.style.display = "block";
+    hasil.textContent = "Username wajib diisi.";
+    return;
+  }
+
+  if (!pesan) {
+    hasil.style.display = "block";
+    hasil.textContent = "Pesan wajib diisi.";
+    return;
+  }
+
+  hasil.style.display = "block";
+  hasil.textContent = "Memproses...";
+  kirimBtn.disabled = true;
+
+  try {
+
+    const url = new URL(API_URL);
+
+    url.searchParams.set("url", username);
+    url.searchParams.set("pesan", pesan);
+    url.searchParams.set("jumlah", jumlah);
+
+    const response = await fetch(url.toString());
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    if (data.status === false) {
+      hasil.textContent =
+        data.message ||
+        "API gagal memproses permintaan.";
+    } else {
+      hasil.textContent =
+        data.message ||
+        "Pesan berhasil diproses.";
+    }
+
+    console.log("JAVIN ANONIM:", data);
+
+  } catch (error) {
+
+    console.error("JAVIN ANONIM ERROR:", error);
+
+    hasil.textContent =
+      "Terjadi kesalahan saat menghubungi API.";
+
+  } finally {
+
+    kirimBtn.disabled = false;
+
+  }
+
+});
+</script>
+
+<script src="/common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/auth-socket.js"></script>
+
+</body>
+</html>

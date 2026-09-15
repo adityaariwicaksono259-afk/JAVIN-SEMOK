@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Javin Analog - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.analog-wrap{max-width:600px;margin:auto;padding:16px}
+.analog-card{background:var(--card-bg,#fff);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.analog-title{font-size:22px;font-weight:700;margin-bottom:6px}
+.analog-desc{opacity:.7;margin-bottom:18px}
+.analog-label{display:block;font-weight:600;margin:12px 0 6px}
+.analog-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #ccc;border-radius:12px;font-size:15px}
+.analog-btn{width:100%;border:0;border-radius:12px;padding:13px;margin-top:12px;font-size:15px;font-weight:700;cursor:pointer}
+.analog-status{margin-top:12px;padding:11px;border-radius:10px;display:none;white-space:pre-wrap;word-break:break-word}
+.analog-stats{line-height:1.8}
+</style>
+</head>
+
+<body>
+<div class="page">
+  <header class="page-header">
+    <a href="/tools.html" class="header-btn">Tools</a>
+    <h1>Javin Analog</h1>
+  </header>
+
+  <div class="page-content analog-wrap">
+
+    <div class="analog-card">
+      <div class="analog-title">🔐 Magic Link</div>
+      <div class="analog-desc">
+        Kirim magic link menggunakan API Javin Analog.
+      </div>
+
+      <label class="analog-label">Email</label>
+      <input
+        id="sendEmail"
+        class="analog-input"
+        type="email"
+        placeholder="contoh@email.com"
+        autocomplete="off"
+      >
+
+      <button id="sendBtn" class="analog-btn">
+        📩 Kirim Magic Link
+      </button>
+
+      <div id="sendStatus" class="analog-status"></div>
+    </div>
+
+    <div class="analog-card">
+      <div class="analog-title">✅ Verify</div>
+      <div class="analog-desc">
+        Masukkan email dan link verifikasi yang diterima.
+      </div>
+
+      <label class="analog-label">Email</label>
+      <input
+        id="verifyEmail"
+        class="analog-input"
+        type="email"
+        placeholder="contoh@email.com"
+      >
+
+      <label class="analog-label">Link Verifikasi</label>
+      <input
+        id="verifyLink"
+        class="analog-input"
+        type="text"
+        placeholder="https://..."
+      >
+
+      <button id="verifyBtn" class="analog-btn">
+        ✅ Verify
+      </button>
+
+      <div id="verifyStatus" class="analog-status"></div>
+    </div>
+
+    <div class="analog-card">
+      <div class="analog-title">📊 Statistik API</div>
+
+      <button id="statsBtn" class="analog-btn">
+        🔄 Ambil Statistik
+      </button>
+
+      <div id="statsResult" class="analog-status analog-stats"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showStatus(el, message, ok = true) {
+  el.style.display = "block";
+  el.textContent = message;
+  el.style.background = ok
+    ? "rgba(46, 204, 113, .12)"
+    : "rgba(231, 76, 60, .12)";
+}
+
+async function sendMagicLink() {
+  const input = document.getElementById("sendEmail");
+  const status = document.getElementById("sendStatus");
+  const btn = document.getElementById("sendBtn");
+
+  const email = (input && input.value
+    ? input.value
+    : "").trim();
+
+  if (!email) {
+    showStatus(status, "Silakan ketik email secara manual.", false);
+    input?.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Mengirim...";
+
+  try {
+    const res = await fetch("/api/javin-analog/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: email
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    showStatus(
+      status,
+      data.message || JSON.stringify(data),
+      res.ok && data.success !== false
+    );
+  } catch (err) {
+    showStatus(
+      status,
+      "Gagal menghubungi server: " + err.message,
+      false
+    );
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📩 Kirim Magic Link";
+  }
+}
+
+async function verifyMagicLink() {
+  const email = String(document.getElementById("verifyEmail").value || "").trim();
+  const link = String(document.getElementById("verifyLink").value || "").trim();
+  const status = document.getElementById("verifyStatus");
+  const btn = document.getElementById("verifyBtn");
+
+  if (!email || !link) {
+    showStatus(status, "Email dan link wajib diisi.", false);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Memverifikasi...";
+
+  try {
+    const res = await fetch("/api/javin-analog/verify", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({email, link})
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    showStatus(
+      status,
+      data.message || JSON.stringify(data),
+      res.ok && data.success !== false
+    );
+  } catch (err) {
+    showStatus(status, "Gagal menghubungi server.", false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "✅ Verify";
+  }
+}
+
+async function loadStats() {
+  const result = document.getElementById("statsResult");
+  const btn = document.getElementById("statsBtn");
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Mengambil data...";
+
+  try {
+    const res = await fetch("/api/javin-analog/stats");
+    const data = await res.json();
+
+    if (!res.ok || data.success === false) {
+      throw new Error(data.message || "Gagal mengambil statistik");
+    }
+
+    const stats = data.stats || {};
+    const recent = data.recent || {};
+
+    result.style.display = "block";
+    result.textContent =
+      "Status: " + (stats.status ? "ONLINE" : "OFFLINE") + "\\n" +
+      "Total Verified: " + (stats.totalVerified ?? "-") + "\\n" +
+      "Verified Hari Ini: " + (stats.todayVerified ?? "-") + "\\n" +
+      "Database: " + (stats.isMongo ? "MongoDB" : "Unknown") + "\\n" +
+      "Recent Log: " + (recent.logs?.length ?? 0);
+  } catch (err) {
+    showStatus(result, err.message, false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "🔄 Ambil Statistik";
+  }
+}
+
+document.getElementById("sendBtn").onclick = sendMagicLink;
+document.getElementById("verifyBtn").onclick = verifyMagicLink;
+document.getElementById("statsBtn").onclick = loadStats;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ManhwaDesu - JAVIN CHAT</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0b0b;
+      color: #fff;
+    }
+
+    .page {
+      width: min(1100px, 100%);
+      margin: auto;
+      padding: 20px;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .back {
+      text-decoration: none;
+      color: #fff;
+      background: #191919;
+      border: 1px solid #292929;
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      color: #999;
+      margin: 5px 0 0;
+      font-size: 13px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .search-box input {
+      flex: 1;
+      min-width: 0;
+      background: #151515;
+      border: 1px solid #303030;
+      color: #fff;
+      border-radius: 12px;
+      padding: 13px;
+      outline: none;
+    }
+
+    .search-box button,
+    .tabs button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      background: #fff;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+    }
+
+    .tabs button {
+      background: #191919;
+      color: #ddd;
+      border: 1px solid #303030;
+      white-space: nowrap;
+    }
+
+    .tabs button.active {
+      background: #fff;
+      color: #000;
+    }
+
+    .status {
+      color: #aaa;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid #292929;
+      border-radius: 15px;
+      background: #111;
+    }
+
+    .cover {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+      display: block;
+      background: #1b1b1b;
+    }
+
+    .content {
+      padding: 11px;
+    }
+
+    .title {
+      font-weight: 700;
+      line-height: 1.35;
+      font-size: 14px;
+      min-height: 38px;
+    }
+
+    .meta {
+      color: #999;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .open {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      color: #000;
+      background: #fff;
+      border-radius: 9px;
+      padding: 9px;
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .empty {
+      padding: 35px 10px;
+      text-align: center;
+      color: #888;
+    }
+
+    .detail {
+      display: none;
+      margin-top: 20px;
+      padding: 18px;
+      border: 1px solid #292929;
+      border-radius: 16px;
+      background: #111;
+    }
+
+    .detail.show {
+      display: block;
+    }
+
+    .detail-wrap {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 18px;
+    }
+
+    .detail-cover {
+      width: 100%;
+      border-radius: 12px;
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+    }
+
+    .detail h2 {
+      margin-top: 0;
+    }
+
+    .synopsis {
+      color: #bbb;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 12px 0;
+    }
+
+    .genre {
+      border: 1px solid #333;
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: #aaa;
+      font-size: 11px;
+    }
+
+    .chapters {
+      margin-top: 16px;
+    }
+
+    .chapter {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px;
+      margin-top: 7px;
+      background: #181818;
+      border-radius: 9px;
+      color: #ddd;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        padding: 14px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .detail-wrap {
+        grid-template-columns: 120px 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+
+    <div class="top">
+      <a class="back" href="/tools.html">←</a>
+
+      <div>
+        <h1>📚 ManhwaDesu</h1>
+        <div class="subtitle">
+          Cari manga & manhwa
+        </div>
+      </div>
+    </div>
+
+    <form class="search-box" id="searchForm">
+      <input
+        id="query"
+        autocomplete="off"
+        placeholder="Cari judul manga..."
+      >
+
+      <button type="submit">
+        Cari
+      </button>
+    </form>
+
+    <div class="tabs">
+      <button data-mode="latest" class="active">
+        Terbaru
+      </button>
+
+      <button data-mode="popular">
+        Populer
+      </button>
+    </div>
+
+    <div class="status" id="status">
+      Memuat...
+    </div>
+
+    <section class="grid" id="results"></section>
+
+    <section class="detail" id="detail"></section>
+
+  </main>
+
+  <script>
+    const results = document.getElementById('results');
+    const status = document.getElementById('status');
+    const detail = document.getElementById('detail');
+    const form = document.getElementById('searchForm');
+    const query = document.getElementById('query');
+
+    let currentMode = 'latest';
+
+    function escapeHtml(value = '') {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function render(items) {
+      detail.classList.remove('show');
+      detail.innerHTML = '';
+
+      if (!Array.isArray(items) || !items.length) {
+        results.innerHTML =
+          '<div class="empty">Tidak ada hasil ditemukan.</div>';
+
+        return;
+      }
+
+      results.innerHTML = items.map(item => {
+        const title = escapeHtml(item.title || 'Tanpa judul');
+        const image = escapeHtml(item.image || '');
+        const rating = escapeHtml(item.rating || 'N/A');
+        const type = escapeHtml(item.type || 'Manga');
+        const slug = encodeURIComponent(item.slug || '');
+
+        return `
+          <article class="card">
+            ${
+              image
+                ? `<img class="cover" src="${image}" alt="${title}" loading="lazy">`
+                : `<div class="cover"></div>`
+            }
+
+            <div class="content">
+              <div class="title">${title}</div>
+
+              <div class="meta">
+                ${type} • ⭐ ${rating}
+              </div>
+
+              <button
+                class="open"
+                type="button"
+                onclick="openDetail('${slug}')"
+              >
+                Lihat Detail
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function loadMode(mode) {
+      currentMode = mode;
+
+      status.textContent = 'Memuat data...';
+      results.innerHTML = '';
+
+      try {
+        const response = await fetch(
+          `/api/manhwadesu/${mode}?page=1`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(
+            data.error || 'Gagal mengambil data.'
+          );
+        }
+
+        status.textContent =
+          `${data.manga?.length || 0} hasil`;
+
+        render(data.manga || []);
+      } catch (error) {
+        status.textContent = 'Gagal mengambil data.';
+
+        results.innerHTML = `
+          <div class="empty">
+            ${escapeHtml(error.message)}
+          </div>
+        `;
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+
+      const q = query.value.trim();
+
+      if (!q) {
+        loadMode(currentMode);
+        return;
+      }
+
+      status.textContent = 'Mencari...';
+      results.innerHTML = '';
+
+      try {
+        const response = await fetch(
+          `/api/manhwadesu/search?q=${encodeURIComponent(q)}&page=1`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(
+            data.error || 'Pencarian gagal.'
+          );
+        }
+
+        status.textContent =
+          `${data.manga?.length || 0} hasil untuk "${q}"`;
+
+        render(data.manga || []);
+      } catch (error) {
+        status.textContent = 'Pencarian gagal.';
+
+        results.innerHTML = `
+          <div class="empty">
+            ${escapeHtml(error.message)}
+          </div>
+        `;
+      }
+    });
+
+    document.querySelectorAll('.tabs button').forEach(button => {
+      button.addEventListener('click', () => {
+        document
+          .querySelectorAll('.tabs button')
+          .forEach(x => x.classList.remove('active'));
+
+        button.classList.add('active');
+
+        query.value = '';
+
+        loadMode(button.dataset.mode);
+      });
+    });
+
+    async function openDetail(slugEncoded) {
+      const slug = decodeURIComponent(slugEncoded);
+
+      detail.classList.add('show');
+      detail.innerHTML =
+        '<div class="empty">Memuat detail...</div>';
+
+      try {
+        const response = await fetch(
+          `/api/manhwadesu/manga?slug=${encodeURIComponent(slug)}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(
+            data.error || 'Gagal mengambil detail.'
+          );
+        }
+
+        const title = escapeHtml(data.title || 'Tanpa judul');
+        const image = escapeHtml(data.image || '');
+        const synopsis =
+          escapeHtml(data.synopsis || 'Tidak ada sinopsis.');
+
+        const genres = (data.genres || [])
+          .map(g =>
+            `<span class="genre">${escapeHtml(g.title)}</span>`
+          )
+          .join('');
+
+        const chapters = (data.chapters || [])
+          .slice(0, 50)
+          .map(ch => `
+            <a
+              class="chapter"
+              href="${escapeHtml(ch.url)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span>${escapeHtml(ch.title || 'Chapter')}</span>
+              <span>↗</span>
+            </a>
+          `)
+          .join('');
+
+        detail.innerHTML = `
+          <div class="detail-wrap">
+            ${
+              image
+                ? `<img class="detail-cover" src="${image}" alt="${title}">`
+                : ''
+            }
+
+            <div>
+              <h2>${title}</h2>
+
+              <div class="genres">
+                ${genres}
+              </div>
+
+              <div class="synopsis">
+                ${synopsis}
+              </div>
+            </div>
+          </div>
+
+          ${
+            chapters
+              ? `
+                <div class="chapters">
+                  <strong>Chapter</strong>
+                  ${chapters}
+                </div>
+              `
+              : ''
+          }
+        `;
+
+        detail.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+      } catch (error) {
+        detail.innerHTML = `
+          <div class="empty">
+            ${escapeHtml(error.message)}
+          </div>
+        `;
+      }
+    }
+
+    window.openDetail = openDetail;
+
+    loadMode('latest');
+  </script>
+</body>
+</html>

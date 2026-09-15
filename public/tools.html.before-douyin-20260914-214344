@@ -20,28 +20,6 @@
     </div>
 
     <div class="tools-grid">
-<!-- JAVIN-ANONIM-V1 -->
-<a href="/javin-anonim.html" class="tool-card">
-  <div class="tool-icon">🕵️</div>
-  <div class="tool-name">Javin Anonim</div>
-  <div class="tool-desc">Kirim pesan anonim ke username</div>
-  <div class="tool-badge">ANONIM</div>
-</a>
-
-<a href="/javin-manhwadesu.html" class="tool-card">
-  <div class="tool-icon">📚</div>
-  <div class="tool-name">ManhwaDesu</div>
-  <div class="tool-desc">Cari manga & manhwa</div>
-  <div class="tool-badge">MANGA</div>
-</a>
-
-    <a href="/javin-douyin.html" class="tool-card">
-        <div class="tool-icon">🎵</div>
-        <div class="tool-name">Douyin</div>
-        <div class="tool-desc">Cari video Douyin</div>
-        <div class="tool-badge">SOCIAL VIDEO</div>
-      </a>
-
       <a href="/llama.html" class="tool-card">
         <div class="tool-icon">🤖</div>
         <div class="tool-name">Asisten Javin</div>
