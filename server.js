@@ -53,10 +53,6 @@ app.get('/api/douyin/search', async (req, res) => {
 });
 /* /JAVIN-DOUYIN-API-V1 */
 
-
-
-
-
 /* JAVIN-ANALOG-API-V3 */
 async function javinAnalogRequest(req, res, action) {
   try {
@@ -116,9 +112,6 @@ async function javinAnalogRequest(req, res, action) {
     });
   }
 }
-
-
-
 
 /* /JAVIN-ANALOG-API-V3 */
 
@@ -220,8 +213,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
 // ===== AI PROXY (Groq) =====
 app.post('/api/ai/chat', express.json({ limit: '100kb' }), async (req, res) => {
   const messages = req.body && req.body.messages;
@@ -270,7 +261,6 @@ FORMAT JAWABAN:
   }
 });
 
-
 // ===== BRAT VIDEO PROXY =====
 app.get('/api/brat', async (req, res) => {
   const text = req.query.text;
@@ -303,7 +293,6 @@ app.get('/api/sholat', async (req, res) => {
     res.send(JSON.stringify(j));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
 
 // ===== NGL-STYLE ANONIM =====
 function escXml(t) { return String(t||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c])); }
@@ -601,7 +590,6 @@ io.on('connection', (socket) => {
     cb({ ok: true, username: p.username, customTitle: p.customTitle || null });
   });
 
-
   socket.on('anonim-settings', ({ customTitle, isActive } = {}, cb) => {
     if (typeof cb !== 'function') return;
     const uid = onlineUsers.get(socket.id);
@@ -613,7 +601,6 @@ io.on('connection', (socket) => {
     saveData();
     cb({ ok: true, profile: p });
   });
-
 
   // ===== ANONIM (NGL-style) =====
   socket.on('anonim-create', ({ username } = {}, cb) => {
@@ -716,7 +703,6 @@ io.on('connection', (socket) => {
     cb({ ok: true });
   });
 
-
   // ===== ANONIM MESSAGES (rate limit 30/hari) =====
   socket.on('anonim-send', ({ toUserId, text } = {}, cb) => {
     if (typeof cb !== 'function') return;
@@ -811,7 +797,6 @@ io.on('connection', (socket) => {
     cb({ ok: true, users: list });
   });
 
-
   // Cek status ban tanpa harus join
   socket.on('check-ban', (cb) => {
     if (typeof cb !== 'function') return;
@@ -823,7 +808,6 @@ io.on('connection', (socket) => {
     }
     cb({ banned: false });
   });
-
 
   socket.on('admin-maintenance', ({ active, message } = {}, cb) => {
   if (typeof cb !== 'function') return;
@@ -1377,8 +1361,6 @@ socket.on('event-state', (cb) => {
   cb({ ok: true, current: (data.events && data.events.current) || null, history: (data.events && data.events.history || []).slice(-10).reverse() });
 });
 
-
-
   socket.on('peek-online', () => {
     socket.emit('online', onlineUsers.size);
   });
@@ -1873,9 +1855,6 @@ socket.on('event-state', (cb) => {
   });
 
   // ============ REACT/DELETE ============
-  
-
-  
 
   socket.on('react-message', ({ msgId, emoji } = {}, cb) => {
     if (typeof cb !== 'function') return;
@@ -1907,9 +1886,6 @@ socket.on('event-state', (cb) => {
     io.emit('message-reacted', { msgId, reactions: msg.reactions });
     cb({ ok: true });
   });
-
-  
-
 
   socket.on('delete-message', ({ msgId } = {}, cb) => {
     if (typeof cb !== 'function') return;
@@ -2236,7 +2212,6 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
-
 // === WAIFU (proxy ke waifu.im) ===
 app.get('/api/waifu', async (req, res) => {
   try {
@@ -2274,153 +2249,98 @@ app.get('/api/waifu', async (req, res) => {
 });
 // === END WAIFU ===
 
-// === JAVIN ANALOG - ALIGHTPRO ===
-const ALIGHT_BASE = 'https://www.alightpro.my.id';
-let _alightCookie = '';
+// === JAVIN ANALOG - ANITA STUDIO (Netlify) ===
+const ANITA_API = 'https://anita-studio.netlify.app/.netlify/functions/amprem';
 
-function alightSha256(str) {
-  return crypto.createHash('sha256').update(str, 'utf8').digest('hex');
-}
-
-function alightSetCookie(rawList) {
-  if (!rawList) return;
-  const arr = Array.isArray(rawList) ? rawList : [rawList];
-  const cookies = [];
-  for (const raw of arr) {
-    const first = String(raw).split(';')[0].trim();
-    if (first && first.indexOf('=') > 0) cookies.push(first);
-  }
-  if (cookies.length) _alightCookie = cookies.join('; ');
-}
-
-async function alightSession() {
-  const headers = {
-    'accept': '*/*',
-    'accept-language': 'id-ID,id;q=0.9',
-    'referer': ALIGHT_BASE + '/',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/141 Mobile Safari/537.36',
-    'x-requested-with': 'XMLHttpRequest'
-  };
-  if (_alightCookie) headers['cookie'] = _alightCookie;
-
-  const r = await fetch(ALIGHT_BASE + '/api/session', { headers: headers });
-
-  let sc = null;
-  if (typeof r.headers.getSetCookie === 'function') sc = r.headers.getSetCookie();
-  else { const raw = r.headers.get('set-cookie'); if (raw) sc = [raw]; }
-  if (sc) alightSetCookie(sc);
-
-  const data = await r.json();
-  if (!data.status || !data.token || !data.nonce) {
-    throw new Error('Session invalid: ' + JSON.stringify(data));
-  }
-  return data;
-}
-
-async function alightSolvePoW(sessionId, nonce, email, action, difficulty) {
-  const diff = difficulty || '0000';
-  const prefix = sessionId + ':' + nonce + ':' + email.toLowerCase() + ':' + action + ':';
-  for (let i = 0; i < 500000; i++) {
-    const hash = alightSha256(prefix + i);
-    if (hash.startsWith(diff)) return String(i);
-  }
-  return String(Date.now());
-}
-
-async function alightRequest(action, body) {
-  const sess = await alightSession();
-  const pow = await alightSolvePoW(
-    sess.sessionId, sess.nonce, body.email, action, sess.difficulty || '0000'
-  );
-
-  const headers = {
-    'accept': '*/*',
-    'content-type': 'application/json',
-    'referer': ALIGHT_BASE + '/',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/141 Mobile Safari/537.36',
-    'x-requested-with': 'XMLHttpRequest',
-    'x-amprem-token': sess.token,
-    'x-amprem-nonce': sess.nonce,
-    'x-amprem-pow': pow
-  };
-  if (_alightCookie) headers['cookie'] = _alightCookie;
-
-  const r = await fetch(ALIGHT_BASE + '/api/alight-motion', {
+async function anitaPost(action, data) {
+  const body = Object.assign({ action: action }, data);
+  const r = await fetch(ANITA_API, {
     method: 'POST',
-    headers: headers,
-    body: JSON.stringify(Object.assign({ action: action }, body))
+    headers: {
+      'accept': '*/*',
+      'content-type': 'application/json',
+      'origin': 'https://anita-studio.netlify.app',
+      'referer': 'https://anita-studio.netlify.app/',
+      'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/141 Mobile Safari/537.36'
+    },
+    body: JSON.stringify(body)
   });
 
-  let sc = null;
-  if (typeof r.headers.getSetCookie === 'function') sc = r.headers.getSetCookie();
-  else { const raw = r.headers.get('set-cookie'); if (raw) sc = [raw]; }
-  if (sc) alightSetCookie(sc);
+  const text = await r.text();
+  let json;
+  try { json = JSON.parse(text); }
+  catch (e) { json = { success: false, message: 'Response non-JSON: ' + text.slice(0, 300) }; }
 
-  return await r.json();
+  if (!r.ok) {
+    throw new Error('HTTP ' + r.status + ': ' + (json.message || text.slice(0, 200)));
+  }
+  return json;
 }
 
-async function alightGetStats() {
-  const headers = {
-    'accept': '*/*',
-    'accept-language': 'id-ID,id;q=0.9',
-    'referer': ALIGHT_BASE + '/',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/141 Mobile Safari/537.36'
-  };
-  if (_alightCookie) headers['cookie'] = _alightCookie;
-
-  const [a, b] = await Promise.all([
-    fetch(ALIGHT_BASE + '/api/stats', { headers: headers }),
-    fetch(ALIGHT_BASE + '/api/stats/recent', { headers: headers })
-  ]);
-  return { stats: await a.json(), recent: await b.json() };
-}
-
+// POST /api/javin-analog/send  → send-magiclink
 app.post('/api/javin-analog/send', express.json({ limit: '10kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     if (!email) return res.status(400).json({ status: false, message: 'Email wajib diisi' });
-    const data = await alightRequest('send', { email: email });
+    const data = await anitaPost('send-magiclink', { email: email });
     res.json(data);
   } catch (e) {
     console.error('[JAVIN-ANALOG] send error:', e.message);
-    res.status(500).json({ status: false, message: e.message });
+    res.status(500).json({ status: false, success: false, message: e.message });
   }
 });
 
-app.post('/api/javin-analog/verify', express.json({ limit: '10kb' }), async (req, res) => {
+// POST /api/javin-analog/verify  → verify-account
+app.post('/api/javin-analog/verify', express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
-    const link = (req.body && (req.body.link || req.body.oob_link)) || req.query.link;
-    if (!email || !link) return res.status(400).json({ status: false, message: 'Email dan link wajib diisi' });
-    const data = await alightRequest('verify', { email: email, link: link });
+    const rawLink = (req.body && (req.body.rawLink || req.body.link || req.body.oob_link)) || req.query.link;
+    if (!email || !rawLink) return res.status(400).json({ status: false, message: 'Email dan rawLink wajib diisi' });
+    const data = await anitaPost('verify-account', { email: email, rawLink: rawLink });
     res.json(data);
   } catch (e) {
     console.error('[JAVIN-ANALOG] verify error:', e.message);
-    res.status(500).json({ status: false, message: e.message });
+    res.status(500).json({ status: false, success: false, message: e.message });
   }
 });
 
-app.post('/api/javin-analog/magic-link', express.json({ limit: '10kb' }), async (req, res) => {
+// POST /api/javin-analog/magic-link  → alias verify-account
+app.post('/api/javin-analog/magic-link', express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
-    const link = (req.body && (req.body.link || req.body.magic_link)) || req.query.link;
-    if (!email || !link) return res.status(400).json({ status: false, message: 'Email dan link wajib diisi' });
-    const data = await alightRequest('verify', { email: email, link: link });
+    const rawLink = (req.body && (req.body.rawLink || req.body.link || req.body.magic_link)) || req.query.link;
+    if (!email || !rawLink) return res.status(400).json({ status: false, message: 'Email dan rawLink wajib diisi' });
+    const data = await anitaPost('verify-account', { email: email, rawLink: rawLink });
     res.json(data);
   } catch (e) {
     console.error('[JAVIN-ANALOG] magic-link error:', e.message);
-    res.status(500).json({ status: false, message: e.message });
+    res.status(500).json({ status: false, success: false, message: e.message });
   }
 });
 
-app.get('/api/javin-analog/stats', async (req, res) => {
+// POST /api/javin-analog/premium  → apply-premium
+app.post('/api/javin-analog/premium', express.json({ limit: '50kb' }), async (req, res) => {
   try {
-    const data = await alightGetStats();
+    const email = (req.body && req.body.email) || req.query.email;
+    const idToken = (req.body && (req.body.idToken || req.body.token)) || req.query.token;
+    if (!email || !idToken) return res.status(400).json({ status: false, message: 'Email dan idToken wajib diisi' });
+    const data = await anitaPost('apply-premium', { email: email, idToken: idToken });
     res.json(data);
   } catch (e) {
-    console.error('[JAVIN-ANALOG] stats error:', e.message);
-    res.status(500).json({ status: false, message: e.message });
+    console.error('[JAVIN-ANALOG] premium error:', e.message);
+    res.status(500).json({ status: false, success: false, message: e.message });
   }
+});
+
+// GET /api/javin-analog/stats → info sederhana
+app.get('/api/javin-analog/stats', (req, res) => {
+  res.json({
+    status: true,
+    provider: 'anita-studio.netlify.app',
+    endpoint: ANITA_API,
+    actions: ['send-magiclink', 'verify-account', 'apply-premium'],
+    author: 'Javin Semok'
+  });
 });
 // === END JAVIN ANALOG ===
 
