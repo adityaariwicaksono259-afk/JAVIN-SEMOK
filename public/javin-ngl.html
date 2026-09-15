@@ -206,6 +206,11 @@ body {
       <h2>NGL Sender</h2>
       <p class="ngl-sub">kirim pesan secara bertubi-tubi</p>
 
+      <div class="ngl-coin-bar" id="nglCoinBar">
+        <span>💰 Saldo: <strong id="nglSaldo">—</strong> coin</span>
+        <span>Biaya: <strong id="nglBiaya">3</strong> coin</span>
+      </div>
+
       <label class="ngl-label" for="nglTarget">
         Masukan Link/User NGL <span class="req">*</span>
       </label>
@@ -253,6 +258,47 @@ const sendBtn = $('nglSend');
 const clearBtn = $('nglClear');
 const loadingEl = $('nglLoading');
 const statusBox = $('nglStatusBox');
+const coinBar = $('nglCoinBar');
+const saldoEl = $('nglSaldo');
+const biayaEl = $('nglBiaya');
+
+/* === COIN === */
+const NGL_COIN_PER_PESAN = 3;
+let nglSaldo = 0;
+
+function getToken() {
+  try { return localStorage.getItem('javachat_token') || ''; }
+  catch (e) { return ''; }
+}
+
+async function loadBalance() {
+  const token = getToken();
+  if (!token) {
+    saldoEl.textContent = '?';
+    return;
+  }
+  try {
+    const r = await fetch('/api/ngl/balance', {
+      headers: { 'x-auth-token': token }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    nglSaldo = d.coins || 0;
+    saldoEl.textContent = nglSaldo.toLocaleString('id-ID');
+    updateBiaya();
+  } catch (e) {
+    saldoEl.textContent = '?';
+    console.error('Load balance error:', e.message);
+  }
+}
+
+function updateBiaya() {
+  const jumlah = parseInt(jumlahIn.value, 10) || 0;
+  const biaya = jumlah * NGL_COIN_PER_PESAN;
+  biayaEl.textContent = biaya.toLocaleString('id-ID');
+  const kurang = biaya > nglSaldo;
+  coinBar.classList.toggle('low', kurang);
+}
 
 let nglRequesting = false;
 
@@ -284,6 +330,8 @@ function updateCounter() {
 }
 function buildURL() {
   const u = new URL(NGL_PROXY_URL, window.location.origin);
+  const token = getToken();
+  if (token) u.searchParams.set('token', token);
   u.searchParams.set('url', normalizeTarget(targetIn.value));
   u.searchParams.set('pesan', pesanIn.value.trim());
   u.searchParams.set('jumlah', jumlahIn.value.trim());
@@ -378,7 +426,16 @@ async function sendRequest() {
     } else if (data && data.status === false) {
       showStatus('error', 'Gagal Mengirim Pesan', data.message || data.msg || 'API menolak permintaan');
     } else {
-      showStatus('success', 'Berhasil Mengirim Pesan - Javin', jumlah + ' pesan terkirim ke ' + targetURL.replace('https://ngl.link/', '@'));
+      // Update saldo dari response
+      if (data.sisa_coin !== undefined) {
+        nglSaldo = data.sisa_coin;
+        saldoEl.textContent = nglSaldo.toLocaleString('id-ID');
+        updateBiaya();
+      }
+      const biaya = data.coin_terpakai || (jumlah * NGL_COIN_PER_PESAN);
+      showStatus('success', 'Berhasil Mengirim Pesan - Javin',
+        jumlah + ' pesan terkirim ke @' + targetURL.replace('https://ngl.link/', '').replace('@', '') +
+        ' • ' + biaya + ' coin terpakai');
     }
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -399,6 +456,7 @@ function clearAll() {
   jumlahIn.value = '1';
   hideStatus();
   updateCounter();
+  updateBiaya();
   targetIn.focus();
 }
 
@@ -406,6 +464,7 @@ function clearAll() {
 sendBtn.addEventListener('click', sendRequest);
 clearBtn.addEventListener('click', clearAll);
 pesanIn.addEventListener('input', updateCounter);
+jumlahIn.addEventListener('input', updateBiaya);
 targetIn.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); pesanIn.focus(); }
 });
@@ -417,6 +476,7 @@ pesanIn.addEventListener('keydown', (e) => {
 });
 
 updateCounter();
+loadBalance();
 targetIn.focus();
 </script>
 </body>

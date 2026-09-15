@@ -2265,20 +2265,71 @@ setInterval(() => {
 }, 60 * 1000);
 
 
-// === PROXY NGL SENDER ===
-app.get('/api/ngl', async (req, res) => {
-  const { url, pesan, jumlah } = req.query;
+// === PROXY NGL SENDER + COIN SYSTEM ===
+const NGL_COIN_PER_PESAN = 3;
 
+function getUserByToken(token) {
+  if (!token || !data || !data.users) return null;
+  for (const uid in data.users) {
+    if (data.users[uid].authToken === token) {
+      return { uid, user: data.users[uid] };
+    }
+  }
+  return null;
+}
+
+// Endpoint: cek saldo coin
+app.get('/api/ngl/balance', (req, res) => {
+  const token = req.headers['x-auth-token'] || req.query.token;
+  const auth = getUserByToken(token);
+  if (!auth) {
+    return res.status(401).json({ status: false, message: 'Harus login dulu' });
+  }
+  res.json({
+    status: true,
+    username: auth.user.username,
+    coins: auth.user.coins || 0,
+    harga_per_pesan: NGL_COIN_PER_PESAN
+  });
+});
+
+// Endpoint: kirim NGL (potong coin)
+app.get('/api/ngl', async (req, res) => {
+  const token = req.headers['x-auth-token'] || req.query.token;
+  const auth = getUserByToken(token);
+  if (!auth) {
+    return res.status(401).json({ status: false, message: 'Harus login dulu' });
+  }
+
+  const { url, pesan, jumlah } = req.query;
   if (!url || !pesan || !jumlah) {
     return res.status(400).json({ status: false, message: 'Parameter tidak lengkap' });
+  }
+
+  const jumlahNum = parseInt(jumlah, 10);
+  if (!jumlahNum || jumlahNum < 1 || jumlahNum > 1000) {
+    return res.status(400).json({ status: false, message: 'Jumlah harus 1-1000' });
+  }
+
+  const biaya = jumlahNum * NGL_COIN_PER_PESAN;
+  const saldo = auth.user.coins || 0;
+
+  if (saldo < biaya) {
+    return res.status(400).json({
+      status: false,
+      message: 'Coin tidak cukup. Butuh ' + biaya + ', saldo kamu ' + saldo,
+      biaya: biaya,
+      saldo: saldo,
+      kurang: biaya - saldo
+    });
   }
 
   const targetUrl = 'https://api.nexadev.my.id/tools/nglspam/'
     + '?url=' + encodeURIComponent(url)
     + '&pesan=' + encodeURIComponent(pesan)
-    + '&jumlah=' + encodeURIComponent(jumlah);
+    + '&jumlah=' + jumlahNum;
 
-  console.log('[NGL PROXY] Request:', targetUrl);
+  console.log('[NGL] User:', auth.user.username, '| biaya:', biaya, '| saldo:', saldo);
 
   try {
     const apiResponse = await fetch(targetUrl, {
@@ -2289,30 +2340,40 @@ app.get('/api/ngl', async (req, res) => {
       }
     });
 
-    console.log('[NGL PROXY] Status:', apiResponse.status);
-
     const text = await apiResponse.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      data = {
-        status: false,
-        message: 'API balikin non-JSON (HTTP ' + apiResponse.status + ')',
-        raw: text.slice(0, 1000)
-      };
+    let resp;
+    try { resp = JSON.parse(text); }
+    catch (e) {
+      resp = { status: false, message: 'API balikin non-JSON (HTTP ' + apiResponse.status + ')' };
     }
 
-    res.status(apiResponse.status).json(data);
+    // Kalau sukses, potong coin
+    if (apiResponse.ok && resp && resp.status !== false) {
+      auth.user.coins = saldo - biaya;
+      try { saveData(); } catch (e) { console.error('saveData error:', e.message); }
+      console.log('[NGL] Coin dipotong. Sisa:', auth.user.coins);
+
+      return res.json({
+        status: true,
+        message: resp.message || 'Berhasil mengirim pesan.',
+        ngl_link: resp.ngl_link,
+        coin_terpakai: biaya,
+        sisa_coin: auth.user.coins
+      });
+    }
+
+    res.status(apiResponse.status).json(resp);
   } catch (error) {
-    console.error('[NGL PROXY] Error:', error.message);
+    console.error('[NGL] Error:', error.message);
     res.status(500).json({
       status: false,
       message: 'Gagal konek ke API: ' + error.message
     });
   }
 });
-// === END PROXY ===
+// === END PROXY + COIN ===
+
+
 
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
