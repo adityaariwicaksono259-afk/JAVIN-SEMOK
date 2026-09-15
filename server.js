@@ -2267,6 +2267,43 @@ setInterval(() => {
 }, 60 * 1000);
 
 
+// === WAIFU (proxy ke waifu.im) ===
+app.get('/api/waifu', async (req, res) => {
+  try {
+    var upstream = 'https://api.waifu.im/images?excluded_tags=maid&is_nsfw=false';
+    var apiRes = await fetch(upstream, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!apiRes.ok) {
+      return res.status(502).json({ status: false, message: 'waifu.im error: HTTP ' + apiRes.status });
+    }
+
+    var data = await apiRes.json();
+    var item = data && data.items && data.items[0];
+    if (!item || !item.url) {
+      return res.status(502).json({ status: false, message: 'Tidak ada gambar dari waifu.im' });
+    }
+
+    res.json({
+      status: true,
+      url: item.url,
+      width: item.width || 0,
+      height: item.height || 0,
+      dominant_color: item.dominant_color || null,
+      source: item.source || '',
+      artist: item.artist || null,
+      tags: (item.tags || []).map(function(t) { return t.name; }),
+      is_nsfw: item.is_nsfw || false
+    });
+  } catch (err) {
+    console.error('[WAIFU] Error:', err.message);
+    res.status(500).json({ status: false, message: err.message || 'Gagal ambil waifu' });
+  }
+});
+// === END WAIFU ===
+
 // === NGL SENDER + COIN (pakai sistem coin existing) ===
 const NGL_COIN_PER_PESAN = 3;
 
