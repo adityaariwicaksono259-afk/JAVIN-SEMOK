@@ -278,12 +278,35 @@ function getUserName() {
 
 async function loadBalance() {
   var token = getToken();
+
+  // Kalau token kosong, ambil dari server pakai userId
+  if (!token) {
+    var uid = null;
+    try { uid = localStorage.getItem('javachat_id'); } catch(e) {}
+
+    if (uid) {
+      try {
+        var r0 = await fetch('/api/ngl/get-token?uid=' + encodeURIComponent(uid));
+        if (r0.ok) {
+          var d0 = await r0.json();
+          if (d0.status && d0.token) {
+            try { localStorage.setItem('javachat_token', d0.token); } catch(e) {}
+            token = d0.token;
+          }
+        }
+      } catch (e) {
+        console.error('Get token error:', e.message);
+      }
+    }
+  }
+
   if (!token) {
     coinBar.classList.add('low');
     coinBar.style.display = 'block';
     coinBar.innerHTML = '⚠️ <strong>Belum login</strong> — buka <a href="/" style="color:#e63946;">halaman utama</a> dulu';
     return;
   }
+
   try {
     var r = await fetch('/api/ngl/balance', {
       headers: { 'x-auth-token': token }
@@ -291,7 +314,7 @@ async function loadBalance() {
     if (r.status === 401) {
       coinBar.classList.add('low');
       coinBar.style.display = 'block';
-      coinBar.innerHTML = '⚠️ <strong>Sesi tidak valid</strong> — buka <a href="/" style="color:#e63946;">halaman utama</a> untuk login ulang';
+      coinBar.innerHTML = '⚠️ <strong>Sesi tidak valid</strong> — buka <a href="/" style="color:#e63946;">halaman utama</a>';
       return;
     }
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -301,7 +324,7 @@ async function loadBalance() {
     updateBiaya();
   } catch (e) {
     console.error('Load balance error:', e.message);
-    saldoEl.textContent = '?';
+    if (saldoEl) saldoEl.textContent = '?';
   }
 }
 

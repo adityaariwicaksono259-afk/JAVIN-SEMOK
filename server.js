@@ -2280,8 +2280,25 @@ function nglGetUserByToken(token) {
   return null;
 }
 
+// Ambil token dari userId (buat halaman NGL standalone)
+app.get('/api/ngl/get-token', (req, res) => {
+  var uid = req.query.uid;
+  if (!uid || !data.users || !data.users[uid]) {
+    return res.status(404).json({ status: false, message: 'User tidak ditemukan' });
+  }
+  var u = data.users[uid];
+  if (u.banned) {
+    return res.status(403).json({ status: false, message: 'Akun di-ban' });
+  }
+  if (!u.authToken) {
+    u.authToken = crypto.randomBytes(16).toString('hex');
+    try { saveData(); } catch (e) {}
+  }
+  res.json({ status: true, token: u.authToken, username: u.username });
+});
+
 // Cek saldo coin user
-app.get('/api/ngl/balance', (req, res) => {
+app.get('/api/ngl/balance' , (req, res) => {
   var token = req.headers['x-auth-token'] || req.query.token;
   var auth = nglGetUserByToken(token);
   if (!auth) {
