@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Tools - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page tools-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>🧰 Tools</h1>
+  </header>
+  <div class="page-content tools-content">
+    <div class="tools-hero">
+      <div class="tools-hero-icon">🚀</div>
+      <div class="tools-hero-title">AI & Utility Tools</div>
+      <div class="tools-hero-sub">Kumpulan tools buat lo pake sehari-hari</div>
+    </div>
+
+    
+<div class="javin-spotify-box">
+  <div class="javin-spotify-heading">
+    <div class="javin-spotify-icon">🎵</div>
+
+    <div>
+      <div class="javin-spotify-title-main">
+        Spotify
+      </div>
+
+      <div class="javin-spotify-subtitle">
+        Cari dan dengarkan lagu anda
+      </div>
+      <div class="javin-spotify-category">
+        Musik
+      </div>
+    </div>
+  </div>
+
+  <div class="javin-spotify-search">
+    <input
+      id="javinSpotifyQuery"
+      type="text"
+      placeholder="Masukkan judul lagu..."
+      autocomplete="off"
+    />
+
+    <button
+      id="javinSpotifySearch"
+      type="button"
+    >
+      Cari
+    </button>
+  </div>
+
+  <div
+    id="javinSpotifyStatus"
+    class="javin-spotify-status"
+  ></div>
+
+  <div id="javinSpotifyResult"></div>
+</div>
+
+<script>
+(function () {
+  const input = document.getElementById('javinSpotifyQuery');
+  const button = document.getElementById('javinSpotifySearch');
+  const status = document.getElementById('javinSpotifyStatus');
+  const result = document.getElementById('javinSpotifyResult');
+
+  if (!input || !button || !status || !result) return;
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, function (char) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char];
+    });
+  }
+
+  async function searchSpotify() {
+    const q = input.value.trim();
+
+    if (!q) {
+      status.textContent = 'Masukkan judul lagu terlebih dahulu.';
+      result.innerHTML = '';
+      return;
+    }
+
+    button.disabled = true;
+    status.textContent = 'Mencari lagu...';
+    result.innerHTML = '';
+
+    try {
+      const response = await fetch(
+        '/api/spotifyplay?q=' +
+        encodeURIComponent(q),
+        {
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+
+      if (
+        !response.ok ||
+        !data ||
+        data.status !== true ||
+        !data.result
+      ) {
+        throw new Error(
+          data?.error || 'Lagu tidak ditemukan.'
+        );
+      }
+
+      const song = data.result;
+
+      const title =
+        song.title || q;
+
+      const artist =
+        song.artist || 'Unknown Artist';
+
+      const duration =
+        song.duration || '';
+
+      const thumbnail =
+        song.thumbnail || '';
+
+      const audioUrl =
+        song.download_url || '';
+
+      if (!audioUrl) {
+        throw new Error(
+          'Audio lagu tidak tersedia.'
+        );
+      }
+
+      const proxyUrl =
+        '/api/spotify/audio?url=' +
+        encodeURIComponent(audioUrl);
+
+      result.innerHTML = `
+        <div class="javin-tool-result-card">
+
+          <div class="javin-tool-result-media">
+            ${
+              thumbnail
+                ? `
+                  <img
+                    src="${escapeHtml(thumbnail)}"
+                    alt="${escapeHtml(title)}"
+                    loading="lazy"
+                  >
+                `
+                : `
+                  <div class="javin-tool-result-placeholder">
+                    🎵
+                  </div>
+                `
+            }
+          </div>
+
+          <div class="javin-tool-result-body">
+
+            <div class="javin-tool-result-label">
+              SPOTIFY
+            </div>
+
+            <div class="javin-tool-result-title">
+              ${escapeHtml(title)}
+            </div>
+
+            <div class="javin-tool-result-subtitle">
+              ${escapeHtml(artist)}
+            </div>
+
+            ${
+              duration
+                ? `
+                  <div class="javin-tool-result-meta">
+                    ⏱ ${escapeHtml(duration)}
+                  </div>
+                `
+                : ''
+            }
+
+            <audio
+              id="javinSpotifyAudio"
+              preload="none"
+              controls
+              src="${escapeHtml(proxyUrl)}"
+            ></audio>
+
+            <div class="javin-tool-result-actions">
+
+              <button
+                type="button"
+                id="javinSpotifyPlay"
+                class="javin-tool-action"
+              >
+                ▶️ Play
+              </button>
+
+              <button
+                type="button"
+                id="javinSpotifyPause"
+                class="javin-tool-action"
+              >
+                ⏸️ Pause
+              </button>
+
+              <a
+                id="javinSpotifyDownload"
+                class="javin-tool-action"
+                href="${escapeHtml(proxyUrl)}"
+                download
+              >
+                📥 Download
+              </a>
+
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      const audio =
+        document.getElementById(
+          'javinSpotifyAudio'
+        );
+
+      const play =
+        document.getElementById(
+          'javinSpotifyPlay'
+        );
+
+      const pause =
+        document.getElementById(
+          'javinSpotifyPause'
+        );
+
+      if (audio && play) {
+        play.addEventListener(
+          'click',
+          async function () {
+            try {
+              status.textContent =
+                '▶️ Memuat audio...';
+
+              await audio.play();
+
+              status.textContent =
+                '🎵 Sedang diputar';
+            } catch (err) {
+              console.error(
+                'Spotify play error:',
+                err
+              );
+
+              status.textContent =
+                '❌ Audio tidak dapat diputar.';
+            }
+          }
+        );
+      }
+
+      if (audio && pause) {
+        pause.addEventListener(
+          'click',
+          function () {
+            audio.pause();
+
+            status.textContent =
+              '⏸️ Audio dijeda';
+          }
+        );
+      }
+
+      if (audio) {
+        audio.addEventListener(
+          'ended',
+          function () {
+            status.textContent =
+              '✅ Lagu selesai.';
+          }
+        );
+
+        audio.addEventListener(
+          'error',
+          function () {
+            status.textContent =
+              '❌ Gagal memuat audio.';
+          }
+        );
+      }
+
+      status.textContent =
+        '✅ Lagu ditemukan.';
+
+    } catch (error) {
+      console.error(
+        'Spotify error:',
+        error
+      );
+
+      status.textContent =
+        '❌ ' +
+        (error.message ||
+          'Gagal mencari lagu.');
+
+      result.innerHTML = '';
+
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  button.addEventListener(
+    'click',
+    searchSpotify
+  );
+
+  input.addEventListener(
+    'keydown',
+    function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        searchSpotify();
+      }
+    }
+  );
+})();
+</script>
+
+<div class="tools-grid">
+      <a href="/llama.html" class="tool-card">
+        <div class="tool-icon">🤖</div>
+        <div class="tool-name">Asisten Javin</div>
+        <div class="tool-desc">Chat sama AI assistant</div>
+        <div class="tool-badge">AI CHAT</div>
+      </a>
+      <a href="/qr.html" class="tool-card"><div class="tool-icon">📱</div><div class="tool-name">QR Generator</div><div class="tool-desc">Bikin QR code dari link / teks</div><div class="tool-badge">UTILITY</div></a>
+      <a href="/brat.html" class="tool-card"><div class="tool-icon">💚</div><div class="tool-name">Brat Video</div><div class="tool-desc">Bikin video brat dari teks</div><div class="tool-badge">VIDEO</div></a>
+            <div class="tool-card tool-soon">
+        <div class="tool-icon">✨</div>
+        <div class="tool-name">Coming Soon</div>
+        <div class="tool-desc">Tools baru segera hadir</div>
+        <div class="tool-badge tool-badge-soon">SOON</div>
+      </div>
+    </div>
+
+    <div class="tools-footer">
+      <p>Tools bertambah tiap ada update ✨</p>
+    </div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+</body>
+</html>

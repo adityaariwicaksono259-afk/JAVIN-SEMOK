@@ -37,19 +37,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:#faf6eb;color:#433b2a;l
 button,a,input,select,textarea,[role="button"]{min-height:44px}
 }
 </style>
-
-<style id="javin-info-link-style">
-.javin-info-link{
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  text-decoration:none;
-  color:inherit;
-  font-weight:700;
-  cursor:pointer;
-}
-</style>
-
 </head>
 <body>
 <div class="mesh-bg"></div>
@@ -76,11 +63,6 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
 <a href="/profile.html" class="card" style="background:#fff;border:3px solid #558b2f;box-shadow:4px 4px 0 #558b2f;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">👤</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Profile</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Saldo, ganti nama, top-up, VIP</div></a>
 <a href="/admin.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🛠️</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Admin</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Panel admin & moderasi</div></a>
 <a href="/tools.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🧰</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Tools</div><div style="font-size:12px;color:#6b6353;line-height:1.5">AI & utility tools</div></a>
-<a href="/info" class="card" style="background:#fff;border:3px solid #1565c0;box-shadow:4px 4px 0 #1565c0;padding:24px 20px;text-decoration:none;color:#433b2a;display:block">
-<div style="font-size:36px;margin-bottom:14px">🌏</div>
-<div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Info</div>
-<div style="font-size:12px;color:#6b6353;line-height:1.5">Info gempa & informasi BMKG</div>
-</a>
 </div>
 <div class="footer" style="margin-top:60px;padding-top:32px;border-top:3px solid #433b2a">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px;text-align:left">

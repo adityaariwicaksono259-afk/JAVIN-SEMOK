@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Javin Guna - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page jg-page">
+  <header class="page-header">
+    <a href="/tools.html" class="header-btn">←</a>
+    <h1>🛠️ Javin Guna</h1>
+  </header>
+  <div class="page-content jg-content">
+
+    <div class="jg-hero">
+      <div class="jg-hero-icon">🛠️</div>
+      <div class="jg-hero-title">JAVIN GUNA</div>
+      <div class="jg-hero-sub">Multi-purpose tool</div>
+    </div>
+
+    <div class="jg-form">
+
+      <label class="jg-label">PILIH FUNGSI</label>
+      <select id="jgFunc" class="jg-select">
+        <option value="default">-- Default --</option>
+        <!-- TAMBAH FUNGSI DI SINI -->
+      </select>
+
+      <label class="jg-label">INPUT UTAMA</label>
+      <input id="jgInput" class="jg-input" type="text" placeholder="Ketik input di sini..." autocomplete="off" />
+
+      <label class="jg-label">INPUT TAMBAHAN (opsional)</label>
+      <input id="jgInput2" class="jg-input" type="text" placeholder="Kosongin kalo gak dipake" autocomplete="off" />
+
+      <button id="jgCreate" class="jg-create">🚀 CREATE</button>
+      <button id="jgReset" class="jg-reset">🗑️ Reset</button>
+    </div>
+
+    <div class="jg-response hidden" id="jgResponse">
+      <div class="jg-resp-head">
+        <span class="jg-resp-status" id="jgStatus">-</span>
+        <span class="jg-resp-time" id="jgTime">-</span>
+        <button id="jgCopy" class="jg-copy">📋 Copy</button>
+      </div>
+      <div class="jg-resp-body" id="jgBody">-</div>
+    </div>
+
+    <div class="jg-hist-wrap">
+      <div class="jg-hist-title">📜 RIWAYAT</div>
+      <div class="jg-hist" id="jgHist"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="javin-guna.js"></script>
+</body>
+</html>

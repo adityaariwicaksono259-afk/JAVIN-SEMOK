@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Tools - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page tools-page">
+  <header class="page-header">
+    <a href="/" class="header-btn">Home</a>
+    <h1>🧰 Tools</h1>
+  </header>
+  <div class="page-content tools-content">
+    <div class="tools-hero">
+      <div class="tools-hero-icon">🚀</div>
+      <div class="tools-hero-title">AI & Utility Tools</div>
+      <div class="tools-hero-sub">Kumpulan tools buat lo pake sehari-hari</div>
+    </div>
+
+<<<<<<< HEAD
+    <div class="tools-grid">
+<!-- JAVIN-ANONIM-V1 -->
+<a href="/javin-anonim.html" class="tool-card">
+  <div class="tool-icon">🕵️</div>
+  <div class="tool-name">Javin Anonim</div>
+  <div class="tool-desc">Kirim pesan anonim ke username</div>
+  <div class="tool-badge">ANONIM</div>
+</a>
+
+<a href="/javin-manhwadesu.html" class="tool-card">
+  <div class="tool-icon">📚</div>
+  <div class="tool-name">ManhwaDesu</div>
+  <div class="tool-desc">Cari manga & manhwa</div>
+  <div class="tool-badge">MANGA</div>
+</a>
+
+    <a href="/javin-douyin.html" class="tool-card">
+        <div class="tool-icon">🎵</div>
+        <div class="tool-name">Douyin</div>
+        <div class="tool-desc">Cari video Douyin</div>
+        <div class="tool-badge">SOCIAL VIDEO</div>
+      </a>
+
+=======
+<div class="javin-spotify-box" id="javinSpotifyBox">
+  <div class="javin-spotify-heading">
+    <div class="javin-spotify-icon">🎵</div>
+
+    <div>
+      <div class="javin-spotify-title-main">
+        Spotify
+      </div>
+
+      <div class="javin-spotify-subtitle">
+        Cari dan dengarkan lagu anda
+      </div>
+      <div class="javin-spotify-category">
+        Musik
+      </div>
+    </div>
+  </div>
+
+  <div class="javin-spotify-search">
+    <input
+      id="javinSpotifyQuery"
+      type="text"
+      placeholder="Masukkan judul lagu..."
+      autocomplete="off"
+    />
+
+    <button
+      id="javinSpotifySearch"
+      type="button"
+    >
+      Cari
+    </button>
+  </div>
+
+  <div
+    id="javinSpotifyStatus"
+    class="javin-spotify-status"
+  ></div>
+
+  <div id="javinSpotifyResult"></div>
+</div>
+
+<script>
+(function () {
+  const input = document.getElementById('javinSpotifyQuery');
+  const button = document.getElementById('javinSpotifySearch');
+  const status = document.getElementById('javinSpotifyStatus');
+  const result = document.getElementById('javinSpotifyResult');
+
+  if (!input || !button || !status || !result) return;
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, function (char) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char];
+    });
+  }
+
+  async function searchSpotify() {
+    const q = input.value.trim();
+
+    if (!q) {
+      status.textContent = 'Masukkan judul lagu terlebih dahulu.';
+      result.innerHTML = '';
+      return;
+    }
+
+    button.disabled = true;
+    status.textContent = 'Mencari lagu...';
+    result.innerHTML = '';
+
+    try {
+      const response = await fetch(
+        '/api/spotifyplay?q=' +
+        encodeURIComponent(q),
+        {
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      const data = await response.json();
+
+      if (
+        !response.ok ||
+        !data ||
+        data.status !== true ||
+        !data.result
+      ) {
+        throw new Error(
+          data?.error || 'Lagu tidak ditemukan.'
+        );
+      }
+
+      const song = data.result;
+
+      const title =
+        song.title || q;
+
+      const artist =
+        song.artist || 'Unknown Artist';
+
+      const duration =
+        song.duration || '';
+
+      const thumbnail =
+        song.thumbnail || '';
+
+      const audioUrl =
+        song.download_url || '';
+
+      if (!audioUrl) {
+        throw new Error(
+          'Audio lagu tidak tersedia.'
+        );
+      }
+
+      const proxyUrl =
+        '/api/spotify/audio?url=' +
+        encodeURIComponent(audioUrl);
+
+      result.innerHTML = `
+        <div class="javin-tool-result-card">
+
+          <div class="javin-tool-result-media">
+            ${
+              thumbnail
+                ? `
+                  <img
+                    src="${escapeHtml(thumbnail)}"
+                    alt="${escapeHtml(title)}"
+                    loading="lazy"
+                  >
+                `
+                : `
+                  <div class="javin-tool-result-placeholder">
+                    🎵
+                  </div>
+                `
+            }
+          </div>
+
+          <div class="javin-tool-result-body">
+
+            <div class="javin-tool-result-label">
+              SPOTIFY
+            </div>
+
+            <div class="javin-tool-result-title">
+              ${escapeHtml(title)}
+            </div>
+
+            <div class="javin-tool-result-subtitle">
+              ${escapeHtml(artist)}
+            </div>
+
+            ${
+              duration
+                ? `
+                  <div class="javin-tool-result-meta">
+                    ⏱ ${escapeHtml(duration)}
+                  </div>
+                `
+                : ''
+            }
+
+            <audio
+              id="javinSpotifyAudio"
+              preload="none"
+              controls
+              src="${escapeHtml(proxyUrl)}"
+            ></audio>
+
+            <div class="javin-tool-result-actions">
+
+              <button
+                type="button"
+                id="javinSpotifyPlay"
+                class="javin-tool-action"
+              >
+                ▶️ Play
+              </button>
+
+              <button
+                type="button"
+                id="javinSpotifyPause"
+                class="javin-tool-action"
+              >
+                ⏸️ Pause
+              </button>
+
+              <a
+                id="javinSpotifyDownload"
+                class="javin-tool-action"
+                href="${escapeHtml(proxyUrl)}"
+                download
+              >
+                📥 Download
+              </a>
+
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      const audio =
+        document.getElementById(
+          'javinSpotifyAudio'
+        );
+
+      const play =
+        document.getElementById(
+          'javinSpotifyPlay'
+        );
+
+      const pause =
+        document.getElementById(
+          'javinSpotifyPause'
+        );
+
+      if (audio && play) {
+        play.addEventListener(
+          'click',
+          async function () {
+            try {
+              status.textContent =
+                '▶️ Memuat audio...';
+
+              await audio.play();
+
+              status.textContent =
+                '🎵 Sedang diputar';
+            } catch (err) {
+              console.error(
+                'Spotify play error:',
+                err
+              );
+
+              status.textContent =
+                '❌ Audio tidak dapat diputar.';
+            }
+          }
+        );
+      }
+
+      if (audio && pause) {
+        pause.addEventListener(
+          'click',
+          function () {
+            audio.pause();
+
+            status.textContent =
+              '⏸️ Audio dijeda';
+          }
+        );
+      }
+
+      if (audio) {
+        audio.addEventListener(
+          'ended',
+          function () {
+            status.textContent =
+              '✅ Lagu selesai.';
+          }
+        );
+
+        audio.addEventListener(
+          'error',
+          function () {
+            status.textContent =
+              '❌ Gagal memuat audio.';
+          }
+        );
+      }
+
+      status.textContent =
+        '✅ Lagu ditemukan.';
+
+    } catch (error) {
+      console.error(
+        'Spotify error:',
+        error
+      );
+
+      status.textContent =
+        '❌ ' +
+        (error.message ||
+          'Gagal mencari lagu.');
+
+      result.innerHTML = '';
+
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  button.addEventListener(
+    'click',
+    searchSpotify
+  );
+
+  input.addEventListener(
+    'keydown',
+    function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        searchSpotify();
+      }
+    }
+  );
+})();
+</script>
+
+<div class="tools-grid">
+
+      <!-- JAVIN-ANALOG-V1 -->
+<a href="#javinAnalogBox"
+   class="tool-card"
+   onclick="document.getElementById('javinAnalogBox')?.scrollIntoView({behavior:'smooth',block:'start'}); return false;">
+  <div class="tool-icon">✉️</div>
+  <div class="tool-name">Javin Analog</div>
+  <div class="tool-desc">Kirim magic link</div>
+  <div class="tool-badge">ACCOUNT</div>
+</a>
+
+
+      <a href="#javinSpotifyBox" class="tool-card" onclick="document.getElementById('javinSpotifyBox')?.scrollIntoView({behavior:'smooth',block:'start'}); return false;">
+        <div class="tool-icon">🎵</div>
+        <div class="tool-name">Spotify</div>
+        <div class="tool-desc">Cari dan dengarkan lagu</div>
+        <div class="tool-badge">MUSIK</div>
+      </a>
+>>>>>>> bef14926b72d1d9f84fa578154a166ebc3a9d618
+      <a href="/llama.html" class="tool-card">
+        <div class="tool-icon">🤖</div>
+        <div class="tool-name">Asisten Javin</div>
+        <div class="tool-desc">Chat sama AI assistant</div>
+        <div class="tool-badge">AI CHAT</div>
+      </a>
+      <a href="/qr.html" class="tool-card"><div class="tool-icon">📱</div><div class="tool-name">QR Generator</div><div class="tool-desc">Bikin QR code dari link / teks</div><div class="tool-badge">UTILITY</div></a>
+      <a href="/javin-analog.html" class="tool-card">
+        <div class="tool-icon">🔐</div>
+        <div class="tool-name">Javin Analog</div>
+        <div class="tool-desc">Magic Link, Verify & Statistik API</div>
+        <div class="tool-badge">ACCOUNT</div>
+      </a>
+      <a href="/brat.html" class="tool-card"><div class="tool-icon">💚</div><div class="tool-name">Brat Video</div><div class="tool-desc">Bikin video brat dari teks</div><div class="tool-badge">VIDEO</div></a>
+                  <a href="/javin-guna.html" class="tool-card"><div class="tool-icon">🛠️</div><div class="tool-name">Javin Guna</div><div class="tool-desc">Multi-purpose tool</div><div class="tool-badge">TOOL</div></a>
+      <div class="tool-card tool-soon">
+        <div class="tool-icon">✨</div>
+        <div class="tool-name">Coming Soon</div>
+        <div class="tool-desc">Tools baru segera hadir</div>
+        <div class="tool-badge tool-badge-soon">SOON</div>
+      </div>
+    </div>
+
+    <div class="tools-footer">
+      <p>Tools bertambah tiap ada update ✨</p>
+    </div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+
+
+<!-- JAVIN-ANALOG-FORM-V1 -->
+<section id="javinAnalogBox" style="margin-top:24px;padding:20px;border:1px solid #292929;border-radius:15px;background:#101010;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:6px;">
+    ✉️ Javin Analog
+  </div>
+
+  <div style="font-size:13px;opacity:.7;margin-bottom:16px;">
+    Masukkan email untuk mengirim magic link.
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <input
+      id="javinAnalogEmail"
+      type="email"
+      autocomplete="email"
+      placeholder="Email kamu"
+      style="flex:1;min-width:220px;padding:12px;border-radius:10px;border:1px solid #444;background:#181818;color:#fff;"
+    >
+
+    <button
+      id="javinAnalogSend"
+      type="button"
+      style="padding:12px 18px;border:0;border-radius:10px;cursor:pointer;font-weight:700;"
+    >
+      Kirim Magic Link
+    </button>
+  </div>
+
+  <div
+    id="javinAnalogStatus"
+    style="margin-top:14px;font-size:13px;line-height:1.5;"
+  ></div>
+</section>
+
+<script>
+(function () {
+  var emailInput = document.getElementById('javinAnalogEmail');
+  var sendButton = document.getElementById('javinAnalogSend');
+  var status = document.getElementById('javinAnalogStatus');
+
+  if (!emailInput || !sendButton || !status) return;
+
+  sendButton.addEventListener('click', function () {
+    var email = emailInput.value.trim();
+
+    if (!email) {
+      status.textContent = '❌ Email wajib diisi.';
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.textContent = '❌ Format email tidak valid.';
+      return;
+    }
+
+    sendButton.disabled = true;
+    sendButton.textContent = 'Mengirim...';
+    status.textContent = '⏳ Mengirim magic link...';
+
+    fetch('/api/javin-analog/magic-link', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email
+      })
+    })
+    .then(function (response) {
+      return response.json().then(function (data) {
+        return {
+          ok: response.ok,
+          data: data
+        };
+      });
+    })
+    .then(function (result) {
+      if (!result.ok || !result.data.success) {
+        throw new Error(
+          result.data.message || 'Gagal mengirim magic link'
+        );
+      }
+
+      status.textContent =
+        '✅ Berhasil! Magic link sudah dikirim.';
+    })
+    .catch(function (error) {
+      console.error('JAVIN ANALOG:', error);
+
+      status.textContent =
+        '❌ Gagal: ' + error.message;
+    })
+    .finally(function () {
+      sendButton.disabled = false;
+      sendButton.textContent = 'Kirim Magic Link';
+    });
+  });
+})();
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>API Tool - JAVIN SEMOK</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page apitool-page">
+  <header class="page-header">
+    <a href="/tools.html" class="header-btn">←</a>
+    <h1>🔧 API Tool</h1>
+  </header>
+  <div class="page-content apitool-content">
+
+    <div class="apitool-info">Tool testing API. Isi endpoint + parameter, kirim, liat response.</div>
+
+    <div class="apitool-form">
+      <label class="apitool-label">METHOD</label>
+      <div class="apitool-method">
+        <button class="apitool-method-btn active" data-method="GET">GET</button>
+        <button class="apitool-method-btn" data-method="POST">POST</button>
+      </div>
+
+      <label class="apitool-label">URL ENDPOINT</label>
+      <input id="apiUrl" class="apitool-input" type="text" placeholder="https://api.contoh.com/endpoint" autocomplete="off" />
+
+      <label class="apitool-label">PARAMETER (satu per baris: key=value)</label>
+      <textarea id="apiParams" class="apitool-textarea" placeholder="q=hello&#10;limit=10" rows="4"></textarea>
+
+      <label class="apitool-label">BODY (khusus POST, JSON)</label>
+      <textarea id="apiBody" class="apitool-textarea" placeholder='{"key":"value"}' rows="4"></textarea>
+
+      <label class="apitool-label">HEADERS (satu per baris: key=value)</label>
+      <textarea id="apiHeaders" class="apitool-textarea" placeholder="Authorization=Bearer xxx&#10;Content-Type=application/json" rows="3"></textarea>
+
+      <button id="apiSend" class="apitool-send">🚀 KIRIM REQUEST</button>
+      <button id="apiClear" class="apitool-clear">🗑️ Reset</button>
+    </div>
+
+    <div class="apitool-response hidden" id="apiResponse">
+      <div class="apitool-resp-head">
+        <span class="apitool-resp-status" id="apiStatus">-</span>
+        <span class="apitool-resp-time" id="apiTime">-</span>
+        <button id="apiCopy" class="apitool-copy">📋 Copy</button>
+      </div>
+      <pre class="apitool-resp-body" id="apiBody2">-</pre>
+    </div>
+
+    <div class="apitool-history-wrap">
+      <div class="apitool-hist-title">📜 Riwayat</div>
+      <div class="apitool-hist" id="apiHist"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="common.js"></script>
+<script src="api-tool.js"></script>
+</body>
+</html>
