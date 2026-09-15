@@ -4,109 +4,258 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NGL Sender - JAVACHAT</title>
-<link rel="stylesheet" href="/style.css">
 <style>
-.ngl-wrap { max-width: 620px; margin: 0 auto; padding: 20px; }
-.ngl-card { background: var(--card-bg, rgba(255,255,255,.06)); border-radius: 18px; padding: 22px; }
-.ngl-card h2 { margin-top: 0; margin-bottom: 6px; }
-.ngl-sub { opacity: 0.7; font-size: 0.85rem; margin-top: 0; margin-bottom: 18px; }
-.ngl-label { display: block; margin: 16px 0 7px; font-weight: 600; font-size: 0.9rem; }
-.ngl-label .req { color: #ff4d6d; margin-left: 2px; }
-.ngl-hint { font-weight: 400; opacity: 0.65; font-size: 0.78rem; margin-left: 6px; }
-.ngl-input, .ngl-textarea { width: 100%; box-sizing: border-box; border: 1px solid rgba(128,128,128,.3); border-radius: 12px; padding: 12px; font: inherit; background: rgba(128,128,128,.08); color: inherit; transition: border-color 0.15s; }
-.ngl-input:focus, .ngl-textarea:focus { outline: none; border-color: #7c5cff; }
-.ngl-textarea { min-height: 110px; resize: vertical; font-family: inherit; }
-.ngl-counter { text-align: right; font-size: 0.75rem; opacity: 0.6; margin-top: 4px; }
-.ngl-counter.warn { color: #ffb020; opacity: 1; }
-.ngl-counter.over { color: #ff4d6d; opacity: 1; }
-.ngl-actions { display: flex; gap: 10px; margin-top: 20px; }
-.ngl-btn { flex: 1; border: 0; border-radius: 12px; padding: 13px; font: inherit; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.15s; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; overflow-y: auto; height: auto; min-height: 100vh; }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f0efe8;
+  color: #1a1a1a;
+}
+.ngl-page {
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+.ngl-header {
+  background: #1f6f5c;
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.ngl-header a {
+  color: white;
+  text-decoration: none;
+  background: rgba(255,255,255,0.15);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.ngl-header h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.ngl-wrap {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 20px 16px 120px;
+}
+.ngl-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.ngl-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #0f2a24;
+}
+.ngl-sub {
+  font-size: 0.88rem;
+  color: #5a5a5a;
+  margin: 0 0 20px;
+}
+.ngl-label {
+  display: block;
+  margin: 16px 0 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f2a24;
+}
+.ngl-label .req { color: #e63946; margin-left: 2px; }
+.ngl-input, .ngl-textarea {
+  width: 100%;
+  border: 1.5px solid #d8d5cc;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 1rem;
+  background: #f7f6f1;
+  color: #1a1a1a;
+  transition: border-color 0.15s;
+}
+.ngl-input:focus, .ngl-textarea:focus {
+  outline: none;
+  border-color: #1f6f5c;
+  background: #ffffff;
+}
+.ngl-textarea {
+  min-height: 110px;
+  resize: vertical;
+  font-family: inherit;
+}
+.ngl-counter {
+  text-align: right;
+  font-size: 0.78rem;
+  color: #8a8a8a;
+  margin-top: 6px;
+}
+.ngl-counter.warn { color: #e09b20; }
+.ngl-counter.over { color: #e63946; font-weight: 700; }
+.ngl-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+.ngl-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 14px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
 .ngl-btn:active { transform: scale(0.97); }
-.ngl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.ngl-btn-primary { background: linear-gradient(135deg, #7c5cff, #9d7cff); color: white; }
-.ngl-btn-secondary { flex: 0 0 auto; background: rgba(128,128,128,.15); color: inherit; border: 1px solid rgba(128,128,128,.3); padding: 13px 18px; }
-.ngl-result-section { margin-top: 22px; }
-.ngl-result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.ngl-result-head > span:first-child { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; font-weight: 600; }
-.ngl-badge { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; }
-.ngl-badge.idle { background: rgba(128,128,128,.2); opacity: 0.8; }
-.ngl-badge.loading { background: #ffb020; color: #000; }
-.ngl-badge.success { background: #00d4aa; color: #000; }
-.ngl-badge.error { background: #ff4d6d; color: #fff; }
-.ngl-result-box { background: rgba(0,0,0,.3); border: 1px solid rgba(128,128,128,.2); border-radius: 12px; padding: 14px; font-family: monospace; font-size: 0.78rem; line-height: 1.6; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; color: #a8ffd4; margin: 0; display: none; }
+.ngl-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ngl-btn-primary {
+  flex: 1;
+  background: linear-gradient(135deg, #7c5cff, #9d7cff);
+  color: white;
+}
+.ngl-btn-secondary {
+  flex: 0 0 auto;
+  padding: 14px 18px;
+  background: #e8e6df;
+  color: #4a4a4a;
+  border: 1.5px solid #d8d5cc;
+}
+.ngl-result-section { margin-top: 24px; }
+.ngl-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.ngl-result-head > span:first-child {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5a5a5a;
+  font-weight: 700;
+}
+.ngl-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+.ngl-badge.idle { background: #e8e6df; color: #5a5a5a; }
+.ngl-badge.loading { background: #e09b20; color: #fff; }
+.ngl-badge.success { background: #00b894; color: #fff; }
+.ngl-badge.error { background: #e63946; color: #fff; }
+.ngl-result-box {
+  background: #0d0d14;
+  border-radius: 12px;
+  padding: 14px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  max-height: 280px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #a8ffd4;
+  margin: 0;
+  display: none;
+}
 .ngl-result-box.show { display: block; }
-.ngl-error-box { margin-top: 10px; background: rgba(255,77,109,.1); border: 1px solid #ff4d6d; border-radius: 12px; padding: 12px; font-size: 0.83rem; color: #ff8fa3; display: none; }
+.ngl-result-box:empty::before {
+  content: '// Response muncul di sini...';
+  color: #555;
+}
+.ngl-error-box {
+  margin-top: 10px;
+  background: #fde8ea;
+  border: 1.5px solid #e63946;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.85rem;
+  color: #a01824;
+  display: none;
+  line-height: 1.5;
+}
 .ngl-error-box.show { display: block; }
-.ngl-loading { display: none; align-items: center; gap: 10px; padding: 14px 0; opacity: 0.75; font-size: 0.85rem; }
+.ngl-loading {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  color: #5a5a5a;
+  font-size: 0.88rem;
+}
 .ngl-loading.show { display: flex; }
-.ngl-spinner { width: 16px; height: 16px; border: 2px solid rgba(128,128,128,.3); border-top-color: #7c5cff; border-radius: 50%; animation: ngl-spin 0.7s linear infinite; }
+.ngl-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid #d8d5cc;
+  border-top-color: #7c5cff;
+  border-radius: 50%;
+  animation: ngl-spin 0.7s linear infinite;
+}
 @keyframes ngl-spin { to { transform: rotate(360deg); } }
-.ngl-meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.72rem; opacity: 0.55; padding: 0 4px; }
-
-/* === FIX SCROLL === */
-html, body {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-  min-height: 100vh !important;
-  position: relative !important;
-}
-.page.tools-page {
-  overflow-y: visible !important;
-  height: auto !important;
-  min-height: 100vh !important;
-}
-.ngl-wrap {
-  padding-bottom: 120px !important;  /* ruang buat scroll sampe bawah */
-}
-
-/* === FIX SCROLL & LAYOUT === */
-html, body {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-  min-height: 100vh !important;
-  position: static !important;
-  display: block !important;
-}
-.page.ngl-page {
-  overflow-y: auto !important;
-  height: auto !important;
-  min-height: 100vh !important;
-  display: block !important;
-}
-.ngl-wrap {
-  padding-bottom: 150px !important; /* Kasih ruang biar bisa scroll sampe bawah */
+.ngl-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: #8a8a8a;
+  padding: 0 4px;
+  word-break: break-all;
 }
 </style>
 </head>
 <body>
-<div class="page ngl-page">
-  <header class="page-header">
-    <a href="/tools.html" class="header-btn">← Tools</a>
+<div class="ngl-page">
+  <header class="ngl-header">
+    <a href="/tools.html">← Tools</a>
     <h1>📨 NGL Sender</h1>
   </header>
+
   <div class="ngl-wrap">
     <div class="ngl-card">
       <h2>NGL Sender</h2>
       <p class="ngl-sub">kirim pesan secara bertubi-tubi</p>
-      <label class="ngl-label" for="nglTarget">Masukan Link/User NGL <span class="req">*</span></label>
+
+      <label class="ngl-label" for="nglTarget">
+        Masukan Link/User NGL <span class="req">*</span>
+      </label>
       <input id="nglTarget" class="ngl-input" type="text" placeholder="Ketik username atau link NGL" autocomplete="off" />
-      <label class="ngl-label" for="nglPesan">Isi Pesan yang Ingin Dikirim <span class="req">*</span></label>
+
+      <label class="ngl-label" for="nglPesan">
+        Isi Pesan yang Ingin Dikirim <span class="req">*</span>
+      </label>
       <textarea id="nglPesan" class="ngl-textarea" placeholder="masukan teks" maxlength="500"></textarea>
       <div class="ngl-counter" id="nglCounter">0 / 500</div>
-      <label class="ngl-label" for="nglJumlah">Jumlah Kirim <span class="req">*</span> <span class="ngl-hint">1 – 1000</span></label>
+
+      <label class="ngl-label" for="nglJumlah">
+        Jumlah Kirim <span class="req">*</span>
+      </label>
       <input id="nglJumlah" class="ngl-input" type="number" value="1" min="1" max="1000" step="1" />
+
       <div class="ngl-actions">
         <button id="nglSend" class="ngl-btn ngl-btn-primary" type="button">🚀 KIRIM</button>
         <button id="nglClear" class="ngl-btn ngl-btn-secondary" type="button">🗑️</button>
       </div>
+
       <div class="ngl-result-section">
         <div class="ngl-result-head">
           <span>Response</span>
           <span id="nglBadge" class="ngl-badge idle">IDLE</span>
         </div>
-        <div id="nglLoading" class="ngl-loading"><div class="ngl-spinner"></div><span>Mengirim pesan...</span></div>
+        <div id="nglLoading" class="ngl-loading">
+          <div class="ngl-spinner"></div>
+          <span>Mengirim pesan...</span>
+        </div>
         <pre id="nglResult" class="ngl-result-box"></pre>
         <div id="nglError" class="ngl-error-box"></div>
         <div class="ngl-meta">
@@ -117,69 +266,184 @@ html, body {
     </div>
   </div>
 </div>
+
 <script>
-const NGL_BASE_URL = 'https://api.nexadev.my.id/tools/';
-const NGL_ENDPOINT = 'nglspam';
+/* === KONFIGURASI === */
+const NGL_PROXY_URL = '/api/ngl';
 const NGL_TIMEOUT_MS = 120000;
+
+/* === DOM === */
 const $ = (id) => document.getElementById(id);
-const targetIn = $('nglTarget'), pesanIn = $('nglPesan'), jumlahIn = $('nglJumlah');
-const counterEl = $('nglCounter'), sendBtn = $('nglSend'), clearBtn = $('nglClear');
-const resultBox = $('nglResult'), errorBox = $('nglError'), badge = $('nglBadge');
-const loadingEl = $('nglLoading'), latencyEl = $('nglLatency'), apiUrlEl = $('nglApiUrl');
+const targetIn = $('nglTarget');
+const pesanIn = $('nglPesan');
+const jumlahIn = $('nglJumlah');
+const counterEl = $('nglCounter');
+const sendBtn = $('nglSend');
+const clearBtn = $('nglClear');
+const resultBox = $('nglResult');
+const errorBox = $('nglError');
+const badge = $('nglBadge');
+const loadingEl = $('nglLoading');
+const latencyEl = $('nglLatency');
+const apiUrlEl = $('nglApiUrl');
+
 let nglRequesting = false;
-function nglSetBadge(s, t) { badge.className = 'ngl-badge ' + s; badge.textContent = t; }
-function nglShowLoading(s) { loadingEl.classList.toggle('show', s); sendBtn.disabled = s; sendBtn.textContent = s ? '⏳ MENGIRIM...' : '🚀 KIRIM'; }
-function nglShowError(m) { errorBox.textContent = '❌ ' + m; errorBox.classList.add('show'); }
-function nglClearError() { errorBox.classList.remove('show'); errorBox.textContent = ''; }
-function nglPrettyJSON(d) { try { return JSON.stringify(d, null, 2); } catch (e) { return String(d); } }
-function nglNormalizeTarget(r) { let s = (r || '').trim(); if (!s) return ''; if (/^https?:\/\//i.test(s)) return s; s = s.replace(/^@/, ''); return 'https://ngl.link/' + s; }
-function nglIsValidURL(s) { try { const u = new URL(s); return u.protocol === 'http:' || u.protocol === 'https:'; } catch (e) { return false; } }
-function nglUpdateCounter() { const l = pesanIn.value.length; counterEl.textContent = l + ' / 500'; counterEl.className = 'ngl-counter'; if (l > 450) counterEl.classList.add('warn'); if (l >= 500) counterEl.classList.add('over'); }
-function nglBuildURL() { const b = new URL(NGL_BASE_URL + NGL_ENDPOINT + '/'); b.searchParams.set('url', nglNormalizeTarget(targetIn.value)); b.searchParams.set('pesan', pesanIn.value.trim()); b.searchParams.set('jumlah', jumlahIn.value.trim()); return b.toString(); }
-async function nglFetch(u, m) { const c = new AbortController(); const t = setTimeout(() => c.abort(), m || NGL_TIMEOUT_MS); try { return await fetch(u, { signal: c.signal }); } finally { clearTimeout(t); } }
-async function nglSend() {
-  if (nglRequesting) return;
-  const raw = targetIn.value.trim(), pesan = pesanIn.value.trim(), jumlah = parseInt(jumlahIn.value, 10);
-  if (!raw) { nglShowError('Username / link NGL masih kosong.'); targetIn.focus(); return; }
-  const targetURL = nglNormalizeTarget(raw);
-  if (!nglIsValidURL(targetURL)) { nglShowError('Link NGL gak valid.'); targetIn.focus(); return; }
-  if (!pesan) { nglShowError('Pesan masih kosong.'); pesanIn.focus(); return; }
-  if (!jumlah || jumlah < 1) { nglShowError('Jumlah minimal 1.'); jumlahIn.focus(); return; }
-  if (jumlah > 1000) { nglShowError('Jumlah maksimal 1000.'); jumlahIn.focus(); return; }
-  nglRequesting = true; nglClearError(); nglShowLoading(true); nglSetBadge('loading', 'LOADING');
-  resultBox.classList.remove('show'); resultBox.textContent = ''; latencyEl.textContent = '— ms';
-  const apiURL = nglBuildURL();
-  apiUrlEl.textContent = apiURL.length > 55 ? apiURL.slice(0, 50) + '...' : apiURL;
-  apiUrlEl.title = apiURL;
-  const start = performance.now();
+
+/* === HELPERS === */
+function setBadge(s, t) {
+  badge.className = 'ngl-badge ' + s;
+  badge.textContent = t;
+}
+function showLoading(s) {
+  loadingEl.classList.toggle('show', s);
+  sendBtn.disabled = s;
+  sendBtn.textContent = s ? '⏳ MENGIRIM...' : '🚀 KIRIM';
+}
+function showError(m) {
+  errorBox.textContent = '❌ ' + m;
+  errorBox.classList.add('show');
+}
+function clearError() {
+  errorBox.classList.remove('show');
+  errorBox.textContent = '';
+}
+function prettyJSON(d) {
+  try { return JSON.stringify(d, null, 2); }
+  catch (e) { return String(d); }
+}
+function normalizeTarget(r) {
+  let s = (r || '').trim();
+  if (!s) return '';
+  if (/^https?:\/\//i.test(s)) return s;
+  s = s.replace(/^@/, '');
+  return 'https://ngl.link/' + s;
+}
+function isValidURL(s) {
   try {
-    const res = await nglFetch(apiURL);
+    const u = new URL(s);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch (e) { return false; }
+}
+function updateCounter() {
+  const l = pesanIn.value.length;
+  counterEl.textContent = l + ' / 500';
+  counterEl.className = 'ngl-counter';
+  if (l > 450) counterEl.classList.add('warn');
+  if (l >= 500) counterEl.classList.add('over');
+}
+function buildURL() {
+  const u = new URL(NGL_PROXY_URL, window.location.origin);
+  u.searchParams.set('url', normalizeTarget(targetIn.value));
+  u.searchParams.set('pesan', pesanIn.value.trim());
+  u.searchParams.set('jumlah', jumlahIn.value.trim());
+  return u.toString();
+}
+async function fetchWithTimeout(url, ms) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms || NGL_TIMEOUT_MS);
+  try { return await fetch(url, { signal: ctrl.signal }); }
+  finally { clearTimeout(timer); }
+}
+
+/* === SEND === */
+async function sendRequest() {
+  if (nglRequesting) return;
+
+  const raw = targetIn.value.trim();
+  const pesan = pesanIn.value.trim();
+  const jumlah = parseInt(jumlahIn.value, 10);
+
+  if (!raw) { showError('Username / link NGL masih kosong.'); targetIn.focus(); return; }
+  const targetURL = normalizeTarget(raw);
+  if (!isValidURL(targetURL)) { showError('Link NGL gak valid.'); targetIn.focus(); return; }
+  if (!pesan) { showError('Pesan masih kosong.'); pesanIn.focus(); return; }
+  if (!jumlah || jumlah < 1) { showError('Jumlah minimal 1.'); jumlahIn.focus(); return; }
+  if (jumlah > 1000) { showError('Jumlah maksimal 1000.'); jumlahIn.focus(); return; }
+
+  nglRequesting = true;
+  clearError();
+  showLoading(true);
+  setBadge('loading', 'LOADING');
+  resultBox.classList.remove('show');
+  resultBox.textContent = '';
+  latencyEl.textContent = '— ms';
+
+  const apiURL = buildURL();
+  apiUrlEl.textContent = apiURL.length > 60 ? apiURL.slice(0, 55) + '...' : apiURL;
+  apiUrlEl.title = apiURL;
+
+  const start = performance.now();
+
+  try {
+    const res = await fetchWithTimeout(apiURL);
     const elapsed = Math.round(performance.now() - start);
     latencyEl.textContent = elapsed + ' ms';
-    const text = await res.text(); let data;
-    try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
-    if (!res.ok) { nglSetBadge('error', 'HTTP ' + res.status); nglShowError('Server balikin ' + res.status + ' ' + res.statusText); }
-    else if (data && data.status === false) { nglSetBadge('error', 'API ERR'); nglShowError(data.message || data.msg || 'API status false'); }
-    else { nglSetBadge('success', 'SUCCESS'); }
-    resultBox.textContent = nglPrettyJSON(data); resultBox.classList.add('show');
+
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch (e) { data = { raw: text.slice(0, 1000) }; }
+
+    if (!res.ok) {
+      setBadge('error', 'HTTP ' + res.status);
+      showError('Server balikin ' + res.status + ' ' + res.statusText + ' — ' + (data.message || 'cek response di bawah'));
+    } else if (data && data.status === false) {
+      setBadge('error', 'API ERR');
+      showError(data.message || data.msg || 'API status false');
+    } else {
+      setBadge('success', 'SUCCESS');
+    }
+
+    resultBox.textContent = prettyJSON(data);
+    resultBox.classList.add('show');
   } catch (err) {
     const elapsed = Math.round(performance.now() - start);
     latencyEl.textContent = elapsed + ' ms';
-    if (err.name === 'AbortError') { nglSetBadge('error', 'TIMEOUT'); nglShowError('Timeout ' + (NGL_TIMEOUT_MS/1000) + 's.'); }
-    else { nglSetBadge('error', 'NET ERR'); nglShowError('Gagal konek: ' + err.message); }
-  } finally { nglRequesting = false; nglShowLoading(false); }
+
+    if (err.name === 'AbortError') {
+      setBadge('error', 'TIMEOUT');
+      showError('Timeout ' + (NGL_TIMEOUT_MS / 1000) + 's. Server gak balas tepat waktu.');
+    } else {
+      setBadge('error', 'NET ERR');
+      showError('Gagal konek: ' + err.message);
+    }
+  } finally {
+    nglRequesting = false;
+    showLoading(false);
+  }
 }
-function nglClearAll() { targetIn.value = ''; pesanIn.value = ''; jumlahIn.value = '1'; resultBox.textContent = ''; resultBox.classList.remove('show'); nglClearError(); nglSetBadge('idle', 'IDLE'); latencyEl.textContent = '— ms'; apiUrlEl.textContent = '—'; nglUpdateCounter(); targetIn.focus(); }
-sendBtn.addEventListener('click', nglSend);
-clearBtn.addEventListener('click', nglClearAll);
-pesanIn.addEventListener('input', nglUpdateCounter);
-targetIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); pesanIn.focus(); } });
-pesanIn.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); nglSend(); } });
-nglUpdateCounter();
+
+/* === CLEAR === */
+function clearAll() {
+  targetIn.value = '';
+  pesanIn.value = '';
+  jumlahIn.value = '1';
+  resultBox.textContent = '';
+  resultBox.classList.remove('show');
+  clearError();
+  setBadge('idle', 'IDLE');
+  latencyEl.textContent = '— ms';
+  apiUrlEl.textContent = '—';
+  updateCounter();
+  targetIn.focus();
+}
+
+/* === EVENTS === */
+sendBtn.addEventListener('click', sendRequest);
+clearBtn.addEventListener('click', clearAll);
+pesanIn.addEventListener('input', updateCounter);
+targetIn.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); pesanIn.focus(); }
+});
+pesanIn.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    sendRequest();
+  }
+});
+
+updateCounter();
 targetIn.focus();
 </script>
-
-
-
 </body>
 </html>

@@ -2264,4 +2264,55 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
+
+// === PROXY NGL SENDER ===
+app.get('/api/ngl', async (req, res) => {
+  const { url, pesan, jumlah } = req.query;
+
+  if (!url || !pesan || !jumlah) {
+    return res.status(400).json({ status: false, message: 'Parameter tidak lengkap' });
+  }
+
+  const targetUrl = 'https://api.nexadev.my.id/tools/nglspam/'
+    + '?url=' + encodeURIComponent(url)
+    + '&pesan=' + encodeURIComponent(pesan)
+    + '&jumlah=' + encodeURIComponent(jumlah);
+
+  console.log('[NGL PROXY] Request:', targetUrl);
+
+  try {
+    const apiResponse = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'id-ID,id;q=0.9,en;q=0.8'
+      }
+    });
+
+    console.log('[NGL PROXY] Status:', apiResponse.status);
+
+    const text = await apiResponse.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      data = {
+        status: false,
+        message: 'API balikin non-JSON (HTTP ' + apiResponse.status + ')',
+        raw: text.slice(0, 1000)
+      };
+    }
+
+    res.status(apiResponse.status).json(data);
+  } catch (error) {
+    console.error('[NGL PROXY] Error:', error.message);
+    res.status(500).json({
+      status: false,
+      message: 'Gagal konek ke API: ' + error.message
+    });
+  }
+});
+// === END PROXY ===
+
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
