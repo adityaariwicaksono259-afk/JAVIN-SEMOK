@@ -288,7 +288,7 @@ FORMAT JAWABAN:
           ...messages.slice(-20)
         ],
         temperature: 0.7,
-        max_tokens: 1024
+        max_tokens: 8000
       })
     });
     const j = await r.json();
