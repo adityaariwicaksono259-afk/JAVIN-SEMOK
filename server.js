@@ -117,39 +117,9 @@ async function javinAnalogRequest(req, res, action) {
   }
 }
 
-app.post('/api/javin-analog/send', (req, res) =>
-  javinAnalogRequest(req, res, 'send')
-);
 
-app.post('/api/javin-analog/verify', (req, res) =>
-  javinAnalogRequest(req, res, 'verify')
-);
 
-app.post('/api/javin-analog/magic-link', (req, res) =>
-  javinAnalogRequest(req, res, 'send')
-);
 
-app.get('/api/javin-analog/stats', async (req, res) => {
-  try {
-    const data = await amprem.getStats();
-
-    return res.json({
-      success: true,
-      ...data
-    });
-
-  } catch (error) {
-    console.error('JAVIN ANALOG STATS:', error);
-
-    return res.status(502).json({
-      success: false,
-      message:
-        error?.response?.data?.message ||
-        error?.message ||
-        'Gagal mengambil statistik API.'
-    });
-  }
-});
 /* /JAVIN-ANALOG-API-V3 */
 
 app.disable('x-powered-by');
@@ -2303,6 +2273,156 @@ app.get('/api/waifu', async (req, res) => {
   }
 });
 // === END WAIFU ===
+
+// === JAVIN ANALOG - ALIGHTPRO ===
+const ALIGHT_BASE = 'https://www.alightpro.my.id';
+let _alightCookie = '';
+
+function alightSha256(str) {
+  return crypto.createHash('sha256').update(str, 'utf8').digest('hex');
+}
+
+function alightSetCookie(rawList) {
+  if (!rawList) return;
+  const arr = Array.isArray(rawList) ? rawList : [rawList];
+  const cookies = [];
+  for (const raw of arr) {
+    const first = String(raw).split(';')[0].trim();
+    if (first && first.indexOf('=') > 0) cookies.push(first);
+  }
+  if (cookies.length) _alightCookie = cookies.join('; ');
+}
+
+async function alightSession() {
+  const headers = {
+    'accept': '*/*',
+    'accept-language': 'id-ID,id;q=0.9',
+    'referer': ALIGHT_BASE + '/',
+    'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/141 Mobile Safari/537.36',
+    'x-requested-with': 'XMLHttpRequest'
+  };
+  if (_alightCookie) headers['cookie'] = _alightCookie;
+
+  const r = await fetch(ALIGHT_BASE + '/api/session', { headers: headers });
+
+  let sc = null;
+  if (typeof r.headers.getSetCookie === 'function') sc = r.headers.getSetCookie();
+  else { const raw = r.headers.get('set-cookie'); if (raw) sc = [raw]; }
+  if (sc) alightSetCookie(sc);
+
+  const data = await r.json();
+  if (!data.status || !data.token || !data.nonce) {
+    throw new Error('Session invalid: ' + JSON.stringify(data));
+  }
+  return data;
+}
+
+async function alightSolvePoW(sessionId, nonce, email, action, difficulty) {
+  const diff = difficulty || '0000';
+  const prefix = sessionId + ':' + nonce + ':' + email.toLowerCase() + ':' + action + ':';
+  for (let i = 0; i < 500000; i++) {
+    const hash = alightSha256(prefix + i);
+    if (hash.startsWith(diff)) return String(i);
+  }
+  return String(Date.now());
+}
+
+async function alightRequest(action, body) {
+  const sess = await alightSession();
+  const pow = await alightSolvePoW(
+    sess.sessionId, sess.nonce, body.email, action, sess.difficulty || '0000'
+  );
+
+  const headers = {
+    'accept': '*/*',
+    'content-type': 'application/json',
+    'referer': ALIGHT_BASE + '/',
+    'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/141 Mobile Safari/537.36',
+    'x-requested-with': 'XMLHttpRequest',
+    'x-amprem-token': sess.token,
+    'x-amprem-nonce': sess.nonce,
+    'x-amprem-pow': pow
+  };
+  if (_alightCookie) headers['cookie'] = _alightCookie;
+
+  const r = await fetch(ALIGHT_BASE + '/api/alight-motion', {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(Object.assign({ action: action }, body))
+  });
+
+  let sc = null;
+  if (typeof r.headers.getSetCookie === 'function') sc = r.headers.getSetCookie();
+  else { const raw = r.headers.get('set-cookie'); if (raw) sc = [raw]; }
+  if (sc) alightSetCookie(sc);
+
+  return await r.json();
+}
+
+async function alightGetStats() {
+  const headers = {
+    'accept': '*/*',
+    'accept-language': 'id-ID,id;q=0.9',
+    'referer': ALIGHT_BASE + '/',
+    'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/141 Mobile Safari/537.36'
+  };
+  if (_alightCookie) headers['cookie'] = _alightCookie;
+
+  const [a, b] = await Promise.all([
+    fetch(ALIGHT_BASE + '/api/stats', { headers: headers }),
+    fetch(ALIGHT_BASE + '/api/stats/recent', { headers: headers })
+  ]);
+  return { stats: await a.json(), recent: await b.json() };
+}
+
+app.post('/api/javin-analog/send', express.json({ limit: '10kb' }), async (req, res) => {
+  try {
+    const email = (req.body && req.body.email) || req.query.email;
+    if (!email) return res.status(400).json({ status: false, message: 'Email wajib diisi' });
+    const data = await alightRequest('send', { email: email });
+    res.json(data);
+  } catch (e) {
+    console.error('[JAVIN-ANALOG] send error:', e.message);
+    res.status(500).json({ status: false, message: e.message });
+  }
+});
+
+app.post('/api/javin-analog/verify', express.json({ limit: '10kb' }), async (req, res) => {
+  try {
+    const email = (req.body && req.body.email) || req.query.email;
+    const link = (req.body && (req.body.link || req.body.oob_link)) || req.query.link;
+    if (!email || !link) return res.status(400).json({ status: false, message: 'Email dan link wajib diisi' });
+    const data = await alightRequest('verify', { email: email, link: link });
+    res.json(data);
+  } catch (e) {
+    console.error('[JAVIN-ANALOG] verify error:', e.message);
+    res.status(500).json({ status: false, message: e.message });
+  }
+});
+
+app.post('/api/javin-analog/magic-link', express.json({ limit: '10kb' }), async (req, res) => {
+  try {
+    const email = (req.body && req.body.email) || req.query.email;
+    const link = (req.body && (req.body.link || req.body.magic_link)) || req.query.link;
+    if (!email || !link) return res.status(400).json({ status: false, message: 'Email dan link wajib diisi' });
+    const data = await alightRequest('verify', { email: email, link: link });
+    res.json(data);
+  } catch (e) {
+    console.error('[JAVIN-ANALOG] magic-link error:', e.message);
+    res.status(500).json({ status: false, message: e.message });
+  }
+});
+
+app.get('/api/javin-analog/stats', async (req, res) => {
+  try {
+    const data = await alightGetStats();
+    res.json(data);
+  } catch (e) {
+    console.error('[JAVIN-ANALOG] stats error:', e.message);
+    res.status(500).json({ status: false, message: e.message });
+  }
+});
+// === END JAVIN ANALOG ===
 
 // === NGL SENDER + COIN (pakai sistem coin existing) ===
 const NGL_COIN_PER_PESAN = 3;
