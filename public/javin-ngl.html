@@ -262,8 +262,6 @@ function showLoading(s) {
   sendBtn.disabled = s;
   sendBtn.textContent = s ? '⏳ MENGIRIM...' : '🚀 KIRIM';
 }
-catch (e) { return String(d); }
-}
 function normalizeTarget(r) {
   let s = (r || '').trim();
   if (!s) return '';
