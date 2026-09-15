@@ -129,65 +129,54 @@ body {
   border: 1.5px solid #d8d5cc;
 }
 .ngl-result-section { margin-top: 24px; }
-.ngl-result-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.ngl-result-head > span:first-child {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #5a5a5a;
-  font-weight: 700;
-}
-.ngl-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
-}
-.ngl-badge.idle { background: #e8e6df; color: #5a5a5a; }
-.ngl-badge.loading { background: #e09b20; color: #fff; }
-.ngl-badge.success { background: #00b894; color: #fff; }
-.ngl-badge.error { background: #e63946; color: #fff; }
-.ngl-result-box {
-  background: #0d0d14;
-  border-radius: 12px;
-  padding: 14px;
-  font-family: 'Fira Code', 'Consolas', monospace;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  max-height: 280px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  color: #a8ffd4;
-  margin: 0;
+
+.ngl-status-box {
   display: none;
+  padding: 16px 18px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
 }
-.ngl-result-box.show { display: block; }
-.ngl-result-box:empty::before {
-  content: '// Response muncul di sini...';
-  color: #555;
+.ngl-status-box.show { display: block; }
+.ngl-status-box.success {
+  background: #d4f5e8;
+  border: 1.5px solid #00b894;
+  color: #0a5c47;
 }
-.ngl-error-box {
-  margin-top: 10px;
+.ngl-status-box.error {
   background: #fde8ea;
   border: 1.5px solid #e63946;
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 0.85rem;
   color: #a01824;
-  display: none;
-  line-height: 1.5;
 }
-.ngl-error-box.show { display: block; }
+.ngl-status-box.info {
+  background: #f0eee5;
+  border: 1.5px solid #d8d5cc;
+  color: #5a5a5a;
+}
+.ngl-status-icon {
+  font-size: 1.5rem;
+  display: block;
+  margin-bottom: 4px;
+}
+.ngl-status-title {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.ngl-status-sub {
+  display: block;
+  font-weight: 400;
+  font-size: 0.82rem;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
 .ngl-loading {
   display: none;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 14px 0;
   color: #5a5a5a;
@@ -203,15 +192,6 @@ body {
   animation: ngl-spin 0.7s linear infinite;
 }
 @keyframes ngl-spin { to { transform: rotate(360deg); } }
-.ngl-meta {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  font-size: 0.72rem;
-  color: #8a8a8a;
-  padding: 0 4px;
-  word-break: break-all;
-}
 </style>
 </head>
 <body>
@@ -248,20 +228,11 @@ body {
       </div>
 
       <div class="ngl-result-section">
-        <div class="ngl-result-head">
-          <span>Response</span>
-          <span id="nglBadge" class="ngl-badge idle">IDLE</span>
-        </div>
         <div id="nglLoading" class="ngl-loading">
           <div class="ngl-spinner"></div>
           <span>Mengirim pesan...</span>
         </div>
-        <pre id="nglResult" class="ngl-result-box"></pre>
-        <div id="nglError" class="ngl-error-box"></div>
-        <div class="ngl-meta">
-          <span id="nglApiUrl">—</span>
-          <span id="nglLatency">— ms</span>
-        </div>
+        <div id="nglStatusBox" class="ngl-status-box"></div>
       </div>
     </div>
   </div>
@@ -280,36 +251,18 @@ const jumlahIn = $('nglJumlah');
 const counterEl = $('nglCounter');
 const sendBtn = $('nglSend');
 const clearBtn = $('nglClear');
-const resultBox = $('nglResult');
-const errorBox = $('nglError');
-const badge = $('nglBadge');
 const loadingEl = $('nglLoading');
-const latencyEl = $('nglLatency');
-const apiUrlEl = $('nglApiUrl');
+const statusBox = $('nglStatusBox');
 
 let nglRequesting = false;
 
 /* === HELPERS === */
-function setBadge(s, t) {
-  badge.className = 'ngl-badge ' + s;
-  badge.textContent = t;
-}
 function showLoading(s) {
   loadingEl.classList.toggle('show', s);
   sendBtn.disabled = s;
   sendBtn.textContent = s ? '⏳ MENGIRIM...' : '🚀 KIRIM';
 }
-function showError(m) {
-  errorBox.textContent = '❌ ' + m;
-  errorBox.classList.add('show');
-}
-function clearError() {
-  errorBox.classList.remove('show');
-  errorBox.textContent = '';
-}
-function prettyJSON(d) {
-  try { return JSON.stringify(d, null, 2); }
-  catch (e) { return String(d); }
+catch (e) { return String(d); }
 }
 function normalizeTarget(r) {
   let s = (r || '').trim();
@@ -345,6 +298,34 @@ async function fetchWithTimeout(url, ms) {
   finally { clearTimeout(timer); }
 }
 
+/* === STATUS HELPERS === */
+function showStatus(type, title, sub) {
+  statusBox.className = 'ngl-status-box show ' + type;
+  statusBox.innerHTML = '';
+
+  const icon = document.createElement('span');
+  icon.className = 'ngl-status-icon';
+  icon.textContent = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  statusBox.appendChild(icon);
+
+  const t = document.createElement('span');
+  t.className = 'ngl-status-title';
+  t.textContent = title;
+  statusBox.appendChild(t);
+
+  if (sub) {
+    const s = document.createElement('span');
+    s.className = 'ngl-status-sub';
+    s.textContent = sub;
+    statusBox.appendChild(s);
+  }
+}
+
+function hideStatus() {
+  statusBox.className = 'ngl-status-box';
+  statusBox.innerHTML = '';
+}
+
 /* === SEND === */
 async function sendRequest() {
   if (nglRequesting) return;
@@ -353,59 +334,59 @@ async function sendRequest() {
   const pesan = pesanIn.value.trim();
   const jumlah = parseInt(jumlahIn.value, 10);
 
-  if (!raw) { showError('Username / link NGL masih kosong.'); targetIn.focus(); return; }
+  if (!raw) {
+    showStatus('error', 'Gagal Mengirim Pesan', 'Username / link NGL masih kosong');
+    targetIn.focus();
+    return;
+  }
   const targetURL = normalizeTarget(raw);
-  if (!isValidURL(targetURL)) { showError('Link NGL gak valid.'); targetIn.focus(); return; }
-  if (!pesan) { showError('Pesan masih kosong.'); pesanIn.focus(); return; }
-  if (!jumlah || jumlah < 1) { showError('Jumlah minimal 1.'); jumlahIn.focus(); return; }
-  if (jumlah > 1000) { showError('Jumlah maksimal 1000.'); jumlahIn.focus(); return; }
+  if (!isValidURL(targetURL)) {
+    showStatus('error', 'Gagal Mengirim Pesan', 'Link NGL tidak valid');
+    targetIn.focus();
+    return;
+  }
+  if (!pesan) {
+    showStatus('error', 'Gagal Mengirim Pesan', 'Pesan masih kosong');
+    pesanIn.focus();
+    return;
+  }
+  if (!jumlah || jumlah < 1) {
+    showStatus('error', 'Gagal Mengirim Pesan', 'Jumlah minimal 1');
+    jumlahIn.focus();
+    return;
+  }
+  if (jumlah > 1000) {
+    showStatus('error', 'Gagal Mengirim Pesan', 'Jumlah maksimal 1000');
+    jumlahIn.focus();
+    return;
+  }
 
   nglRequesting = true;
-  clearError();
+  hideStatus();
   showLoading(true);
-  setBadge('loading', 'LOADING');
-  resultBox.classList.remove('show');
-  resultBox.textContent = '';
-  latencyEl.textContent = '— ms';
 
   const apiURL = buildURL();
-  apiUrlEl.textContent = apiURL.length > 60 ? apiURL.slice(0, 55) + '...' : apiURL;
-  apiUrlEl.title = apiURL;
-
   const start = performance.now();
 
   try {
     const res = await fetchWithTimeout(apiURL);
-    const elapsed = Math.round(performance.now() - start);
-    latencyEl.textContent = elapsed + ' ms';
-
     const text = await res.text();
     let data;
     try { data = JSON.parse(text); }
-    catch (e) { data = { raw: text.slice(0, 1000) }; }
+    catch (e) { data = { raw: text.slice(0, 500) }; }
 
     if (!res.ok) {
-      setBadge('error', 'HTTP ' + res.status);
-      showError('Server balikin ' + res.status + ' ' + res.statusText + ' — ' + (data.message || 'cek response di bawah'));
+      showStatus('error', 'Gagal Mengirim Pesan', 'Server balikin HTTP ' + res.status);
     } else if (data && data.status === false) {
-      setBadge('error', 'API ERR');
-      showError(data.message || data.msg || 'API status false');
+      showStatus('error', 'Gagal Mengirim Pesan', data.message || data.msg || 'API menolak permintaan');
     } else {
-      setBadge('success', 'SUCCESS');
+      showStatus('success', 'Berhasil Mengirim Pesan - Javin', jumlah + ' pesan terkirim ke ' + targetURL.replace('https://ngl.link/', '@'));
     }
-
-    resultBox.textContent = prettyJSON(data);
-    resultBox.classList.add('show');
   } catch (err) {
-    const elapsed = Math.round(performance.now() - start);
-    latencyEl.textContent = elapsed + ' ms';
-
     if (err.name === 'AbortError') {
-      setBadge('error', 'TIMEOUT');
-      showError('Timeout ' + (NGL_TIMEOUT_MS / 1000) + 's. Server gak balas tepat waktu.');
+      showStatus('error', 'Gagal Mengirim Pesan', 'Timeout — server tidak merespons');
     } else {
-      setBadge('error', 'NET ERR');
-      showError('Gagal konek: ' + err.message);
+      showStatus('error', 'Gagal Mengirim Pesan', err.message);
     }
   } finally {
     nglRequesting = false;
@@ -418,12 +399,7 @@ function clearAll() {
   targetIn.value = '';
   pesanIn.value = '';
   jumlahIn.value = '1';
-  resultBox.textContent = '';
-  resultBox.classList.remove('show');
-  clearError();
-  setBadge('idle', 'IDLE');
-  latencyEl.textContent = '— ms';
-  apiUrlEl.textContent = '—';
+  hideStatus();
   updateCounter();
   targetIn.focus();
 }
