@@ -5584,14 +5584,14 @@ function scanPublicFeatures() {
     'index.html', 'index_backup.html', 'index_backup_v2.html',
     'admin.html', 'admin-login.html', 'dashboard.html',
     'banned.html', 'maintenance.html', 'test.html',
-    'log.html', 'status.html', 'api-tool.html'
+    'log.html', 'status.html', 'api-tool.html', 'info.html',
+    'javin-guna.html', 'javin-douyin.html'
   ];
 
   var labelMap = {
     'javin-ngl.html': 'NGL Sender',
     'javin-analog.html': 'Javin Analog',
     'javin-anonim.html': 'Javin Anonim',
-    'javin-douyin.html': 'Douyin',
     'waifu.html': 'Random Waifu',
     'tools-wink.html': 'Wink Upscaler',
     'tools-ig.html': 'IG Downloader',
@@ -5621,14 +5621,22 @@ function scanPublicFeatures() {
     'anime-otakudesu.html': 'Otakudesu',
     'anime-oploverz.html': 'Oploverz',
     'anime-komikindo.html': 'Komikindo',
-    'berita.html': 'Berita'
+    'berita.html': 'Berita',
+    'chat.html': 'Chat Room',
+    'profile.html': 'Profile',
+    'leaderboard.html': 'Leaderboard',
+    'achievement.html': 'Achievement',
+    'sholat.html': 'Sholat',
+    'ibadah.html': 'Ibadah',
+    'harian.html': 'Harian',
+    'event.html': 'Event',
+    'game.html': 'Game Hub'
   };
 
   var files;
   try { files = fs.readdirSync(pubDir); }
-  catch (e) { return { groups: {} }; }
+  catch (e) { return {}; }
 
-  // Group mapping
   var groups = {
     chat: { label: 'Chat System', icon: '💬', items: [] },
     ai: { label: 'AI', icon: '🤖', items: [] },
@@ -5640,17 +5648,31 @@ function scanPublicFeatures() {
     islamic: { label: 'Islamic & Daily', icon: '📅', items: [] }
   };
 
-  // Routing file → kategori
   function categorize(f) {
+    // Chat
     if (f === 'chat.html' || f.indexOf('chat_v') === 0 || f === 'auth-socket.js') return 'chat';
-    if (f === 'ai.html' || f.indexOf('ai-') === 0 || f === 'llama.html' || f === 'javin-cerdas.html') return 'ai';
+
+    // AI
+    if (f === 'ai.html' || f.indexOf('ai-') === 0) return 'ai';
+    if (f === 'javin-cerdas.html' || f === 'llama.html') return 'ai';
+
+    // Anime
     if (f.indexOf('anime') === 0) return 'anime';
+
+    // Berita
     if (f === 'berita.html') return 'berita';
-    if (['slot.html','blackjack.html','dadu.html','dice.html','chess.html','mahjong.html','roulette.html','lottery.html','tebak.html','kartu.html'].indexOf(f) !== -1) return 'games';
-    if (['sholat.html','ibadah.html','harian.html','event.html'].indexOf(f) !== -1) return 'islamic';
-    if (['profile.html','leaderboard.html','achievement.html','dashboard.html'].indexOf(f) !== -1) return 'account';
-    if (f.indexOf('tools-') === 0 || ['tools.html','qr.html','brat.html','javin-ngl.html','javin-analog.html','javin-anonim.html','javin-douyin.html','waifu.html','sosial.html'].indexOf(f) !== -1) return 'tools';
-    return 'tools'; // default
+
+    // Games
+    if (['slot.html','blackjack.html','dadu.html','dice.html','chess.html','mahjong.html','roulette.html','lottery.html','tebak.html','kartu.html','game.html'].indexOf(f) !== -1) return 'games';
+
+    // Islamic & Daily
+    if (['sholat.html','ibadah.html','harian.html','event.html','workout.html','exercise.html'].indexOf(f) !== -1) return 'islamic';
+
+    // Account
+    if (['profile.html','leaderboard.html','achievement.html'].indexOf(f) !== -1) return 'account';
+
+    // Tools (default)
+    return 'tools';
   }
 
   var seen = {};
@@ -5659,22 +5681,18 @@ function scanPublicFeatures() {
     if (f.indexOf('.html') === -1) continue;
     if (f.indexOf('.backup') !== -1) continue;
     if (f.indexOf('.before') !== -1) continue;
+    if (f.indexOf('.conflict') !== -1) continue;
     if (exclude.indexOf(f) !== -1) continue;
     if (seen[f]) continue;
     seen[f] = true;
 
-    var label = labelMap[f];
-    if (!label) {
-      label = f.replace('.html', '')
-               .replace(/[-_]/g, ' ')
-               .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
-    }
-
+    var label = labelMap[f] || f.replace('.html', '').replace(/[-_]/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
     var cat = categorize(f);
-    groups[cat].items.push({ name: label, file: f, ok: true });
+    if (!groups[cat]) cat = 'tools';
+    groups[cat].items.push({ name: label, ok: true });
   }
 
-  // Build final result
+  // Filter group kosong + hitung status
   var result = {};
   Object.keys(groups).forEach(function(k) {
     var g = groups[k];
