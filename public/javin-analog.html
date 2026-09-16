@@ -16,6 +16,7 @@
 .analog-status{margin-top:12px;padding:11px;border-radius:10px;display:none;white-space:pre-wrap;word-break:break-word}
 .analog-stats{line-height:1.8}
 </style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -42,7 +43,8 @@
         autocomplete="off"
       >
 
-      <button id="sendBtn" class="analog-btn">
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAE4FZCAnVyrCpu3y" data-action="send" style="margin:12px 0;"></div>
+    <button id="sendBtn" class="analog-btn">
         📩 Kirim Magic Link
       </button>
 
@@ -71,7 +73,8 @@
         placeholder="https://..."
       >
 
-      <button id="verifyBtn" class="analog-btn">
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAE4FZCAnVyrCpu3y" data-action="verify" style="margin:12px 0;"></div>
+    <button id="verifyBtn" class="analog-btn">
         ✅ Verify
       </button>
 

@@ -3668,4 +3668,61 @@ app.get('/api/ngl', heavyLimiter, userRateLimit(5), async (req, res) => {
 });
 // === END NGL + COIN ===
 
+
+
+// ============================================
+// PROTECTION LAYER 8 — CLOUDFLARE TURNSTILE
+// ============================================
+
+async function verifyTurnstile(token, ip) {
+  var secret = process.env.TURNSTILE_SECRET;
+  if (!secret) return { ok: true, skipped: true };
+  if (!token) return { ok: false, reason: 'no-token' };
+  try {
+    var r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: secret, response: token, remoteip: ip }),
+      signal: AbortSignal.timeout(8000)
+    });
+    var data = await r.json();
+    return { ok: data.success === true, data: data };
+  } catch (e) {
+    console.error('[TURNSTILE] Verify error:', e.message);
+    return { ok: true, error: e.message };
+  }
+}
+
+function requireTurnstile(req, res, next) {
+  if (!process.env.TURNSTILE_SECRET) return next();
+  var token = (req.body && req.body['cf-turnstile-response']) ||
+              req.headers['x-turnstile-token'] ||
+              req.query['cf-turnstile-response'];
+  verifyTurnstile(token, req.ip).then(function(result) {
+    if (!result.ok) {
+      try { logSecurity('TURNSTILE-FAIL', { ip: req.ip, path: req.path, detail: result.reason || 'unknown' }); } catch(e) {}
+      try { updateReputation(req.ip, 'malformed', 'turnstile-fail'); } catch(e) {}
+      return res.status(403).json({
+        status: false,
+        message: 'Verifikasi keamanan gagal. Refresh halaman dan coba lagi.',
+        turnstile_failed: true
+      });
+    }
+    next();
+  }).catch(function(e) {
+    console.error('[TURNSTILE] Middleware error:', e.message);
+    next();
+  });
+}
+
+app.get('/api/turnstile/status', function(req, res) {
+  res.json({
+    status: true,
+    enabled: !!process.env.TURNSTILE_SECRET,
+    sitekey: '0x4AAAAAAE4FZCAnVyrCpu3y'
+  });
+});
+
+// === END LAYER 8 ===
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
