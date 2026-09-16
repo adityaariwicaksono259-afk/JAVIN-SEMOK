@@ -6486,4 +6486,45 @@ app.get('/api/anime-proxy/:type', async function(req, res) {
 });
 // === END ANIME PROXY ===
 
+
+// === BERITA PROXY (siputzx) ===
+var BERITA_SOURCES = {
+  'kompas': 'https://api.siputzx.my.id/api/berita/kompas',
+  'cnn': 'https://api.siputzx.my.id/api/berita/cnn',
+  'tribunnews': 'https://api.siputzx.my.id/api/berita/tribunnews',
+  'liputan6': 'https://api.siputzx.my.id/api/berita/liputan6',
+  'cnbcindonesia': 'https://api.siputzx.my.id/api/berita/cnbcindonesia'
+};
+
+app.get('/api/berita-proxy/:source', async function(req, res) {
+  try {
+    var src = req.params.source;
+    var url = BERITA_SOURCES[src];
+    if (!url) {
+      return res.status(400).json({ status: false, message: 'Sumber berita tidak dikenal' });
+    }
+
+    var r = await fetch(url, {
+      headers: { 'accept': 'application/json', 'user-agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(30000)
+    });
+
+    var raw = await r.text();
+    var data;
+    try { data = JSON.parse(raw); }
+    catch (e) { data = { raw: raw }; }
+
+    if (!r.ok) {
+      return res.status(r.status).json({ status: false, message: 'Server berita balikin HTTP ' + r.status });
+    }
+
+    res.json({ status: true, source: src, data: data });
+  } catch (e) {
+    console.error('[BERITA] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal ambil berita: ' + e.message });
+  }
+});
+// === END BERITA ===
+
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
