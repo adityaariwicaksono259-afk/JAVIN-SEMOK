@@ -9,67 +9,67 @@
 </head>
 <body>
 <div class="chat">
-  <header class="chat-header">
-    <a href="/" class="header-btn" title="Home">🏠</a>
-    <div class="avatar" id="myAvatar">?</div>
-    <div class="chat-header-info">
-      <div class="chat-title">
-        <span class="group-name">ANGGOTA HITAM KHAS NGAWI</span>
-        <span id="mentionBadge" class="mention-badge hidden">@1</span>
-      </div>
-      <div class="chat-sub">
-        <span id="myName">...</span>
-        <span id="myBadge" class="badge"></span>
-        <span class="dot-sep">·</span>
-        <span id="onlineCount">0 online</span>
-      </div>
-    </div>
-    <button id="notifBtn" class="header-btn" title="Notifikasi">🔕</button>
-    <a href="/profile.html" class="header-btn" title="Profile">👤</a>
-  </header>
+ <header class="chat-header">
+ <a href="/" class="header-btn" title="Home">🏠</a>
+ <div class="avatar" id="myAvatar">?</div>
+ <div class="chat-header-info">
+ <div class="chat-title">
+ <span class="group-name">ANGGOTA HITAM KHAS NGAWI</span>
+ <span id="mentionBadge" class="mention-badge hidden">@1</span>
+ </div>
+ <div class="chat-sub">
+ <span id="myName">...</span>
+ <span id="myBadge" class="badge"></span>
+ <span class="dot-sep">·</span>
+ <span id="onlineCount">0 online</span>
+ </div>
+ </div>
+ <button id="notifBtn" class="header-btn" title="Notifikasi">🔕</button>
+ <a href="/profile.html" class="header-btn" title="Profile">👤</a>
+ </header>
 
-  <div id="pinnedBar" class="pinned-bar hidden"><span class="pin-icon">PIN</span><div class="pin-content" id="pinContent"></div><button id="unpinBtn" class="pin-close hidden" title="Unpin">X</button></div>
-  <main id="messages" class="messages"></main>
-  <div id="typingBar" class="typing-bar hidden"></div>
+ <div id="pinnedBar" class="pinned-bar hidden"><span class="pin-icon">PIN</span><div class="pin-content" id="pinContent"></div><button id="unpinBtn" class="pin-close hidden" title="Unpin">X</button></div>
+ <main id="messages" class="messages"></main>
+ <div id="typingBar" class="typing-bar hidden"></div>
 
-  <div id="replyBar" class="reply-bar hidden">
-    <div class="reply-bar-info">
-      <div class="reply-bar-user" id="replyBarUser"></div>
-      <div class="reply-bar-text" id="replyBarText"></div>
-    </div>
-    <button id="replyBarClose" class="reply-bar-close">✕</button>
-  </div>
+ <div id="replyBar" class="reply-bar hidden">
+ <div class="reply-bar-info">
+ <div class="reply-bar-user" id="replyBarUser"></div>
+ <div class="reply-bar-text" id="replyBarText"></div>
+ </div>
+ <button id="replyBarClose" class="reply-bar-close">✕</button>
+ </div>
 
-  <footer class="input-bar">
-    <input type="file" id="fileInput" accept="image/*" hidden />
-    <button id="emojiBtn" class="icon-btn" title="Emoji">😀</button>
-    <button id="imgBtn" class="icon-btn" title="Kirim Gambar">📎</button>
-    <input id="msgInput" type="text" placeholder="Ketik pesan..." autocomplete="off" />
-    <button id="sendBtn" aria-label="Kirim">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-    </button>
-  </footer>
+ <footer class="input-bar">
+ <input type="file" id="fileInput" accept="image/*" hidden />
+ <button id="emojiBtn" class="icon-btn" title="Emoji">😀</button>
+ <button id="imgBtn" class="icon-btn" title="Kirim Gambar">📎</button>
+ <input id="msgInput" type="text" placeholder="Ketik pesan..." autocomplete="off" />
+ <button id="sendBtn" aria-label="Kirim">
+ <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+ </button>
+ </footer>
 </div>
 
 <div id="emojiPicker" class="emoji-picker hidden"></div>
 
 <div id="imgPreviewModal" class="modal hidden">
-  <div class="modal-card">
-    <h2>📎 Preview</h2>
-    <div id="imgPreviewBox" class="img-preview-box"></div>
-    <div id="imgPreviewErr" class="err"></div>
-    <div class="modal-actions">
-      <button class="btn-ghost" data-close="imgPreviewModal">Batal</button>
-      <button id="imgSend" class="btn-primary">Kirim</button>
-    </div>
-  </div>
+ <div class="modal-card">
+ <h2>Preview</h2>
+ <div id="imgPreviewBox" class="img-preview-box"></div>
+ <div id="imgPreviewErr" class="err"></div>
+ <div class="modal-actions">
+ <button class="btn-ghost" data-close="imgPreviewModal">Batal</button>
+ <button id="imgSend" class="btn-primary">Kirim</button>
+ </div>
+ </div>
 </div>
 
 <div id="imgViewer" class="modal hidden">
-  <div class="img-viewer-box">
-    <img id="imgViewerImg" src="" alt="" />
-    <button id="imgViewerClose" class="img-viewer-close">✕</button>
-  </div>
+ <div class="img-viewer-box">
+ <img id="imgViewerImg" src="" alt="" />
+ <button id="imgViewerClose" class="img-viewer-close">✕</button>
+ </div>
 </div>
 
 <div id="toast" class="toast hidden"></div>

@@ -9,62 +9,62 @@
 </head>
 <body>
 <div class="page">
-  <header class="page-header">
-    <a href="/chat.html" class="header-btn">← Kembali</a>
-    <h1>👤 Profile & Saldo</h1>
-  </header>
-  <div class="page-content">
-    <div class="profile-card" id="profileCard">Memuat data...</div>
-    <div class="profile-actions">
-      <button id="dailyBtn" class="btn-primary big-btn">🎁 Ambil Reward Harian</button>
-      <button id="renameBtn" class="btn-ghost big-btn">✏️ Ganti Nama</button>
-      <button id="giftBtn" class="btn-ghost big-btn">🎁 Kirim Coin</button>
-      <button id="wpBtn" class="btn-ghost big-btn">🖼️ Wallpaper</button>
-      <button id="achBtn" class="btn-primary big-btn">🏅 Achievement</button>
-      <button id="badgeBtn" class="btn-primary big-btn">🏅 Badge Store</button>
-      <button id="bubbleBtn" class="btn-ghost big-btn">🎨 Warna Bubble</button>
-      <button id="topupBtn" class="btn-primary big-btn">💳 Top-up Coin</button>
-      <button id="themeBtn" class="btn-ghost big-btn">🌙 Toggle Tema</button>
-    </div>
-  </div>
+ <header class="page-header">
+ <a href="/chat.html" class="header-btn">← Kembali</a>
+ <h1>Profile & Saldo</h1>
+ </header>
+ <div class="page-content">
+ <div class="profile-card" id="profileCard">Memuat data...</div>
+ <div class="profile-actions">
+ <button id="dailyBtn" class="btn-primary big-btn">🎁 Ambil Reward Harian</button>
+ <button id="renameBtn" class="btn-ghost big-btn">✏️ Ganti Nama</button>
+ <button id="giftBtn" class="btn-ghost big-btn">🎁 Kirim Coin</button>
+ <button id="wpBtn" class="btn-ghost big-btn">🖼️ Wallpaper</button>
+ <button id="achBtn" class="btn-primary big-btn">🏅 Achievement</button>
+ <button id="badgeBtn" class="btn-primary big-btn">🏅 Badge Store</button>
+ <button id="bubbleBtn" class="btn-ghost big-btn">🎨 Warna Bubble</button>
+ <button id="topupBtn" class="btn-primary big-btn">💳 Top-up Coin</button>
+ <button id="themeBtn" class="btn-ghost big-btn">🌙 Toggle Tema</button>
+ </div>
+ </div>
 </div>
 
 <div id="renameModal" class="modal hidden">
-  <div class="modal-card">
-    <h2>✏️ Ganti Nama</h2>
-    <div class="wallet-info" id="walletInfo"></div>
-    <input id="newNameInput" type="text" placeholder="Nama baru..." maxlength="20" autocomplete="off" />
-    <div id="renameErr" class="err"></div>
-    <div class="modal-actions">
-      <button class="btn-ghost" data-close="renameModal">Batal</button>
-      <button id="renameConfirm" class="btn-primary">Ganti</button>
-    </div>
-  </div>
+ <div class="modal-card">
+ <h2>Ganti Nama</h2>
+ <div class="wallet-info" id="walletInfo"></div>
+ <input id="newNameInput" type="text" placeholder="Nama baru..." maxlength="20" autocomplete="off" />
+ <div id="renameErr" class="err"></div>
+ <div class="modal-actions">
+ <button class="btn-ghost" data-close="renameModal">Batal</button>
+ <button id="renameConfirm" class="btn-primary">Ganti</button>
+ </div>
+ </div>
 </div>
 
 <div id="topupModal" class="modal hidden">
-  <div class="modal-card">
-    <h2>💳 Top-up Coin</h2>
-    <div class="wallet-info">
-      Kirim ke:<br>
-      <b>DANA</b>: 08xxxxxxxxxx<br>
-      <b>QRIS</b>: minta ke admin<br><br>
-      Setelah transfer, isi form di bawah. Admin akan approve.
-    </div>
-    <input id="topupAmount" type="number" placeholder="Jumlah coin (min 1000)" />
-    <select id="topupMethod" class="select">
-      <option value="dana">DANA</option>
-      <option value="qris">QRIS</option>
-      <option value="gopay">GoPay</option>
-      <option value="ovo">OVO</option>
-    </select>
-    <input id="topupNote" type="text" placeholder="Catatan (nama / no. ref)" maxlength="200" />
-    <div id="topupErr" class="err"></div>
-    <div class="modal-actions">
-      <button class="btn-ghost" data-close="topupModal">Batal</button>
-      <button id="topupConfirm" class="btn-primary">Kirim Request</button>
-    </div>
-  </div>
+ <div class="modal-card">
+ <h2>Top-up Coin</h2>
+ <div class="wallet-info">
+ Kirim ke:<br>
+ <b>DANA</b>: 08xxxxxxxxxx<br>
+ <b>QRIS</b>: minta ke admin<br><br>
+ Setelah transfer, isi form di bawah. Admin akan approve.
+ </div>
+ <input id="topupAmount" type="number" placeholder="Jumlah coin (min 1000)" />
+ <select id="topupMethod" class="select">
+ <option value="dana">DANA</option>
+ <option value="qris">QRIS</option>
+ <option value="gopay">GoPay</option>
+ <option value="ovo">OVO</option>
+ </select>
+ <input id="topupNote" type="text" placeholder="Catatan (nama / no. ref)" maxlength="200" />
+ <div id="topupErr" class="err"></div>
+ <div class="modal-actions">
+ <button class="btn-ghost" data-close="topupModal">Batal</button>
+ <button id="topupConfirm" class="btn-primary">Kirim Request</button>
+ </div>
+ </div>
 </div>
 
 <div id="toast" class="toast hidden"></div>
@@ -74,10 +74,10 @@
 <script src="profile.js"></script>
 <script src="wallpaper.js?v=1789137938712"></script>
 <script src="bubble.js?v=1789135710373"></script>
-<div id="giftModal" class="modal hidden"><div class="modal-card"><h2>🎁 Kirim Coin</h2><div class="wallet-info" id="giftWalletInfo"></div><select id="giftUserSelect" class="select"><option value="">-- Pilih penerima --</option></select><input id="giftAmount" type="number" placeholder="Jumlah coin" min="1" /><div id="giftErr" class="err"></div><div class="modal-actions"><button class="btn-ghost" data-close="giftModal">Batal</button><button id="giftConfirm" class="btn-primary">Kirim</button></div></div></div>
-<div id="bubbleModal" class="modal hidden"><div class="modal-card"><h2>🎨 Warna Bubble</h2><div class="wallet-info">Pilih warna bubble chat lo. Bisa ganti kapan aja.</div><div class="bubble-grid" id="bubbleGrid"></div><div class="modal-actions"><button class="btn-ghost" data-close="bubbleModal">Tutup</button></div></div></div>
-<div id="wpModal" class="modal hidden"><div class="modal-card"><h2>🖼️ Wallpaper Chat</h2><div class="wallet-info">Pilih background chat lo.</div><div class="wp-grid" id="wpGrid"></div><div class="modal-actions"><button class="btn-ghost" data-close="wpModal">Tutup</button></div></div></div>
-<div id="badgeModal" class="modal hidden"><div class="modal-card wide"><h2>🏅 Badge Store</h2><div class="wallet-info" id="badgeInfo"></div><div class="badge-grid" id="badgeGrid"></div><div class="modal-actions"><button class="btn-ghost" data-close="badgeModal">Tutup</button></div></div></div>
+<div id="giftModal" class="modal hidden"><div class="modal-card"><h2>Kirim Coin</h2><div class="wallet-info" id="giftWalletInfo"></div><select id="giftUserSelect" class="select"><option value="">-- Pilih penerima --</option></select><input id="giftAmount" type="number" placeholder="Jumlah coin" min="1" /><div id="giftErr" class="err"></div><div class="modal-actions"><button class="btn-ghost" data-close="giftModal">Batal</button><button id="giftConfirm" class="btn-primary">Kirim</button></div></div></div>
+<div id="bubbleModal" class="modal hidden"><div class="modal-card"><h2>Warna Bubble</h2><div class="wallet-info">Pilih warna bubble chat lo. Bisa ganti kapan aja.</div><div class="bubble-grid" id="bubbleGrid"></div><div class="modal-actions"><button class="btn-ghost" data-close="bubbleModal">Tutup</button></div></div></div>
+<div id="wpModal" class="modal hidden"><div class="modal-card"><h2>Wallpaper Chat</h2><div class="wallet-info">Pilih background chat lo.</div><div class="wp-grid" id="wpGrid"></div><div class="modal-actions"><button class="btn-ghost" data-close="wpModal">Tutup</button></div></div></div>
+<div id="badgeModal" class="modal hidden"><div class="modal-card wide"><h2>Badge Store</h2><div class="wallet-info" id="badgeInfo"></div><div class="badge-grid" id="badgeGrid"></div><div class="modal-actions"><button class="btn-ghost" data-close="badgeModal">Tutup</button></div></div></div>
 <script src="badges.js"></script>
 </body>
 </html>

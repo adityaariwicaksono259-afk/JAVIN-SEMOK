@@ -40,13 +40,13 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
 
 <style id="javin-info-link-style">
 .javin-info-link{
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  text-decoration:none;
-  color:inherit;
-  font-weight:700;
-  cursor:pointer;
+ display:inline-flex;
+ align-items:center;
+ gap:7px;
+ text-decoration:none;
+ color:inherit;
+ font-weight:700;
+ cursor:pointer;
 }
 </style>
 
@@ -62,115 +62,115 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
 
 <!-- STATUS PILL (compact) -->
 <a href="/status.html" id="statusPill" class="status-pill loading">
-  <span class="sp-dot"></span>
-  <span class="sp-text">Cek Status Sistem</span>
-  <span class="sp-arrow">→</span>
+ <span class="sp-dot"></span>
+ <span class="sp-text">Cek Status Sistem</span>
+ <span class="sp-arrow">→</span>
 </a>
 
 <style>
 .status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  background: rgba(128,128,128,0.15);
-  border: 1.5px solid #666;
-  border-radius: 30px;
-  text-decoration: none;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  margin: 18px auto 8px;
-  transition: all 0.2s;
-  font-family: inherit;
-  white-space: nowrap;
+ display: inline-flex;
+ align-items: center;
+ gap: 10px;
+ padding: 10px 18px;
+ background: rgba(128,128,128,0.15);
+ border: 1.5px solid #666;
+ border-radius: 30px;
+ text-decoration: none;
+ color: #fff;
+ font-size: 13px;
+ font-weight: 700;
+ letter-spacing: 0.3px;
+ margin: 18px auto 8px;
+ transition: all 0.2s;
+ font-family: inherit;
+ white-space: nowrap;
 }
 .status-pill:hover, .status-pill:active {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+ transform: translateY(-2px);
+ box-shadow: 0 6px 16px rgba(0,0,0,0.3);
 }
 .status-pill .sp-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #666;
-  flex-shrink: 0;
+ width: 10px;
+ height: 10px;
+ border-radius: 50%;
+ background: #666;
+ flex-shrink: 0;
 }
 .status-pill .sp-arrow {
-  font-size: 14px;
-  opacity: 0.7;
+ font-size: 14px;
+ opacity: 0.7;
 }
 
 .status-pill.healthy {
-  background: rgba(76,175,80,0.12);
-  border-color: #4caf50;
+ background: rgba(76,175,80,0.12);
+ border-color: #4caf50;
 }
 .status-pill.healthy .sp-dot {
-  background: #4caf50;
-  box-shadow: 0 0 10px #4caf50;
-  animation: pulse-green 2s infinite;
+ background: #4caf50;
+ box-shadow: 0 0 10px #4caf50;
+ animation: pulse-green 2s infinite;
 }
 .status-pill.healthy .sp-text { color: #4caf50; }
 
 .status-pill.warning {
-  background: rgba(255,176,32,0.12);
-  border-color: #ffb020;
+ background: rgba(255,176,32,0.12);
+ border-color: #ffb020;
 }
 .status-pill.warning .sp-dot {
-  background: #ffb020;
-  box-shadow: 0 0 10px #ffb020;
+ background: #ffb020;
+ box-shadow: 0 0 10px #ffb020;
 }
 .status-pill.warning .sp-text { color: #ffb020; }
 
 .status-pill.error {
-  background: rgba(255,77,109,0.12);
-  border-color: #ff4d6d;
+ background: rgba(255,77,109,0.12);
+ border-color: #ff4d6d;
 }
 .status-pill.error .sp-dot {
-  background: #ff4d6d;
-  box-shadow: 0 0 10px #ff4d6d;
-  animation: pulse-red 1s infinite;
+ background: #ff4d6d;
+ box-shadow: 0 0 10px #ff4d6d;
+ animation: pulse-red 1s infinite;
 }
 .status-pill.error .sp-text { color: #ff4d6d; }
 
 @keyframes pulse-green {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+ 0%, 100% { opacity: 1; }
+ 50% { opacity: 0.5; }
 }
 @keyframes pulse-red {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.2); }
+ 0%, 100% { opacity: 1; transform: scale(1); }
+ 50% { opacity: 0.6; transform: scale(1.2); }
 }
 </style>
 
 <script>
 (function() {
-  var pill = document.getElementById('statusPill');
-  if (!pill) return;
-  var dot = pill.querySelector('.sp-dot');
-  var text = pill.querySelector('.sp-text');
+ var pill = document.getElementById('statusPill');
+ if (!pill) return;
+ var dot = pill.querySelector('.sp-dot');
+ var text = pill.querySelector('.sp-text');
 
-  async function loadPill() {
-    try {
-      var r = await fetch('/api/system-status?t=' + Date.now());
-      var d = await r.json();
-      var map = {
-        healthy: { cls: 'healthy', txt: 'Semua Sistem Normal' },
-        warning: { cls: 'warning', txt: 'Ada Peringatan' },
-        error:   { cls: 'error',   txt: 'Ada Masalah Terdeteksi' }
-      };
-      var m = map[d.overall] || map.warning;
-      pill.className = 'status-pill ' + m.cls;
-      text.textContent = m.txt;
-    } catch(e) {
-      pill.className = 'status-pill error';
-      text.textContent = 'Gagal memuat status';
-    }
-  }
+ async function loadPill() {
+ try {
+ var r = await fetch('/api/system-status?t=' + Date.now());
+ var d = await r.json();
+ var map = {
+ healthy: { cls: 'healthy', txt: 'Semua Sistem Normal' },
+ warning: { cls: 'warning', txt: 'Ada Peringatan' },
+ error: { cls: 'error', txt: 'Ada Masalah Terdeteksi' }
+ };
+ var m = map[d.overall] || map.warning;
+ pill.className = 'status-pill ' + m.cls;
+ text.textContent = m.txt;
+ } catch(e) {
+ pill.className = 'status-pill error';
+ text.textContent = 'Gagal memuat status';
+ }
+ }
 
-  loadPill();
-  setInterval(loadPill, 30000);
+ loadPill();
+ setInterval(loadPill, 30000);
 })();
 </script>
 
@@ -183,21 +183,20 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
 </div>
 <div class="section-title" style="font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;display:flex;align-items:center;gap:12px">FITUR UTAMA</div>
 
-
 <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:48px">
-<a href="/ai.html" class="card" style="background:#fff;border:3px solid #7c5cff;box-shadow:4px 4px 0 #7c5cff;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🤖</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">AI Tools</div><div style="font-size:12px;color:#6b6353;line-height:1.5">AI Neo · Javin Cerdas · dll</div></a>
+<a href="/ai.html" class="card" style="background:#fff;border:3px solid #7c5cff;box-shadow:4px 4px 0 #7c5cff;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">AI Tools</div><div style="font-size:12px;color:#6b6353;line-height:1.5">AI Neo · Javin Cerdas · dll</div></a>
 
-<a href="/chat.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">💬</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Chat Room</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Ngobrol real-time sama semua user</div></a>
-      <a href="/game.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🎮</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Game Center</div><div style="font-size:12px;color:#6b6353;line-height:1.5">8 game seru, menang coin</div></a>
-      <a href="/event.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🎉</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Event Center</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Lottery · Leaderboard · Achievement</div></a>
-      <a href="/harian.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">📅</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Fitur Harian</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Workout 3D · Ibadah · Doa 6 Agama</div></a>
-      <a href="/sosial.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">💬</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Sosial</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Anonim · Inbox · Kirim rahasia</div></a>
-<a href="/profile.html" class="card" style="background:#fff;border:3px solid #558b2f;box-shadow:4px 4px 0 #558b2f;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">👤</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Profile</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Saldo, ganti nama, top-up, VIP</div></a>
-<a href="/admin.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🛠️</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Admin</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Panel admin & moderasi</div></a>
-<a href="/tools.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🧰</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Tools</div><div style="font-size:12px;color:#6b6353;line-height:1.5">AI & utility tools</div></a>
+<a href="/chat.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Chat Room</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Ngobrol real-time sama semua user</div></a>
+ <a href="/game.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Game Center</div><div style="font-size:12px;color:#6b6353;line-height:1.5">8 game seru, menang coin</div></a>
+ <a href="/event.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Event Center</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Lottery · Leaderboard · Achievement</div></a>
+ <a href="/harian.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Fitur Harian</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Workout 3D · Ibadah · Doa 6 Agama</div></a>
+ <a href="/sosial.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Sosial</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Anonim · Inbox · Kirim rahasia</div></a>
+<a href="/profile.html" class="card" style="background:#fff;border:3px solid #558b2f;box-shadow:4px 4px 0 #558b2f;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Profile</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Saldo, ganti nama, top-up, VIP</div></a>
+<a href="/admin.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Admin</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Panel admin & moderasi</div></a>
+<a href="/tools.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Tools</div><div style="font-size:12px;color:#6b6353;line-height:1.5">AI & utility tools</div></a>
 <a href="/anime.html" class="card" style="background:#fff;border:3px solid #f59e0b;box-shadow:4px 4px 0 #f59e0b;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Anime</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Otakudesu · Oploverz · Komikindo</div></a>
 <a href="/info" class="card" style="background:#fff;border:3px solid #1565c0;box-shadow:4px 4px 0 #1565c0;padding:24px 20px;text-decoration:none;color:#433b2a;display:block">
-<div style="font-size:36px;margin-bottom:14px">🌏</div>
+
 <div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Info</div>
 <div style="font-size:12px;color:#6b6353;line-height:1.5">Info gempa & informasi BMKG</div>
 </a>

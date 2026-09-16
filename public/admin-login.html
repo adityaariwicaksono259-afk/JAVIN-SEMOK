@@ -30,87 +30,87 @@ button:disabled { opacity:0.6; cursor:not-allowed; }
 </head>
 <body>
 <div class="box">
-  <div class="icon">🔐</div>
-  <h1>Admin Login</h1>
-  <p>Masukkan password admin untuk lanjut</p>
+ <div class="icon">🔐</div>
+ <h1>Admin Login</h1>
+ <p>Masukkan password admin untuk lanjut</p>
 
-  <div id="loginForm">
-    <label>Password</label>
-    <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password" />
-    <button id="loginBtn">Login</button>
-    <div class="status" id="statusBox"></div>
-  </div>
+ <div id="loginForm">
+ <label>Password</label>
+ <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password" />
+ <button id="loginBtn">Login</button>
+ <div class="status" id="statusBox"></div>
+ </div>
 
-  <div class="admin-panel" id="adminPanel">
-    <h2>✅ Selamat datang, Admin</h2>
-    <a href="/api/admin/dashboard" target="_blank" class="admin-btn">📊 Dashboard</a>
-    <a href="/api/admin/security" target="_blank" class="admin-btn">🛡️ Security (Blacklist)</a>
-    <a href="/api/admin/logs?limit=100" target="_blank" class="admin-btn">📜 Logs</a>
-    <a href="/api/admin/reputation" target="_blank" class="admin-btn">⭐ Reputation</a>
-    <a href="/api/admin/unban?ip=all" target="_blank" class="admin-btn">🔓 Unban Semua</a>
-    <button class="admin-btn" id="logoutBtn" style="margin-top:12px;color:#ff4d6d;">🚪 Logout</button>
-  </div>
+ <div class="admin-panel" id="adminPanel">
+ <h2>Selamat datang, Admin</h2>
+ <a href="/api/admin/dashboard" target="_blank" class="admin-btn">📊 Dashboard</a>
+ <a href="/api/admin/security" target="_blank" class="admin-btn">🛡️ Security (Blacklist)</a>
+ <a href="/api/admin/logs?limit=100" target="_blank" class="admin-btn">📜 Logs</a>
+ <a href="/api/admin/reputation" target="_blank" class="admin-btn">⭐ Reputation</a>
+ <a href="/api/admin/unban?ip=all" target="_blank" class="admin-btn">🔓 Unban Semua</a>
+ <button class="admin-btn" id="logoutBtn" style="margin-top:12px;color:#ff4d6d;">🚪 Logout</button>
+ </div>
 </div>
 
 <script>
 var $ = function(id){ return document.getElementById(id); };
 
 async function checkLogin() {
-  try {
-    var r = await fetch('/api/admin/check');
-    var d = await r.json();
-    if (d.isAdmin) showAdminPanel();
-  } catch(e) {}
+ try {
+ var r = await fetch('/api/admin/check');
+ var d = await r.json();
+ if (d.isAdmin) showAdminPanel();
+ } catch(e) {}
 }
 
 function showAdminPanel() {
-  $('loginForm').style.display = 'none';
-  $('adminPanel').classList.add('show');
+ $('loginForm').style.display = 'none';
+ $('adminPanel').classList.add('show');
 }
 
 function showStatus(type, msg) {
-  var s = $('statusBox');
-  s.className = 'status show ' + type;
-  s.textContent = msg;
+ var s = $('statusBox');
+ s.className = 'status show ' + type;
+ s.textContent = msg;
 }
 
 $('loginBtn').onclick = async function() {
-  var pw = $('pw').value;
-  if (!pw) { showStatus('err', 'Password wajib diisi'); return; }
-  var btn = $('loginBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Memproses...';
-  $('statusBox').classList.remove('show');
+ var pw = $('pw').value;
+ if (!pw) { showStatus('err', 'Password wajib diisi'); return; }
+ var btn = $('loginBtn');
+ btn.disabled = true;
+ btn.textContent = '⏳ Memproses...';
+ $('statusBox').classList.remove('show');
 
-  try {
-    var r = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
-    });
-    var d = await r.json();
-    if (d.status) {
-      showStatus('ok', 'Login berhasil!');
-      $('pw').value = '';
-      setTimeout(showAdminPanel, 500);
-    } else {
-      showStatus('err', d.message || 'Login gagal');
-    }
-  } catch(e) {
-    showStatus('err', 'Error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Login';
-  }
+ try {
+ var r = await fetch('/api/admin/login', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ password: pw })
+ });
+ var d = await r.json();
+ if (d.status) {
+ showStatus('ok', 'Login berhasil!');
+ $('pw').value = '';
+ setTimeout(showAdminPanel, 500);
+ } else {
+ showStatus('err', d.message || 'Login gagal');
+ }
+ } catch(e) {
+ showStatus('err', 'Error: ' + e.message);
+ } finally {
+ btn.disabled = false;
+ btn.textContent = 'Login';
+ }
 };
 
 $('logoutBtn').onclick = async function() {
-  await fetch('/api/admin/logout', { method: 'POST' });
-  location.reload();
+ await fetch('/api/admin/logout', { method: 'POST' });
+ location.reload();
 };
 
 $('pw').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') $('loginBtn').click();
+ if (e.key === 'Enter') $('loginBtn').click();
 });
 
 checkLogin();

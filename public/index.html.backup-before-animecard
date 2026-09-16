@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>JavaChat — Anonymous Chat Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',system-ui,sans-serif;background:#faf6eb;color:#433b2a;line-height:1.6}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#faf6eb}
+::-webkit-scrollbar-thumb{background:#c2bcae;border-radius:99px;border:2px solid #faf6eb}
+::-webkit-scrollbar-thumb:hover{background:#a39e90}
+.mesh-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-color:#faf6eb;background-image:radial-gradient(circle,rgba(67,59,42,.08) 1.5px,transparent 1.5px),linear-gradient(rgba(67,59,42,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(67,59,42,.015) 1px,transparent 1px);background-size:24px 24px,48px 48px,48px 48px}
+.container{max-width:1100px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+.hero{text-align:center;padding:80px 0 40px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:#558b2f;color:#fff;padding:8px 20px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;margin-bottom:24px}
+.hero h1{font-size:clamp(40px,10vw,96px);font-weight:900;letter-spacing:-3px;line-height:1;margin-bottom:20px;text-transform:uppercase}
+.hero .sub{font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:6px;color:#558b2f;font-weight:700;text-transform:uppercase;margin-bottom:24px}
+.hero p{font-size:17px;color:#6b6353;max-width:600px;margin:0 auto;line-height:1.7}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:48px 0;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;background:#fff}
+.stat{padding:28px 16px;text-align:center;border-right:3px solid #433b2a}
+.stat:last-child{border-right:none}
+.stat-val{font-size:32px;font-weight:900;color:#558b2f;font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:6px}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6b6353}
+@media(max-width:640px){
+.hero{padding:50px 0 30px}
+.hero h1{letter-spacing:-1px}
+.stats{grid-template-columns:repeat(2,1fr)}
+.stat{border-right:none;border-bottom:3px solid #433b2a}
+.stat:nth-child(1),.stat:nth-child(3){border-right:3px solid #433b2a}
+.stat:nth-child(3),.stat:nth-child(4){border-bottom:none}
+button,a,input,select,textarea,[role="button"]{min-height:44px}
+}
+</style>
+
+<style id="javin-info-link-style">
+.javin-info-link{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  text-decoration:none;
+  color:inherit;
+  font-weight:700;
+  cursor:pointer;
+}
+</style>
+
+<link rel="stylesheet" href="/theme-accent.css?v=1">
+</head>
+<body>
+<div class="mesh-bg"></div>
+<div class="container">
+<div class="hero">
+<div class="hero-badge">SYSTEM ONLINE</div>
+<div class="sub">ANONYMOUS CHAT PLATFORM</div>
+<h1>JAVIN SEMOK</h1>
+
+<!-- STATUS PILL (compact) -->
+<a href="/status.html" id="statusPill" class="status-pill loading">
+  <span class="sp-dot"></span>
+  <span class="sp-text">Cek Status Sistem</span>
+  <span class="sp-arrow">→</span>
+</a>
+
+<style>
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(128,128,128,0.15);
+  border: 1.5px solid #666;
+  border-radius: 30px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin: 18px auto 8px;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.status-pill:hover, .status-pill:active {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+.status-pill .sp-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #666;
+  flex-shrink: 0;
+}
+.status-pill .sp-arrow {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.status-pill.healthy {
+  background: rgba(76,175,80,0.12);
+  border-color: #4caf50;
+}
+.status-pill.healthy .sp-dot {
+  background: #4caf50;
+  box-shadow: 0 0 10px #4caf50;
+  animation: pulse-green 2s infinite;
+}
+.status-pill.healthy .sp-text { color: #4caf50; }
+
+.status-pill.warning {
+  background: rgba(255,176,32,0.12);
+  border-color: #ffb020;
+}
+.status-pill.warning .sp-dot {
+  background: #ffb020;
+  box-shadow: 0 0 10px #ffb020;
+}
+.status-pill.warning .sp-text { color: #ffb020; }
+
+.status-pill.error {
+  background: rgba(255,77,109,0.12);
+  border-color: #ff4d6d;
+}
+.status-pill.error .sp-dot {
+  background: #ff4d6d;
+  box-shadow: 0 0 10px #ff4d6d;
+  animation: pulse-red 1s infinite;
+}
+.status-pill.error .sp-text { color: #ff4d6d; }
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+</style>
+
+<script>
+(function() {
+  var pill = document.getElementById('statusPill');
+  if (!pill) return;
+  var dot = pill.querySelector('.sp-dot');
+  var text = pill.querySelector('.sp-text');
+
+  async function loadPill() {
+    try {
+      var r = await fetch('/api/system-status?t=' + Date.now());
+      var d = await r.json();
+      var map = {
+        healthy: { cls: 'healthy', txt: 'Semua Sistem Normal' },
+        warning: { cls: 'warning', txt: 'Ada Peringatan' },
+        error:   { cls: 'error',   txt: 'Ada Masalah Terdeteksi' }
+      };
+      var m = map[d.overall] || map.warning;
+      pill.className = 'status-pill ' + m.cls;
+      text.textContent = m.txt;
+    } catch(e) {
+      pill.className = 'status-pill error';
+      text.textContent = 'Gagal memuat status';
+    }
+  }
+
+  loadPill();
+  setInterval(loadPill, 30000);
+})();
+</script>
+
+</div>
+<div class="stats">
+<div class="stat"><div class="stat-val">1K+</div><div class="stat-label">Total Request Per Hari</div></div>
+
+<div class="stat"><div class="stat-val">&lt;100ms</div><div class="stat-label">Latency</div></div>
+<div class="stat"><div class="stat-val">24/7</div><div class="stat-label">Uptime</div></div>
+</div>
+<div class="section-title" style="font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;display:flex;align-items:center;gap:12px">FITUR UTAMA</div>
+
+
+<div class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:48px">
+<a href="/ai.html" class="card" style="background:#fff;border:3px solid #7c5cff;box-shadow:4px 4px 0 #7c5cff;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🤖</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">AI Tools</div><div style="font-size:12px;color:#6b6353;line-height:1.5">AI Neo · Javin Cerdas · dll</div></a>
+
+<a href="/chat.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">💬</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Chat Room</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Ngobrol real-time sama semua user</div></a>
+      <a href="/game.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🎮</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Game Center</div><div style="font-size:12px;color:#6b6353;line-height:1.5">8 game seru, menang coin</div></a>
+      <a href="/event.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🎉</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Event Center</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Lottery · Leaderboard · Achievement</div></a>
+      <a href="/harian.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">📅</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Fitur Harian</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Workout 3D · Ibadah · Doa 6 Agama</div></a>
+      <a href="/sosial.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">💬</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Sosial</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Anonim · Inbox · Kirim rahasia</div></a>
+<a href="/profile.html" class="card" style="background:#fff;border:3px solid #558b2f;box-shadow:4px 4px 0 #558b2f;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">👤</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Profile</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Saldo, ganti nama, top-up, VIP</div></a>
+<a href="/admin.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🛠️</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Admin</div><div style="font-size:12px;color:#6b6353;line-height:1.5">Panel admin & moderasi</div></a>
+<a href="/tools.html" class="card" style="background:#fff;border:3px solid #433b2a;box-shadow:4px 4px 0 #433b2a;padding:24px 20px;text-decoration:none;color:#433b2a;display:block"><div style="font-size:36px;margin-bottom:14px">🧰</div><div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Tools</div><div style="font-size:12px;color:#6b6353;line-height:1.5">AI & utility tools</div></a>
+<a href="/info" class="card" style="background:#fff;border:3px solid #1565c0;box-shadow:4px 4px 0 #1565c0;padding:24px 20px;text-decoration:none;color:#433b2a;display:block">
+<div style="font-size:36px;margin-bottom:14px">🌏</div>
+<div style="font-size:16px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Info</div>
+<div style="font-size:12px;color:#6b6353;line-height:1.5">Info gempa & informasi BMKG</div>
+</a>
+</div>
+<div class="footer" style="margin-top:60px;padding-top:32px;border-top:3px solid #433b2a">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px;text-align:left">
+<div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#6b6353;margin-bottom:16px">NAVIGATION</div>
+<a href="/" style="display:block;font-size:15px;font-weight:600;color:#433b2a;text-decoration:none;margin-bottom:12px">Explore Index</a>
+<a href="/chat.html" style="display:block;font-size:15px;font-weight:600;color:#433b2a;text-decoration:none;margin-bottom:12px">Home Platform</a>
+</div>
+<div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#6b6353;margin-bottom:16px">OPERATIONAL</div>
+<div style="font-size:15px;font-weight:600;color:#433b2a;margin-bottom:12px">&copy; 2026 JAVIN SEMOK</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#558b2f">&gt; ACTIVE 200 OK</div>
+</div>
+</div>
+
+</div>
+</div>
+<script src="common.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="auth-socket.js"></script>
+<script>
+const socket = io();
+socket.on('connect', () => socket.emit('peek-online'));
+</script>
+</body>
+</html>

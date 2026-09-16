@@ -9,113 +9,113 @@
 </head>
 <body>
 <div class="page slot-page">
-  <header class="page-header">
-    <a href="/" class="header-btn">🏠</a>
-    <a href="/chat.html" class="header-btn">💬</a>
-    <h1>🎰 Slot Machine</h1>
-    <button id="soundBtn" class="header-btn" title="Suara">🔊</button>
-  </header>
+ <header class="page-header">
+ <a href="/" class="header-btn">🏠</a>
+ <a href="/chat.html" class="header-btn">💬</a>
+ <h1>Slot Machine</h1>
+ <button id="soundBtn" class="header-btn" title="Suara">🔊</button>
+ </header>
 
-  <div class="page-content slot-content">
-    <div class="slot-machine">
-      <div class="slot-brand-bar">
-        <span class="brand-text">✨ SUPER JACKPOT ✨</span>
-      </div>
+ <div class="page-content slot-content">
+ <div class="slot-machine">
+ <div class="slot-brand-bar">
+ <span class="brand-text">✨ SUPER JACKPOT ✨</span>
+ </div>
 
-      <div class="slot-cabinet">
-        <div class="slot-lights-bar top">
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-        </div>
+ <div class="slot-cabinet">
+ <div class="slot-lights-bar top">
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ </div>
 
-        <div class="slot-grid" id="slotGrid">
-          <div class="reel-col" data-col="0">
-            <div class="slot-cell" data-r="0" data-row="0">❓</div>
-            <div class="slot-cell" data-r="0" data-row="1">❓</div>
-          </div>
-          <div class="reel-col" data-col="1">
-            <div class="slot-cell" data-r="1" data-row="0">❓</div>
-            <div class="slot-cell" data-r="1" data-row="1">❓</div>
-          </div>
-          <div class="reel-col" data-col="2">
-            <div class="slot-cell" data-r="2" data-row="0">❓</div>
-            <div class="slot-cell" data-r="2" data-row="1">❓</div>
-          </div>
-          <div class="reel-col" data-col="3">
-            <div class="slot-cell" data-r="3" data-row="0">❓</div>
-            <div class="slot-cell" data-r="3" data-row="1">❓</div>
-          </div>
-          <div class="reel-col" data-col="4">
-            <div class="slot-cell" data-r="4" data-row="0">❓</div>
-            <div class="slot-cell" data-r="4" data-row="1">❓</div>
-          </div>
-        </div>
+ <div class="slot-grid" id="slotGrid">
+ <div class="reel-col" data-col="0">
+ <div class="slot-cell" data-r="0" data-row="0">❓</div>
+ <div class="slot-cell" data-r="0" data-row="1">❓</div>
+ </div>
+ <div class="reel-col" data-col="1">
+ <div class="slot-cell" data-r="1" data-row="0">❓</div>
+ <div class="slot-cell" data-r="1" data-row="1">❓</div>
+ </div>
+ <div class="reel-col" data-col="2">
+ <div class="slot-cell" data-r="2" data-row="0">❓</div>
+ <div class="slot-cell" data-r="2" data-row="1">❓</div>
+ </div>
+ <div class="reel-col" data-col="3">
+ <div class="slot-cell" data-r="3" data-row="0">❓</div>
+ <div class="slot-cell" data-r="3" data-row="1">❓</div>
+ </div>
+ <div class="reel-col" data-col="4">
+ <div class="slot-cell" data-r="4" data-row="0">❓</div>
+ <div class="slot-cell" data-r="4" data-row="1">❓</div>
+ </div>
+ </div>
 
-        <div class="slot-display">
-          <div class="display-cell"><div class="display-label">SALDO</div><div class="display-value" id="slotBalance">0</div></div>
-          <div class="display-cell"><div class="display-label">BET</div><div class="display-value" id="slotBetDisplay">50</div></div>
-          <div class="display-cell"><div class="display-label">WIN</div><div class="display-value win-value" id="slotWin">0</div></div>
-        </div>
+ <div class="slot-display">
+ <div class="display-cell"><div class="display-label">SALDO</div><div class="display-value" id="slotBalance">0</div></div>
+ <div class="display-cell"><div class="display-label">BET</div><div class="display-value" id="slotBetDisplay">50</div></div>
+ <div class="display-cell"><div class="display-label">WIN</div><div class="display-value win-value" id="slotWin">0</div></div>
+ </div>
 
-        <div class="slot-message" id="slotResult"></div>
+ <div class="slot-message" id="slotResult"></div>
 
-        <div class="slot-bet-row">
-          <button class="chip" data-bet="10">10</button>
-          <button class="chip" data-bet="50">50</button>
-          <button class="chip" data-bet="100">100</button>
-          <button class="chip" data-bet="500">500</button>
-          <button class="chip chip-max" data-bet="max">MAX</button>
-        </div>
+ <div class="slot-bet-row">
+ <button class="chip" data-bet="10">10</button>
+ <button class="chip" data-bet="50">50</button>
+ <button class="chip" data-bet="100">100</button>
+ <button class="chip" data-bet="500">500</button>
+ <button class="chip chip-max" data-bet="max">MAX</button>
+ </div>
 
-        <button class="slot-spin-btn" id="slotSpin">
-          <span class="spin-icon">🎰</span>
-          <span class="spin-text">SPIN</span>
-        </button>
+ <button class="slot-spin-btn" id="slotSpin">
+ <span class="spin-icon">🎰</span>
+ <span class="spin-text">SPIN</span>
+ </button>
 
-        <div class="slot-lights-bar bottom">
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-          <span class="light"></span><span class="light"></span><span class="light"></span>
-        </div>
-      </div>
+ <div class="slot-lights-bar bottom">
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ <span class="light"></span><span class="light"></span><span class="light"></span>
+ </div>
+ </div>
 
-      <div class="slot-paytable">
-        <div class="paytable-title">💰 PAYTABLE <span class="pt-note">(per 1x bet)</span></div>
-        <div class="paytable-scroll">
-          <table class="pt-table">
-            <thead><tr><th>SYMBOL</th><th>x3</th><th>x4</th><th>x5</th></tr></thead>
-            <tbody>
-              <tr><td class="pt-sym">7️⃣ 7️⃣ 7️⃣</td><td>10</td><td>40</td><td class="jack">200</td></tr>
-              <tr><td class="pt-sym">💎 💎 💎</td><td>5</td><td>18</td><td class="jack">60</td></tr>
-              <tr><td class="pt-sym">⭐ ⭐ ⭐</td><td>3</td><td>10</td><td class="jack">30</td></tr>
-              <tr><td class="pt-sym">🍇 🍇 🍇</td><td>2</td><td>6</td><td>18</td></tr>
-              <tr><td class="pt-sym">🍋 🍋 🍋</td><td>1</td><td>4</td><td>12</td></tr>
-              <tr><td class="pt-sym">🍒 🍒 🍒</td><td>1</td><td>3</td><td>10</td></tr>
-            </tbody>
-          </table>
-          <div class="pt-scatter">
-            <span class="pt-scatter-sym">🎰 SCATTER</span>
-            <span class="pt-scatter-desc">Muncul 3+ di mana aja:</span>
-            <span class="pt-scatter-val">x3 = 5 · x4 = 20 · x5 = <b>100</b></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <div class="slot-paytable">
+ <div class="paytable-title">💰 PAYTABLE <span class="pt-note">(per 1x bet)</span></div>
+ <div class="paytable-scroll">
+ <table class="pt-table">
+ <thead><tr><th>SYMBOL</th><th>x3</th><th>x4</th><th>x5</th></tr></thead>
+ <tbody>
+ <tr><td class="pt-sym">7️⃣ 7️⃣ 7️⃣</td><td>10</td><td>40</td><td class="jack">200</td></tr>
+ <tr><td class="pt-sym">💎 💎 💎</td><td>5</td><td>18</td><td class="jack">60</td></tr>
+ <tr><td class="pt-sym">⭐ ⭐ ⭐</td><td>3</td><td>10</td><td class="jack">30</td></tr>
+ <tr><td class="pt-sym">🍇 🍇 🍇</td><td>2</td><td>6</td><td>18</td></tr>
+ <tr><td class="pt-sym">🍋 🍋 🍋</td><td>1</td><td>4</td><td>12</td></tr>
+ <tr><td class="pt-sym">🍒 🍒 🍒</td><td>1</td><td>3</td><td>10</td></tr>
+ </tbody>
+ </table>
+ <div class="pt-scatter">
+ <span class="pt-scatter-sym">🎰 SCATTER</span>
+ <span class="pt-scatter-desc">Muncul 3+ di mana aja:</span>
+ <span class="pt-scatter-val">x3 = 5 · x4 = 20 · x5 = <b>100</b></span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 <!-- BIG WIN OVERLAY -->
 <div id="bigWinOverlay" class="bigwin-overlay hidden">
-  <div class="bigwin-rays"></div>
-  <div class="bigwin-content">
-    <div class="bigwin-title" id="bigWinTitle">BIG WIN!</div>
-    <div class="bigwin-amount"><span class="bigwin-plus">+</span><span id="bigWinAmount">0</span></div>
-    <div class="bigwin-sub" id="bigWinSub">coin</div>
-    <div class="bigwin-coins" id="bigWinCoins"></div>
-  </div>
+ <div class="bigwin-rays"></div>
+ <div class="bigwin-content">
+ <div class="bigwin-title" id="bigWinTitle">BIG WIN!</div>
+ <div class="bigwin-amount"><span class="bigwin-plus">+</span><span id="bigWinAmount">0</span></div>
+ <div class="bigwin-sub" id="bigWinSub">coin</div>
+ <div class="bigwin-coins" id="bigWinCoins"></div>
+ </div>
 </div>
 
 <div id="toast" class="toast hidden"></div>

@@ -7,61 +7,61 @@
 <link rel="stylesheet" href="/style.css">
 <style>
 .javin-anonim-wrap {
-  max-width: 620px;
-  margin: 0 auto;
-  padding: 20px;
+ max-width: 620px;
+ margin: 0 auto;
+ padding: 20px;
 }
 
 .javin-anonim-card {
-  background: var(--card-bg, rgba(255,255,255,.06));
-  border-radius: 18px;
-  padding: 20px;
+ background: var(--card-bg, rgba(255,255,255,.06));
+ border-radius: 18px;
+ padding: 20px;
 }
 
 .javin-anonim-card h2 {
-  margin-top: 0;
+ margin-top: 0;
 }
 
 .javin-anonim-label {
-  display: block;
-  margin: 16px 0 7px;
-  font-weight: 600;
+ display: block;
+ margin: 16px 0 7px;
+ font-weight: 600;
 }
 
 .javin-anonim-input,
 .javin-anonim-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid rgba(128,128,128,.3);
-  border-radius: 12px;
-  padding: 12px;
-  font: inherit;
-  background: rgba(128,128,128,.08);
+ width: 100%;
+ box-sizing: border-box;
+ border: 1px solid rgba(128,128,128,.3);
+ border-radius: 12px;
+ padding: 12px;
+ font: inherit;
+ background: rgba(128,128,128,.08);
 }
 
 .javin-anonim-textarea {
-  min-height: 120px;
-  resize: vertical;
+ min-height: 120px;
+ resize: vertical;
 }
 
 .javin-anonim-btn {
-  width: 100%;
-  margin-top: 18px;
-  border: 0;
-  border-radius: 12px;
-  padding: 13px;
-  font-weight: 700;
-  cursor: pointer;
+ width: 100%;
+ margin-top: 18px;
+ border: 0;
+ border-radius: 12px;
+ padding: 13px;
+ font-weight: 700;
+ cursor: pointer;
 }
 
 .javin-anonim-result {
-  margin-top: 18px;
-  padding: 13px;
-  border-radius: 12px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: rgba(128,128,128,.08);
-  display: none;
+ margin-top: 18px;
+ padding: 13px;
+ border-radius: 12px;
+ white-space: pre-wrap;
+ word-break: break-word;
+ background: rgba(128,128,128,.08);
+ display: none;
 }
 </style>
 <link rel="stylesheet" href="/theme-accent.css?v=1">
@@ -71,67 +71,67 @@
 
 <div class="page tools-page">
 
-  <header class="page-header">
-    <a href="/tools.html" class="header-btn">Tools</a>
-    <h1>🕵️ Javin Anonim</h1>
-  </header>
+ <header class="page-header">
+ <a href="/tools.html" class="header-btn">Tools</a>
+ <h1>Javin Anonim</h1>
+ </header>
 
-  <div class="javin-anonim-wrap">
+ <div class="javin-anonim-wrap">
 
-    <div class="javin-anonim-card">
+ <div class="javin-anonim-card">
 
-      <h2>Javin Anonim</h2>
-      <p>Kirim satu pesan anonim melalui API yang lu gunakan.</p>
+ <h2>Javin Anonim</h2>
+ <p>Kirim satu pesan anonim melalui API yang lu gunakan.</p>
 
-      <label class="javin-anonim-label" for="username">
-        Username
-      </label>
+ <label class="javin-anonim-label" for="username">
+ Username
+ </label>
 
-      <input
-        id="username"
-        class="javin-anonim-input"
-        type="text"
-        placeholder="Masukkan username"
-        autocomplete="off"
-      >
+ <input
+ id="username"
+ class="javin-anonim-input"
+ type="text"
+ placeholder="Masukkan username"
+ autocomplete="off"
+ >
 
-      <label class="javin-anonim-label" for="pesan">
-        Pesan
-      </label>
+ <label class="javin-anonim-label" for="pesan">
+ Pesan
+ </label>
 
-      <textarea
-        id="pesan"
-        class="javin-anonim-textarea"
-        placeholder="Masukkan pesan"
-      ></textarea>
+ <textarea
+ id="pesan"
+ class="javin-anonim-textarea"
+ placeholder="Masukkan pesan"
+ ></textarea>
 
-      <label class="javin-anonim-label" for="jumlah">
-        Jumlah
-      </label>
+ <label class="javin-anonim-label" for="jumlah">
+ Jumlah
+ </label>
 
-      <input
-        id="jumlah"
-        class="javin-anonim-input"
-        type="number"
-        value="1"
-        min="1"
-        max="1000"
-        
-      >
+ <input
+ id="jumlah"
+ class="javin-anonim-input"
+ type="number"
+ value="1"
+ min="1"
+ max="1000"
+ 
+ >
 
-      <button
-        id="kirimAnonim"
-        class="javin-anonim-btn"
-        type="button"
-      >
-        KIRIM
-      </button>
+ <button
+ id="kirimAnonim"
+ class="javin-anonim-btn"
+ type="button"
+ >
+ KIRIM
+ </button>
 
-      <div id="hasilAnonim" class="javin-anonim-result"></div>
+ <div id="hasilAnonim" class="javin-anonim-result"></div>
 
-    </div>
+ </div>
 
-  </div>
+ </div>
 
 </div>
 
@@ -146,15 +146,14 @@ GANTI BAGIAN DI BAWAH INI DENGAN API LU.
 Contoh format:
 
 const API_URL =
-  "https://api.nexadev.my.id/tools/nglspam/?url=&pesan=&jumlah=";
+ "https://api.nexadev.my.id/tools/nglspam/?url=&pesan=&jumlah=";
 
 JANGAN ubah kode lainnya.
 ==================================================
 */
 
 const API_URL =
-  "https://api.nexadev.my.id/tools/nglspam/?url=&pesan=&jumlah=";
-
+ "https://api.nexadev.my.id/tools/nglspam/?url=&pesan=&jumlah=";
 
 const usernameInput = document.getElementById("username");
 const pesanInput = document.getElementById("pesan");
@@ -162,69 +161,68 @@ const jumlahInput = document.getElementById("jumlah");
 const kirimBtn = document.getElementById("kirimAnonim");
 const hasil = document.getElementById("hasilAnonim");
 
-
 kirimBtn.addEventListener("click", async () => {
 
-  const username = usernameInput.value.trim();
-  const pesan = pesanInput.value.trim();
-  const jumlah = "1";
+ const username = usernameInput.value.trim();
+ const pesan = pesanInput.value.trim();
+ const jumlah = "1";
 
-  if (!username) {
-    hasil.style.display = "block";
-    hasil.textContent = "Username wajib diisi.";
-    return;
-  }
+ if (!username) {
+ hasil.style.display = "block";
+ hasil.textContent = "Username wajib diisi.";
+ return;
+ }
 
-  if (!pesan) {
-    hasil.style.display = "block";
-    hasil.textContent = "Pesan wajib diisi.";
-    return;
-  }
+ if (!pesan) {
+ hasil.style.display = "block";
+ hasil.textContent = "Pesan wajib diisi.";
+ return;
+ }
 
-  hasil.style.display = "block";
-  hasil.textContent = "Memproses...";
-  kirimBtn.disabled = true;
+ hasil.style.display = "block";
+ hasil.textContent = "Memproses...";
+ kirimBtn.disabled = true;
 
-  try {
+ try {
 
-    const url = new URL(API_URL);
+ const url = new URL(API_URL);
 
-    url.searchParams.set("url", username);
-    url.searchParams.set("pesan", pesan);
-    url.searchParams.set("jumlah", jumlah);
+ url.searchParams.set("url", username);
+ url.searchParams.set("pesan", pesan);
+ url.searchParams.set("jumlah", jumlah);
 
-    const response = await fetch(url.toString());
+ const response = await fetch(url.toString());
 
-    const data = await response.json();
+ const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error("HTTP " + response.status);
-    }
+ if (!response.ok) {
+ throw new Error("HTTP " + response.status);
+ }
 
-    if (data.status === false) {
-      hasil.textContent =
-        data.message ||
-        "API gagal memproses permintaan.";
-    } else {
-      hasil.textContent =
-        data.message ||
-        "Pesan berhasil diproses.";
-    }
+ if (data.status === false) {
+ hasil.textContent =
+ data.message ||
+ "API gagal memproses permintaan.";
+ } else {
+ hasil.textContent =
+ data.message ||
+ "Pesan berhasil diproses.";
+ }
 
-    console.log("JAVIN ANONIM:", data);
+ console.log("JAVIN ANONIM:", data);
 
-  } catch (error) {
+ } catch (error) {
 
-    console.error("JAVIN ANONIM ERROR:", error);
+ console.error("JAVIN ANONIM ERROR:", error);
 
-    hasil.textContent =
-      "Terjadi kesalahan saat menghubungi API.";
+ hasil.textContent =
+ "Terjadi kesalahan saat menghubungi API.";
 
-  } finally {
+ } finally {
 
-    kirimBtn.disabled = false;
+ kirimBtn.disabled = false;
 
-  }
+ }
 
 });
 </script>

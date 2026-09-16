@@ -73,130 +73,130 @@ body { font-family: system-ui, -apple-system, sans-serif; background:#0a0a0f; co
 </head>
 <body>
 <div class="page">
-  <div class="header">
-    <h1>📊 Status Sistem</h1>
-    <p>Monitoring semua fitur JAVIN SEMOK</p>
-  </div>
+ <div class="header">
+ <h1>Status Sistem</h1>
+ <p>Monitoring semua fitur JAVIN SEMOK</p>
+ </div>
 
-  <div id="loading" class="loading">
-    <div class="spinner"></div>
-    <div>Memuat status...</div>
-  </div>
+ <div id="loading" class="loading">
+ <div class="spinner"></div>
+ <div>Memuat status...</div>
+ </div>
 
-  <div id="content" style="display:none">
-    <div id="overall" class="overall healthy">
-      <div class="overall-emoji" id="overallEmoji">✅</div>
-      <div class="overall-title" id="overallTitle">Semua Sistem Normal</div>
-      <div class="overall-sub" id="overallSub">-</div>
-    </div>
+ <div id="content" style="display:none">
+ <div id="overall" class="overall healthy">
+ <div class="overall-emoji" id="overallEmoji">✅</div>
+ <div class="overall-title" id="overallTitle">Semua Sistem Normal</div>
+ <div class="overall-sub" id="overallSub">-</div>
+ </div>
 
-    <div class="summary">
-      <div class="sum-item ok"><div class="sum-num" id="sumOk">0</div><div class="sum-lbl">Ready</div></div>
-      <div class="sum-item warn"><div class="sum-num" id="sumWarn">0</div><div class="sum-lbl">Warning</div></div>
-      <div class="sum-item err"><div class="sum-num" id="sumErr">0</div><div class="sum-lbl">Error</div></div>
-    </div>
+ <div class="summary">
+ <div class="sum-item ok"><div class="sum-num" id="sumOk">0</div><div class="sum-lbl">Ready</div></div>
+ <div class="sum-item warn"><div class="sum-num" id="sumWarn">0</div><div class="sum-lbl">Warning</div></div>
+ <div class="sum-item err"><div class="sum-num" id="sumErr">0</div><div class="sum-lbl">Error</div></div>
+ </div>
 
-    <div class="section-title">Kategori Fitur</div>
-    <div id="groups"></div>
+ <div class="section-title">Kategori Fitur</div>
+ <div id="groups"></div>
 
-    <div class="footer">
-      <div class="footer-info" id="footerInfo">-</div>
-      <button class="refresh-btn" id="refreshBtn" onclick="loadStatus()">🔄 Refresh Sekarang</button>
-    </div>
-  </div>
+ <div class="footer">
+ <div class="footer-info" id="footerInfo">-</div>
+ <button class="refresh-btn" id="refreshBtn" onclick="loadStatus()">🔄 Refresh Sekarang</button>
+ </div>
+ </div>
 </div>
 
 <script>
 var expanded = {};
 
 function renderStatus(d) {
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('content').style.display = 'block';
+ document.getElementById('loading').style.display = 'none';
+ document.getElementById('content').style.display = 'block';
 
-  // Overall
-  var ov = document.getElementById('overall');
-  ov.className = 'overall ' + d.overall;
-  var emojiMap = { healthy: '✅', warning: '⚠️', error: '❌' };
-  var titleMap = { healthy: 'Semua Sistem Normal', warning: 'Ada Peringatan', error: 'Ada Masalah Terdeteksi' };
-  document.getElementById('overallEmoji').textContent = emojiMap[d.overall] || '❓';
-  document.getElementById('overallTitle').textContent = titleMap[d.overall] || 'Unknown';
-  document.getElementById('overallSub').textContent = 'Update: ' + d.time;
+ // Overall
+ var ov = document.getElementById('overall');
+ ov.className = 'overall ' + d.overall;
+ var emojiMap = { healthy: '✅', warning: '⚠️', error: '❌' };
+ var titleMap = { healthy: 'Semua Sistem Normal', warning: 'Ada Peringatan', error: 'Ada Masalah Terdeteksi' };
+ document.getElementById('overallEmoji').textContent = emojiMap[d.overall] || '❓';
+ document.getElementById('overallTitle').textContent = titleMap[d.overall] || 'Unknown';
+ document.getElementById('overallSub').textContent = 'Update: ' + d.time;
 
-  // Summary
-  var okCount = 0, warnCount = 0, errCount = 0;
-  Object.keys(d.groups).forEach(function(k) {
-    var s = d.groups[k].status;
-    if (s === 'ready') okCount++;
-    else if (s === 'warning') warnCount++;
-    else errCount++;
-  });
-  document.getElementById('sumOk').textContent = okCount;
-  document.getElementById('sumWarn').textContent = warnCount;
-  document.getElementById('sumErr').textContent = errCount;
+ // Summary
+ var okCount = 0, warnCount = 0, errCount = 0;
+ Object.keys(d.groups).forEach(function(k) {
+ var s = d.groups[k].status;
+ if (s === 'ready') okCount++;
+ else if (s === 'warning') warnCount++;
+ else errCount++;
+ });
+ document.getElementById('sumOk').textContent = okCount;
+ document.getElementById('sumWarn').textContent = warnCount;
+ document.getElementById('sumErr').textContent = errCount;
 
-  // Groups
-  var cont = document.getElementById('groups');
-  cont.innerHTML = '';
-  var order = ['chat', 'games', 'tools', 'account', 'islamic', 'infra', 'security'];
-  order.forEach(function(k) {
-    var g = d.groups[k];
-    if (!g) return;
-    var lbl = g.status === 'ready' ? 'READY' : g.status === 'warning' ? 'WARN' : 'ERROR';
-    var itemOk = (g.items || []).filter(function(i) { return i.ok; }).length;
-    var itemTotal = (g.items || []).length;
+ // Groups
+ var cont = document.getElementById('groups');
+ cont.innerHTML = '';
+ var order = ['chat', 'games', 'tools', 'account', 'islamic', 'infra', 'security'];
+ order.forEach(function(k) {
+ var g = d.groups[k];
+ if (!g) return;
+ var lbl = g.status === 'ready' ? 'READY' : g.status === 'warning' ? 'WARN' : 'ERROR';
+ var itemOk = (g.items || []).filter(function(i) { return i.ok; }).length;
+ var itemTotal = (g.items || []).length;
 
-    var el = document.createElement('div');
-    el.className = 'group ' + g.status + (expanded[k] ? ' expanded' : '');
-    el.setAttribute('data-key', k);
+ var el = document.createElement('div');
+ el.className = 'group ' + g.status + (expanded[k] ? ' expanded' : '');
+ el.setAttribute('data-key', k);
 
-    var itemsHtml = '';
-    (g.items || []).forEach(function(it) {
-      itemsHtml += '<div class="item ' + (it.ok ? 'ok' : 'bad') + '">' +
-        '<div class="item-dot"></div>' +
-        '<div class="item-name">' + it.name + '</div>' +
-        '<div class="item-status">' + (it.ok ? 'OK' : 'ERR') + '</div>' +
-      '</div>';
-    });
+ var itemsHtml = '';
+ (g.items || []).forEach(function(it) {
+ itemsHtml += '<div class="item ' + (it.ok ? 'ok' : 'bad') + '">' +
+ '<div class="item-dot"></div>' +
+ '<div class="item-name">' + it.name + '</div>' +
+ '<div class="item-status">' + (it.ok ? 'OK' : 'ERR') + '</div>' +
+ '</div>';
+ });
 
-    el.innerHTML =
-      '<div class="group-header">' +
-        '<div class="group-emoji">' + g.icon + '</div>' +
-        '<div class="group-info">' +
-          '<div class="group-label">' + g.label + '</div>' +
-          '<div class="group-detail">' + itemOk + '/' + itemTotal + ' • ' + g.detail + '</div>' +
-        '</div>' +
-        '<div class="group-badge">' + lbl + '</div>' +
-        '<div class="group-arrow">▶</div>' +
-      '</div>' +
-      '<div class="group-items">' + itemsHtml + '</div>';
+ el.innerHTML =
+ '<div class="group-header">' +
+ '<div class="group-emoji">' + g.icon + '</div>' +
+ '<div class="group-info">' +
+ '<div class="group-label">' + g.label + '</div>' +
+ '<div class="group-detail">' + itemOk + '/' + itemTotal + ' • ' + g.detail + '</div>' +
+ '</div>' +
+ '<div class="group-badge">' + lbl + '</div>' +
+ '<div class="group-arrow">▶</div>' +
+ '</div>' +
+ '<div class="group-items">' + itemsHtml + '</div>';
 
-    el.querySelector('.group-header').addEventListener('click', function() {
-      expanded[k] = !expanded[k];
-      el.classList.toggle('expanded');
-    });
+ el.querySelector('.group-header').addEventListener('click', function() {
+ expanded[k] = !expanded[k];
+ el.classList.toggle('expanded');
+ });
 
-    cont.appendChild(el);
-  });
+ cont.appendChild(el);
+ });
 
-  // Footer
-  document.getElementById('footerInfo').innerHTML =
-    '✅ ' + d.summary.ok + ' / ' + d.summary.totalItems + ' fitur normal<br>' +
-    'Auto-refresh tiap 30 detik';
+ // Footer
+ document.getElementById('footerInfo').innerHTML =
+ '✅ ' + d.summary.ok + ' / ' + d.summary.totalItems + ' fitur normal<br>' +
+ 'Auto-refresh tiap 30 detik';
 }
 
 async function loadStatus() {
-  var btn = document.getElementById('refreshBtn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Memuat...'; }
-  try {
-    var r = await fetch('/api/system-status?t=' + Date.now());
-    var d = await r.json();
-    renderStatus(d);
-  } catch(e) {
-    document.getElementById('loading').innerHTML =
-      '<div style="color:#ff4d6d">❌ Gagal memuat status: ' + e.message + '</div>';
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Sekarang'; }
-  }
+ var btn = document.getElementById('refreshBtn');
+ if (btn) { btn.disabled = true; btn.textContent = '⏳ Memuat...'; }
+ try {
+ var r = await fetch('/api/system-status?t=' + Date.now());
+ var d = await r.json();
+ renderStatus(d);
+ } catch(e) {
+ document.getElementById('loading').innerHTML =
+ '<div style="color:#ff4d6d">❌ Gagal memuat status: ' + e.message + '</div>';
+ } finally {
+ if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Sekarang'; }
+ }
 }
 
 loadStatus();

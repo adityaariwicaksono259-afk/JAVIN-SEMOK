@@ -8,294 +8,294 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; overflow-y: auto; height: auto; min-height: 100vh; }
 body {
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f0efe8;
-  color: #1a1a1a;
+ font-family: system-ui, -apple-system, sans-serif;
+ background: #f0efe8;
+ color: #1a1a1a;
 }
 .wf-page { min-height: 100vh; padding-bottom: 100px; }
 .wf-header {
-  background: #1f6f5c;
-  color: white;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+ background: #1f6f5c;
+ color: white;
+ padding: 14px 16px;
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ position: sticky;
+ top: 0;
+ z-index: 10;
 }
 .wf-header a {
-  color: white;
-  text-decoration: none;
-  background: rgba(255,255,255,0.15);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+ color: white;
+ text-decoration: none;
+ background: rgba(255,255,255,0.15);
+ padding: 6px 14px;
+ border-radius: 20px;
+ font-size: 0.85rem;
+ font-weight: 600;
 }
 .wf-header h1 { margin: 0; font-size: 1.1rem; font-weight: 700; }
 
 .wf-wrap {
-  max-width: 620px;
-  margin: 0 auto;
-  padding: 20px 16px 120px;
+ max-width: 620px;
+ margin: 0 auto;
+ padding: 20px 16px 120px;
 }
 .wf-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+ background: #ffffff;
+ border-radius: 16px;
+ padding: 20px;
+ box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .wf-title {
-  margin: 0 0 6px;
-  font-size: 1.4rem;
-  color: #0f2a24;
+ margin: 0 0 6px;
+ font-size: 1.4rem;
+ color: #0f2a24;
 }
 .wf-sub {
-  font-size: 0.88rem;
-  color: #5a5a5a;
-  margin: 0 0 18px;
+ font-size: 0.88rem;
+ color: #5a5a5a;
+ margin: 0 0 18px;
 }
 .wf-img-wrap {
-  position: relative;
-  width: 100%;
-  background: #f0efe8;
-  border-radius: 14px;
-  overflow: hidden;
-  min-height: 320px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+ position: relative;
+ width: 100%;
+ background: #f0efe8;
+ border-radius: 14px;
+ overflow: hidden;
+ min-height: 320px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
 }
 .wf-img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 14px;
-  transition: opacity 0.3s;
+ width: 100%;
+ height: auto;
+ display: block;
+ border-radius: 14px;
+ transition: opacity 0.3s;
 }
 .wf-img.loading { opacity: 0.4; }
 .wf-spinner {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e8e6df;
-  border-top-color: #1f6f5c;
-  border-radius: 50%;
-  animation: wf-spin 0.8s linear infinite;
+ position: absolute;
+ width: 40px;
+ height: 40px;
+ border: 3px solid #e8e6df;
+ border-top-color: #1f6f5c;
+ border-radius: 50%;
+ animation: wf-spin 0.8s linear infinite;
 }
 @keyframes wf-spin { to { transform: rotate(360deg); } }
 .wf-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
+ display: flex;
+ gap: 10px;
+ margin-top: 18px;
 }
 .wf-btn {
-  flex: 1;
-  border: 0;
-  border-radius: 12px;
-  padding: 14px;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.1s, opacity 0.15s;
+ flex: 1;
+ border: 0;
+ border-radius: 12px;
+ padding: 14px;
+ font: inherit;
+ font-size: 1rem;
+ font-weight: 700;
+ cursor: pointer;
+ transition: transform 0.1s, opacity 0.15s;
 }
 .wf-btn:active { transform: scale(0.97); }
 .wf-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .wf-btn-primary {
-  background: linear-gradient(135deg, #7c5cff, #9d7cff);
-  color: white;
+ background: linear-gradient(135deg, #7c5cff, #9d7cff);
+ color: white;
 }
 .wf-btn-secondary {
-  flex: 0 0 auto;
-  padding: 14px 18px;
-  background: #e8e6df;
-  color: #4a4a4a;
-  border: 1.5px solid #d8d5cc;
+ flex: 0 0 auto;
+ padding: 14px 18px;
+ background: #e8e6df;
+ color: #4a4a4a;
+ border: 1.5px solid #d8d5cc;
 }
 .wf-info {
-  margin-top: 14px;
-  font-size: 0.78rem;
-  color: #8a8a8a;
-  text-align: center;
-  line-height: 1.5;
-  min-height: 20px;
+ margin-top: 14px;
+ font-size: 0.78rem;
+ color: #8a8a8a;
+ text-align: center;
+ line-height: 1.5;
+ min-height: 20px;
 }
 .wf-info a { color: #1f6f5c; text-decoration: none; }
 .wf-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 10px;
+ display: flex;
+ flex-wrap: wrap;
+ gap: 6px;
+ justify-content: center;
+ margin-top: 10px;
 }
 .wf-tag {
-  background: #eaf5f1;
-  color: #0f5c47;
-  font-size: 0.7rem;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-weight: 600;
+ background: #eaf5f1;
+ color: #0f5c47;
+ font-size: 0.7rem;
+ padding: 3px 10px;
+ border-radius: 20px;
+ font-weight: 600;
 }
 .wf-status {
-  display: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-  margin-top: 14px;
+ display: none;
+ padding: 12px;
+ border-radius: 10px;
+ font-size: 0.85rem;
+ font-weight: 600;
+ text-align: center;
+ margin-top: 14px;
 }
 .wf-status.show { display: block; }
 .wf-status.error {
-  background: #fde8ea;
-  border: 1.5px solid #e63946;
-  color: #a01824;
+ background: #fde8ea;
+ border: 1.5px solid #e63946;
+ color: #a01824;
 }
 </style>
 <link rel="stylesheet" href="/theme-accent.css?v=1">
 </head>
 <body>
 <div class="wf-page">
-  <header class="wf-header">
-    <a href="/tools.html">← Tools</a>
-    <h1>🌸 Waifu</h1>
-  </header>
+ <header class="wf-header">
+ <a href="/tools.html">← Tools</a>
+ <h1>Waifu</h1>
+ </header>
 
-  <div class="wf-wrap">
-    <div class="wf-card">
-      <h2 class="wf-title">Random Waifu</h2>
-      <p class="wf-sub">acak my bini</p>
+ <div class="wf-wrap">
+ <div class="wf-card">
+ <h2 class="wf-title">Random Waifu</h2>
+ <p class="wf-sub">acak my bini</p>
 
-      <div class="wf-img-wrap" id="wfImgWrap">
-        <div class="wf-spinner" id="wfSpinner"></div>
-        <img id="wfImg" class="wf-img" alt="waifu" style="display:none" />
-      </div>
+ <div class="wf-img-wrap" id="wfImgWrap">
+ <div class="wf-spinner" id="wfSpinner"></div>
+ <img id="wfImg" class="wf-img" alt="waifu" style="display:none" />
+ </div>
 
-      <div class="wf-actions">
-        <button id="wfReload" class="wf-btn wf-btn-primary" type="button">🎲 Acak Lagi</button>
-        <button id="wfDownload" class="wf-btn wf-btn-secondary" type="button" title="Download">⬇️</button>
-      </div>
+ <div class="wf-actions">
+ <button id="wfReload" class="wf-btn wf-btn-primary" type="button">🎲 Acak Lagi</button>
+ <button id="wfDownload" class="wf-btn wf-btn-secondary" type="button" title="Download">⬇️</button>
+ </div>
 
-      <div class="wf-info" id="wfInfo"></div>
-      <div class="wf-tags" id="wfTags"></div>
-      <div class="wf-status" id="wfStatus"></div>
-    </div>
-  </div>
+ <div class="wf-info" id="wfInfo"></div>
+ <div class="wf-tags" id="wfTags"></div>
+ <div class="wf-status" id="wfStatus"></div>
+ </div>
+ </div>
 </div>
 
 <script>
 (function() {
-  var $ = function(id) { return document.getElementById(id); };
-  var imgEl = $('wfImg');
-  var spinnerEl = $('wfSpinner');
-  var wrapEl = $('wfImgWrap');
-  var infoEl = $('wfInfo');
-  var tagsEl = $('wfTags');
-  var statusEl = $('wfStatus');
-  var reloadBtn = $('wfReload');
-  var downloadBtn = $('wfDownload');
+ var $ = function(id) { return document.getElementById(id); };
+ var imgEl = $('wfImg');
+ var spinnerEl = $('wfSpinner');
+ var wrapEl = $('wfImgWrap');
+ var infoEl = $('wfInfo');
+ var tagsEl = $('wfTags');
+ var statusEl = $('wfStatus');
+ var reloadBtn = $('wfReload');
+ var downloadBtn = $('wfDownload');
 
-  var isRequesting = false;
-  var currentURL = '';
+ var isRequesting = false;
+ var currentURL = '';
 
-  function hideStatus() {
-    statusEl.classList.remove('show');
-    statusEl.textContent = '';
-  }
+ function hideStatus() {
+ statusEl.classList.remove('show');
+ statusEl.textContent = '';
+ }
 
-  function showStatus(type, msg) {
-    statusEl.className = 'wf-status show ' + type;
-    statusEl.textContent = msg;
-  }
+ function showStatus(type, msg) {
+ statusEl.className = 'wf-status show ' + type;
+ statusEl.textContent = msg;
+ }
 
-  function setLoading(show) {
-    spinnerEl.style.display = show ? 'block' : 'none';
-    reloadBtn.disabled = show;
-    reloadBtn.textContent = show ? '⏳ Loading...' : '🎲 Acak Lagi';
-  }
+ function setLoading(show) {
+ spinnerEl.style.display = show ? 'block' : 'none';
+ reloadBtn.disabled = show;
+ reloadBtn.textContent = show ? '⏳ Loading...' : '🎲 Acak Lagi';
+ }
 
-  async function loadWaifu() {
-    if (isRequesting) return;
-    isRequesting = true;
-    hideStatus();
-    setLoading(true);
-    imgEl.classList.add('loading');
-    infoEl.textContent = '';
-    tagsEl.innerHTML = '';
+ async function loadWaifu() {
+ if (isRequesting) return;
+ isRequesting = true;
+ hideStatus();
+ setLoading(true);
+ imgEl.classList.add('loading');
+ infoEl.textContent = '';
+ tagsEl.innerHTML = '';
 
-    try {
-      var r = await fetch('/api/waifu');
-      var d = await r.json();
+ try {
+ var r = await fetch('/api/waifu');
+ var d = await r.json();
 
-      if (!r.ok || !d.status || !d.url) {
-        throw new Error(d.message || 'Gagal ambil waifu');
-      }
+ if (!r.ok || !d.status || !d.url) {
+ throw new Error(d.message || 'Gagal ambil waifu');
+ }
 
-      currentURL = d.url;
-      imgEl.onload = function() {
-        imgEl.classList.remove('loading');
-        imgEl.style.display = 'block';
-      };
-      imgEl.onerror = function() {
-        showStatus('error', 'Gagal load gambar');
-      };
-      imgEl.src = d.url;
+ currentURL = d.url;
+ imgEl.onload = function() {
+ imgEl.classList.remove('loading');
+ imgEl.style.display = 'block';
+ };
+ imgEl.onerror = function() {
+ showStatus('error', 'Gagal load gambar');
+ };
+ imgEl.src = d.url;
 
-      var parts = [];
-      if (d.artist) {
-        parts.push('🎨 <a href="' + d.artist + '" target="_blank" rel="noopener">Artist</a>');
-      }
-      if (d.source) {
-        parts.push('🔗 <a href="' + d.source + '" target="_blank" rel="noopener">Source</a>');
-      }
-      if (d.width && d.height) {
-        parts.push(d.width + ' × ' + d.height);
-      }
-      infoEl.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+ var parts = [];
+ if (d.artist) {
+ parts.push('🎨 <a href="' + d.artist + '" target="_blank" rel="noopener">Artist</a>');
+ }
+ if (d.source) {
+ parts.push('🔗 <a href="' + d.source + '" target="_blank" rel="noopener">Source</a>');
+ }
+ if (d.width && d.height) {
+ parts.push(d.width + ' × ' + d.height);
+ }
+ infoEl.innerHTML = parts.join(' &nbsp;·&nbsp; ');
 
-      tagsEl.innerHTML = '';
-      (d.tags || []).slice(0, 8).forEach(function(t) {
-        var span = document.createElement('span');
-        span.className = 'wf-tag';
-        span.textContent = t;
-        tagsEl.appendChild(span);
-      });
-    } catch (e) {
-      showStatus('error', '❌ ' + e.message);
-      imgEl.style.display = 'none';
-      spinnerEl.style.display = 'none';
-    } finally {
-      isRequesting = false;
-      setLoading(false);
-    }
-  }
+ tagsEl.innerHTML = '';
+ (d.tags || []).slice(0, 8).forEach(function(t) {
+ var span = document.createElement('span');
+ span.className = 'wf-tag';
+ span.textContent = t;
+ tagsEl.appendChild(span);
+ });
+ } catch (e) {
+ showStatus('error', '❌ ' + e.message);
+ imgEl.style.display = 'none';
+ spinnerEl.style.display = 'none';
+ } finally {
+ isRequesting = false;
+ setLoading(false);
+ }
+ }
 
-  async function downloadImage() {
-    if (!currentURL) return;
-    try {
-      var r = await fetch(currentURL);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      var blob = await r.blob();
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'waifu_' + Date.now() + '.jpg';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
-    } catch (e) {
-      showStatus('error', 'Download gagal: ' + e.message);
-    }
-  }
+ async function downloadImage() {
+ if (!currentURL) return;
+ try {
+ var r = await fetch(currentURL);
+ if (!r.ok) throw new Error('HTTP ' + r.status);
+ var blob = await r.blob();
+ var url = URL.createObjectURL(blob);
+ var a = document.createElement('a');
+ a.href = url;
+ a.download = 'waifu_' + Date.now() + '.jpg';
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+ } catch (e) {
+ showStatus('error', 'Download gagal: ' + e.message);
+ }
+ }
 
-  reloadBtn.addEventListener('click', loadWaifu);
-  downloadBtn.addEventListener('click', downloadImage);
+ reloadBtn.addEventListener('click', loadWaifu);
+ downloadBtn.addEventListener('click', downloadImage);
 
-  // Load pertama
-  loadWaifu();
+ // Load pertama
+ loadWaifu();
 })();
 </script>
 </body>

@@ -9,33 +9,33 @@
 </head>
 <body>
 <div class="page chess-page">
-  <header class="page-header">
-    <a href="/" class="header-btn">Home</a>
-    <h1>Catur vs AI</h1>
-  </header>
-  <div class="page-content chess-content">
-    <div class="chess-top">
-      <div class="chess-coins"><span>COIN</span> <b id="chessCoins">0</b></div>
-      <div class="chess-status" id="chessStatus">-</div>
-    </div>
+ <header class="page-header">
+ <a href="/" class="header-btn">Home</a>
+ <h1>Catur vs AI</h1>
+ </header>
+ <div class="page-content chess-content">
+ <div class="chess-top">
+ <div class="chess-coins"><span>COIN</span> <b id="chessCoins">0</b></div>
+ <div class="chess-status" id="chessStatus">-</div>
+ </div>
 
-    <div class="chess-diff-row">
-      <button class="chess-diff active" data-diff="easy">EASY</button>
-      <button class="chess-diff" data-diff="medium">MEDIUM</button>
-      <button class="chess-diff" data-diff="hard">HARD</button>
-    </div>
+ <div class="chess-diff-row">
+ <button class="chess-diff active" data-diff="easy">EASY</button>
+ <button class="chess-diff" data-diff="medium">MEDIUM</button>
+ <button class="chess-diff" data-diff="hard">HARD</button>
+ </div>
 
-    <div class="chess-board-wrap">
-      <div class="chess-board" id="chessBoard"></div>
-      <div class="chess-coord-files"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
-    </div>
+ <div class="chess-board-wrap">
+ <div class="chess-board" id="chessBoard"></div>
+ <div class="chess-coord-files"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
+ </div>
 
-    <div class="chess-reward-info">
-      Menang: +8 / +17 / +35 &middot; Kalah: +2 / +4 / +7
-    </div>
+ <div class="chess-reward-info">
+ Menang: +8 / +17 / +35 &middot; Kalah: +2 / +4 / +7
+ </div>
 
-    <button class="chess-restart hidden" id="chessRestart">MAIN LAGI</button>
-  </div>
+ <button class="chess-restart hidden" id="chessRestart">MAIN LAGI</button>
+ </div>
 </div>
 <div id="toast" class="toast hidden"></div>
 <script src="common.js"></script>

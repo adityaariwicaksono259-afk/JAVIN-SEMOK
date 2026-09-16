@@ -29,50 +29,50 @@
 </head>
 <body>
 <div class="ban-page">
-  <div class="ban-box">
-    <div class="ban-icon">🚫</div>
-    <div class="ban-title">AKUN DI-BAN</div>
-    <div class="ban-sub">Akun lo gak bisa diakses karena di-ban oleh admin.</div>
+ <div class="ban-box">
+ <div class="ban-icon">🚫</div>
+ <div class="ban-title">AKUN DI-BAN</div>
+ <div class="ban-sub">Akun lo gak bisa diakses karena di-ban oleh admin.</div>
 
-    <div class="ban-alert">
-      <div class="ban-alert-label">ALASAN</div>
-      <div class="ban-alert-text" id="banReason">Melanggar aturan yang berlaku.</div>
-    </div>
+ <div class="ban-alert">
+ <div class="ban-alert-label">ALASAN</div>
+ <div class="ban-alert-text" id="banReason">Melanggar aturan yang berlaku.</div>
+ </div>
 
-    <div class="ban-info" id="banInfo">
-      <b>User ID:</b> <span id="banUid">-</span><br>
-      <b>Waktu:</b> <span id="banTime">-</span>
-    </div>
+ <div class="ban-info" id="banInfo">
+ <b>User ID:</b> <span id="banUid">-</span><br>
+ <b>Waktu:</b> <span id="banTime">-</span>
+ </div>
 
-    <div class="ban-actions">
-      <a href="https://wa.me/" class="ban-btn ban-btn-primary" id="banContact">📩 HUBUNGI ADMIN</a>
-      <button class="ban-btn ban-btn-ghost" id="banRetry">🔄 Coba Lagi</button>
-    </div>
+ <div class="ban-actions">
+ <a href="https://wa.me/" class="ban-btn ban-btn-primary" id="banContact">📩 HUBUNGI ADMIN</a>
+ <button class="ban-btn ban-btn-ghost" id="banRetry">🔄 Coba Lagi</button>
+ </div>
 
-    <div class="ban-footer">© 2026 JAVIN SEMOK</div>
-  </div>
+ <div class="ban-footer">© 2026 JAVIN SEMOK</div>
+ </div>
 </div>
 
 <script>
-  // Ambil info dari sessionStorage
-  try {
-    var reason = sessionStorage.getItem('ban_reason') || 'Melanggar aturan yang berlaku.';
-    var uid = sessionStorage.getItem('ban_uid') || '-';
-    var time = sessionStorage.getItem('ban_time') || '-';
-    document.getElementById('banReason').textContent = reason;
-    document.getElementById('banUid').textContent = uid;
-    document.getElementById('banTime').textContent = time;
-  } catch(e) {}
+ // Ambil info dari sessionStorage
+ try {
+ var reason = sessionStorage.getItem('ban_reason') || 'Melanggar aturan yang berlaku.';
+ var uid = sessionStorage.getItem('ban_uid') || '-';
+ var time = sessionStorage.getItem('ban_time') || '-';
+ document.getElementById('banReason').textContent = reason;
+ document.getElementById('banUid').textContent = uid;
+ document.getElementById('banTime').textContent = time;
+ } catch(e) {}
 
-  document.getElementById('banRetry').onclick = function() {
-    try {
-      sessionStorage.removeItem('ban_reason');
-      sessionStorage.removeItem('ban_uid');
-      sessionStorage.removeItem('ban_time');
-      sessionStorage.removeItem('auth_reloaded');
-    } catch(e) {}
-    location.href = '/';
-  };
+ document.getElementById('banRetry').onclick = function() {
+ try {
+ sessionStorage.removeItem('ban_reason');
+ sessionStorage.removeItem('ban_uid');
+ sessionStorage.removeItem('ban_time');
+ sessionStorage.removeItem('auth_reloaded');
+ } catch(e) {}
+ location.href = '/';
+ };
 </script>
 </body>
 </html>

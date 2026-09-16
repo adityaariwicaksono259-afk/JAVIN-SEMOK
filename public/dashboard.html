@@ -9,45 +9,45 @@
 </head>
 <body>
 <div class="page dash-page">
-  <header class="page-header">
-    <a href="/admin.html" class="header-btn">Kembali</a>
-    <h1>📊 Dashboard</h1>
-    <button id="refreshBtn" class="header-btn" title="Refresh">🔄</button>
-  </header>
-  <div class="page-content dash-content">
+ <header class="page-header">
+ <a href="/admin.html" class="header-btn">Kembali</a>
+ <h1>Dashboard</h1>
+ <button id="refreshBtn" class="header-btn" title="Refresh">🔄</button>
+ </header>
+ <div class="page-content dash-content">
 
-    <div class="dash-loading" id="dashLoading">Memuat statistik...</div>
+ <div class="dash-loading" id="dashLoading">Memuat statistik...</div>
 
-    <div class="dash-main hidden" id="dashMain">
-      <div class="dash-grid">
-        <div class="dash-card c-green"><div class="dc-label">TOTAL USER</div><div class="dc-val" id="dcUsers">-</div></div>
-        <div class="dash-card c-blue"><div class="dc-label">ONLINE</div><div class="dc-val" id="dcOnline">-</div></div>
-        <div class="dash-card c-gold"><div class="dc-label">TOTAL COIN</div><div class="dc-val" id="dcCoins">-</div></div>
-        <div class="dash-card c-purple"><div class="dc-label">TOTAL PESAN</div><div class="dc-val" id="dcMsgs">-</div></div>
-        <div class="dash-card c-red"><div class="dc-label">DI-BAN</div><div class="dc-val" id="dcBanned">-</div></div>
-        <div class="dash-card c-orange"><div class="dc-label">USER BARU (7H)</div><div class="dc-val" id="dcNewWeek">-</div></div>
-        <div class="dash-card c-pink"><div class="dc-label">USER BARU (HARI INI)</div><div class="dc-val" id="dcNewToday">-</div></div>
-        <div class="dash-card c-teal"><div class="dc-label">PESAN HARI INI</div><div class="dc-val" id="dcMsgsToday">-</div></div>
-        <div class="dash-card c-gold"><div class="dc-label">💰 KAS EVENT</div><div class="dc-val" id="dcKas">-</div></div>
-        <div class="dash-card c-purple"><div class="dc-label">🎮 TOTAL GAME</div><div class="dc-val" id="dcGames">-</div></div>
-        <div class="dash-card c-green"><div class="dc-label">🎟️ TIKET LOTTERY</div><div class="dc-val" id="dcTickets">-</div></div>
-        <div class="dash-card c-gold"><div class="dc-label">💰 POOL LOTTERY</div><div class="dc-val" id="dcPool">-</div></div>
-      </div>
+ <div class="dash-main hidden" id="dashMain">
+ <div class="dash-grid">
+ <div class="dash-card c-green"><div class="dc-label">TOTAL USER</div><div class="dc-val" id="dcUsers">-</div></div>
+ <div class="dash-card c-blue"><div class="dc-label">ONLINE</div><div class="dc-val" id="dcOnline">-</div></div>
+ <div class="dash-card c-gold"><div class="dc-label">TOTAL COIN</div><div class="dc-val" id="dcCoins">-</div></div>
+ <div class="dash-card c-purple"><div class="dc-label">TOTAL PESAN</div><div class="dc-val" id="dcMsgs">-</div></div>
+ <div class="dash-card c-red"><div class="dc-label">DI-BAN</div><div class="dc-val" id="dcBanned">-</div></div>
+ <div class="dash-card c-orange"><div class="dc-label">USER BARU (7H)</div><div class="dc-val" id="dcNewWeek">-</div></div>
+ <div class="dash-card c-pink"><div class="dc-label">USER BARU (HARI INI)</div><div class="dc-val" id="dcNewToday">-</div></div>
+ <div class="dash-card c-teal"><div class="dc-label">PESAN HARI INI</div><div class="dc-val" id="dcMsgsToday">-</div></div>
+ <div class="dash-card c-gold"><div class="dc-label">💰 KAS EVENT</div><div class="dc-val" id="dcKas">-</div></div>
+ <div class="dash-card c-purple"><div class="dc-label">🎮 TOTAL GAME</div><div class="dc-val" id="dcGames">-</div></div>
+ <div class="dash-card c-green"><div class="dc-label">🎟️ TIKET LOTTERY</div><div class="dc-val" id="dcTickets">-</div></div>
+ <div class="dash-card c-gold"><div class="dc-label">💰 POOL LOTTERY</div><div class="dc-val" id="dcPool">-</div></div>
+ </div>
 
-      <div class="dash-section">
-        <div class="dash-section-title">🏆 TOP 5 COIN</div>
-        <div class="dash-list" id="dashTopCoin"></div>
-      </div>
+ <div class="dash-section">
+ <div class="dash-section-title">🏆 TOP 5 COIN</div>
+ <div class="dash-list" id="dashTopCoin"></div>
+ </div>
 
-      <div class="dash-section">
-        <div class="dash-section-title">💬 TOP 5 CHAT</div>
-        <div class="dash-list" id="dashTopChat"></div>
-      </div>
+ <div class="dash-section">
+ <div class="dash-section-title">💬 TOP 5 CHAT</div>
+ <div class="dash-list" id="dashTopChat"></div>
+ </div>
 
-      <div class="dash-footer" id="dashFooter"></div>
-    </div>
+ <div class="dash-footer" id="dashFooter"></div>
+ </div>
 
-  </div>
+ </div>
 </div>
 <div id="toast" class="toast hidden"></div>
 <script src="common.js"></script>

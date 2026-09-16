@@ -18,71 +18,71 @@ body { background: #111; color: #0f0; font-family: monospace; font-size: 12px; p
 <script>
 const logEl = document.getElementById('log');
 function log(msg, cls) {
-  logEl.innerHTML += '<div class="' + (cls||'') + '">' + new Date().toLocaleTimeString() + ' ' + msg + '</div>';
-  console.log(msg);
+ logEl.innerHTML += '<div class="' + (cls||'') + '">' + new Date().toLocaleTimeString() + ' ' + msg + '</div>';
+ console.log(msg);
 }
 
 // Ambil userId dari localStorage
 let uid = localStorage.getItem('javachat_id') || '';
 if (!uid || uid.length < 8) {
-  uid = 'test-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
-  localStorage.setItem('javachat_id', uid);
-  log('Generated new userId: ' + uid, 'warn');
+ uid = 'test-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+ localStorage.setItem('javachat_id', uid);
+ log('Generated new userId: ' + uid, 'warn');
 } else {
-  log('Using existing userId: ' + uid);
+ log('Using existing userId: ' + uid);
 }
 
 log('Connecting to socket...');
 const socket = io({ auth: { userId: uid, token: localStorage.getItem('javachat_token') || '' } });
 
 socket.on('connect', () => {
-  log('✅ CONNECTED, socket.id=' + socket.id, 'ok');
-  log('Emitting join with userId=' + uid);
-  socket.emit('join', uid);
+ log('✅ CONNECTED, socket.id=' + socket.id, 'ok');
+ log('Emitting join with userId=' + uid);
+ socket.emit('join', uid);
 });
 
 socket.on('connect_error', (err) => {
-  log('❌ CONNECT_ERROR: ' + err.message, 'err');
+ log('❌ CONNECT_ERROR: ' + err.message, 'err');
 });
 
 socket.on('disconnect', (reason) => {
-  log('⚠️ DISCONNECT: ' + reason, 'warn');
+ log('⚠️ DISCONNECT: ' + reason, 'warn');
 });
 
 socket.on('me', (u) => {
-  log('✅ ME received: ' + JSON.stringify({ username: u.username, coins: u.coins, badge: u.badge }), 'ok');
+ log('✅ ME received: ' + JSON.stringify({ username: u.username, coins: u.coins, badge: u.badge }), 'ok');
 });
 
 socket.on('auth-fail', (msg) => {
-  log('❌ AUTH_FAIL: ' + msg, 'err');
+ log('❌ AUTH_FAIL: ' + msg, 'err');
 });
 
 socket.on('auth-token', (t) => {
-  log('🔑 AUTH_TOKEN received: ' + t, 'ok');
-  localStorage.setItem('javachat_token', t);
+ log('🔑 AUTH_TOKEN received: ' + t, 'ok');
+ localStorage.setItem('javachat_token', t);
 });
 
 socket.on('history', (h) => {
-  log('✅ HISTORY received: ' + h.length + ' messages', 'ok');
+ log('✅ HISTORY received: ' + h.length + ' messages', 'ok');
 });
 
 socket.on('online', (n) => {
-  log('✅ ONLINE: ' + n, 'ok');
+ log('✅ ONLINE: ' + n, 'ok');
 });
 
 socket.on('system', (t) => {
-  log('💬 SYSTEM: ' + t);
+ log('💬 SYSTEM: ' + t);
 });
 
 socket.on('rate-limited', (d) => {
-  log('⚠️ RATE_LIMITED: ' + d.msg, 'warn');
+ log('⚠️ RATE_LIMITED: ' + d.msg, 'warn');
 });
 
 // Timeout check
 setTimeout(() => {
-  if (!socket.connected) {
-    log('❌ TIMEOUT: socket belum connect setelah 10 detik', 'err');
-  }
+ if (!socket.connected) {
+ log('❌ TIMEOUT: socket belum connect setelah 10 detik', 'err');
+ }
 }, 10000);
 </script>
 </body>

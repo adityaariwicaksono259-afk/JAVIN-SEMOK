@@ -21,40 +21,40 @@
 </head>
 <body>
 <div class="hr-page">
-  <header class="hr-header">
-    <a href="/" class="header-btn">🏠</a>
-    <h1>📅 Fitur Harian</h1>
-  </header>
-  <div class="hr-tabs" id="hrTabs"></div>
-  <iframe id="hrFrame" class="hr-frame"></iframe>
+ <header class="hr-header">
+ <a href="/" class="header-btn">🏠</a>
+ <h1>Fitur Harian</h1>
+ </header>
+ <div class="hr-tabs" id="hrTabs"></div>
+ <iframe id="hrFrame" class="hr-frame"></iframe>
 </div>
 <script src="common.js"></script>
 <script>
-  var tabs = [
-    { key:'workout', label:'💪 Workout', url:'/workout.html' },
-    { key:'islam', label:'🕌 Islam (Sholat)', url:'/sholat.html' },
-    { key:'kristen', label:'✝️ Kristen', url:'/ibadah.html?agama=kristen' },
-    { key:'katolik', label:'✝️ Katolik', url:'/ibadah.html?agama=katolik' },
-    { key:'hindu', label:'🕉️ Hindu', url:'/ibadah.html?agama=hindu' },
-    { key:'buddha', label:'☸️ Buddha', url:'/ibadah.html?agama=buddha' },
-    { key:'konghucu', label:'☯️ Konghucu', url:'/ibadah.html?agama=konghucu' }
-  ];
-  var tabsBox = document.getElementById('hrTabs');
-  var frame = document.getElementById('hrFrame');
+ var tabs = [
+ { key:'workout', label:'💪 Workout', url:'/workout.html' },
+ { key:'islam', label:'🕌 Islam (Sholat)', url:'/sholat.html' },
+ { key:'kristen', label:'✝️ Kristen', url:'/ibadah.html?agama=kristen' },
+ { key:'katolik', label:'✝️ Katolik', url:'/ibadah.html?agama=katolik' },
+ { key:'hindu', label:'🕉️ Hindu', url:'/ibadah.html?agama=hindu' },
+ { key:'buddha', label:'☸️ Buddha', url:'/ibadah.html?agama=buddha' },
+ { key:'konghucu', label:'☯️ Konghucu', url:'/ibadah.html?agama=konghucu' }
+ ];
+ var tabsBox = document.getElementById('hrTabs');
+ var frame = document.getElementById('hrFrame');
 
-  tabs.forEach(function(t, i) {
-    var b = document.createElement('button');
-    b.className = 'hr-tab' + (i === 0 ? ' active' : '');
-    b.textContent = t.label;
-    b.onclick = function() {
-      document.querySelectorAll('.hr-tab').forEach(function(x){ x.classList.remove('active'); });
-      b.classList.add('active');
-      frame.src = t.url;
-    };
-    tabsBox.appendChild(b);
-  });
+ tabs.forEach(function(t, i) {
+ var b = document.createElement('button');
+ b.className = 'hr-tab' + (i === 0 ? ' active' : '');
+ b.textContent = t.label;
+ b.onclick = function() {
+ document.querySelectorAll('.hr-tab').forEach(function(x){ x.classList.remove('active'); });
+ b.classList.add('active');
+ frame.src = t.url;
+ };
+ tabsBox.appendChild(b);
+ });
 
-  frame.src = tabs[0].url;
+ frame.src = tabs[0].url;
 </script>
 </body>
 </html>

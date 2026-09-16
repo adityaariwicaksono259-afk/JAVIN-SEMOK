@@ -1,297 +1,297 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+ <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+ <meta
+ name="viewport"
+ content="width=device-width, initial-scale=1.0"
+ >
 
-  <title>Info Gempa — JAVACHAT</title>
+ <title>Info Gempa — JAVACHAT</title>
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  >
+ <link
+ rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+ >
 
-  <style>
+ <style>
 
-    * {
-      box-sizing: border-box;
-    }
+ * {
+ box-sizing: border-box;
+ }
 
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-      background: #080808;
-      color: #f5f5f5;
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-    }
+ html,
+ body {
+ margin: 0;
+ padding: 0;
+ min-height: 100%;
+ background: #080808;
+ color: #f5f5f5;
+ font-family:
+ Inter,
+ system-ui,
+ -apple-system,
+ BlinkMacSystemFont,
+ "Segoe UI",
+ sans-serif;
+ }
 
-    body {
-      padding: 16px;
-    }
+ body {
+ padding: 16px;
+ }
 
-    .wrap {
-      width: min(100%, 920px);
-      margin: auto;
-    }
+ .wrap {
+ width: min(100%, 920px);
+ margin: auto;
+ }
 
-    .top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
+ .top {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 12px;
+ margin-bottom: 14px;
+ }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+ .brand {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ }
 
-    .brand-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(
-        135deg,
-        #1f1f1f,
-        #101010
-      );
-      border: 1px solid #303030;
-      font-size: 21px;
-    }
+ .brand-icon {
+ width: 42px;
+ height: 42px;
+ border-radius: 13px;
+ display: grid;
+ place-items: center;
+ background: linear-gradient(
+ 135deg,
+ #1f1f1f,
+ #101010
+ );
+ border: 1px solid #303030;
+ font-size: 21px;
+ }
 
-    .title {
-      font-size: 18px;
-      font-weight: 800;
-    }
+ .title {
+ font-size: 18px;
+ font-weight: 800;
+ }
 
-    .subtitle {
-      color: #999;
-      font-size: 12px;
-      margin-top: 2px;
-    }
+ .subtitle {
+ color: #999;
+ font-size: 12px;
+ margin-top: 2px;
+ }
 
-    button,
-    a.button {
-      border: 1px solid #333;
-      background: #171717;
-      color: #fff;
-      border-radius: 10px;
-      padding: 9px 12px;
-      text-decoration: none;
-      cursor: pointer;
-      font-size: 12px;
-    }
+ button,
+ a.button {
+ border: 1px solid #333;
+ background: #171717;
+ color: #fff;
+ border-radius: 10px;
+ padding: 9px 12px;
+ text-decoration: none;
+ cursor: pointer;
+ font-size: 12px;
+ }
 
-    button:hover,
-    a.button:hover {
-      background: #222;
-    }
+ button:hover,
+ a.button:hover {
+ background: #222;
+ }
 
-    .status {
-      margin-bottom: 12px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #111;
-      border: 1px solid #252525;
-      color: #aaa;
-      font-size: 12px;
-    }
+ .status {
+ margin-bottom: 12px;
+ padding: 10px 12px;
+ border-radius: 10px;
+ background: #111;
+ border: 1px solid #252525;
+ color: #aaa;
+ font-size: 12px;
+ }
 
-    .status.ok {
-      color: #9ee6b1;
-    }
+ .status.ok {
+ color: #9ee6b1;
+ }
 
-    .status.warn {
-      color: #ffd37a;
-    }
+ .status.warn {
+ color: #ffd37a;
+ }
 
-    .error {
-      color: #ff8d8d;
-    }
+ .error {
+ color: #ff8d8d;
+ }
 
-    .map-card {
-      overflow: hidden;
-      border: 1px solid #292929;
-      border-radius: 15px;
-      background: #101010;
-      margin-bottom: 12px;
-    }
+ .map-card {
+ overflow: hidden;
+ border: 1px solid #292929;
+ border-radius: 15px;
+ background: #101010;
+ margin-bottom: 12px;
+ }
 
-    #gempaMap {
-      width: 100%;
-      height: 380px;
-    }
+ #gempaMap {
+ width: 100%;
+ height: 380px;
+ }
 
-    .info-card {
-      border: 1px solid #292929;
-      border-radius: 15px;
-      background: #101010;
-      padding: 15px;
-      margin-bottom: 12px;
-    }
+ .info-card {
+ border: 1px solid #292929;
+ border-radius: 15px;
+ background: #101010;
+ padding: 15px;
+ margin-bottom: 12px;
+ }
 
-    .info-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 14px;
-    }
+ .info-head {
+ display: flex;
+ justify-content: space-between;
+ gap: 12px;
+ align-items: center;
+ margin-bottom: 14px;
+ }
 
-    .info-head h2 {
-      margin: 0;
-      font-size: 16px;
-    }
+ .info-head h2 {
+ margin: 0;
+ font-size: 16px;
+ }
 
-    .source {
-      font-size: 10px;
-      padding: 5px 8px;
-      border-radius: 999px;
-      background: #1b1b1b;
-      border: 1px solid #303030;
-      color: #aaa;
-    }
+ .source {
+ font-size: 10px;
+ padding: 5px 8px;
+ border-radius: 999px;
+ background: #1b1b1b;
+ border: 1px solid #303030;
+ color: #aaa;
+ }
 
-    .magnitude {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: 13px;
-      background: #171717;
-      border: 1px solid #2c2c2c;
-      margin-bottom: 12px;
-    }
+ .magnitude {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ padding: 14px;
+ border-radius: 13px;
+ background: #171717;
+ border: 1px solid #2c2c2c;
+ margin-bottom: 12px;
+ }
 
-    .m-value {
-      font-size: 31px;
-      font-weight: 900;
-      line-height: 1;
-    }
+ .m-value {
+ font-size: 31px;
+ font-weight: 900;
+ line-height: 1;
+ }
 
-    .m-label {
-      color: #999;
-      font-size: 11px;
-      margin-top: 3px;
-    }
+ .m-label {
+ color: #999;
+ font-size: 11px;
+ margin-top: 3px;
+ }
 
-    .grid {
-      display: grid;
-      grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
+ .grid {
+ display: grid;
+ grid-template-columns:
+ repeat(2, minmax(0, 1fr));
+ gap: 8px;
+ }
 
-    .item {
-      padding: 11px;
-      border-radius: 11px;
-      background: #151515;
-      border: 1px solid #242424;
-      min-width: 0;
-    }
+ .item {
+ padding: 11px;
+ border-radius: 11px;
+ background: #151515;
+ border: 1px solid #242424;
+ min-width: 0;
+ }
 
-    .label {
-      color: #888;
-      font-size: 10px;
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: .4px;
-    }
+ .label {
+ color: #888;
+ font-size: 10px;
+ margin-bottom: 5px;
+ text-transform: uppercase;
+ letter-spacing: .4px;
+ }
 
-    .value {
-      color: #eee;
-      font-size: 12px;
-      line-height: 1.45;
-      word-break: break-word;
-    }
+ .value {
+ color: #eee;
+ font-size: 12px;
+ line-height: 1.45;
+ word-break: break-word;
+ }
 
-    .wide {
-      grid-column: 1 / -1;
-    }
+ .wide {
+ grid-column: 1 / -1;
+ }
 
-    .shakemap {
-      margin-top: 12px;
-    }
+ .shakemap {
+ margin-top: 12px;
+ }
 
-    .shakemap h3 {
-      font-size: 13px;
-      margin: 0 0 9px;
-    }
+ .shakemap h3 {
+ font-size: 13px;
+ margin: 0 0 9px;
+ }
 
-    .shake-img {
-      display: block;
-      width: 100%;
-      max-height: 520px;
-      object-fit: contain;
-      border-radius: 11px;
-      background: #080808;
-      border: 1px solid #292929;
-    }
+ .shake-img {
+ display: block;
+ width: 100%;
+ max-height: 520px;
+ object-fit: contain;
+ border-radius: 11px;
+ background: #080808;
+ border: 1px solid #292929;
+ }
 
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
+ .actions {
+ display: flex;
+ gap: 8px;
+ flex-wrap: wrap;
+ margin-top: 12px;
+ }
 
-    .actions a {
-      flex: 1;
-      min-width: 130px;
-      text-align: center;
-    }
+ .actions a {
+ flex: 1;
+ min-width: 130px;
+ text-align: center;
+ }
 
-    .empty {
-      padding: 30px 15px;
-      text-align: center;
-      color: #888;
-    }
+ .empty {
+ padding: 30px 15px;
+ text-align: center;
+ color: #888;
+ }
 
-    .leaflet-container {
-      background: #101010;
-    }
+ .leaflet-container {
+ background: #101010;
+ }
 
-    @media (max-width: 600px) {
+ @media (max-width: 600px) {
 
-      body {
-        padding: 10px;
-      }
+ body {
+ padding: 10px;
+ }
 
-      #gempaMap {
-        height: 320px;
-      }
+ #gempaMap {
+ height: 320px;
+ }
 
-      .grid {
-        grid-template-columns: 1fr;
-      }
+ .grid {
+ grid-template-columns: 1fr;
+ }
 
-      .wide {
-        grid-column: auto;
-      }
+ .wide {
+ grid-column: auto;
+ }
 
-      .top {
-        align-items: flex-start;
-      }
+ .top {
+ align-items: flex-start;
+ }
 
-    }
+ }
 
-  </style>
+ </style>
 <link rel="stylesheet" href="/theme-accent.css?v=1">
 </head>
 
@@ -299,563 +299,542 @@
 
 <div class="wrap">
 
-  <div class="top">
+ <div class="top">
 
-    <div class="brand">
+ <div class="brand">
 
-      <div class="brand-icon">
-        🌋
-      </div>
+ <div class="brand-icon">
+ 🌋
+ </div>
 
-      <div>
-        <div class="title">
-          Info Gempa
-        </div>
+ <div>
+ <div class="title">
+ Info Gempa
+ </div>
 
-        <div class="subtitle">
-          Informasi gempa terkini
-        </div>
-      </div>
+ <div class="subtitle">
+ Informasi gempa terkini
+ </div>
+ </div>
 
-    </div>
+ </div>
 
-    <div style="display:flex;gap:7px">
+ <div style="display:flex;gap:7px">
 
-      <button id="refreshBtn">
-        ↻ Refresh
-      </button>
+ <button id="refreshBtn">
+ ↻ Refresh
+ </button>
 
-      <a
-        href="/"
-        class="button"
-      >
-        ← Kembali
-      </a>
+ <a
+ href="/"
+ class="button"
+ >
+ ← Kembali
+ </a>
 
-    </div>
+ </div>
 
-  </div>
+ </div>
 
-  <div
-    id="status"
-    class="status"
-  >
-    Mengambil data gempa...
-  </div>
+ <div
+ id="status"
+ class="status"
+ >
+ Mengambil data gempa...
+ </div>
 
-  <div class="map-card">
+ <div class="map-card">
 
-    <div id="gempaMap"></div>
+ <div id="gempaMap"></div>
 
-  </div>
+ </div>
 
-  <div
-    id="content"
-    class="info-card"
-  >
+ <div
+ id="content"
+ class="info-card"
+ >
 
-    <div class="empty">
-      Memuat data...
-    </div>
+ <div class="empty">
+ Memuat data...
+ </div>
 
-  </div>
+ </div>
 
 </div>
 
 <script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ></script>
 
 <script>
 
-  let map = null;
-  let marker = null;
-  let circle = null;
+ let map = null;
+ let marker = null;
+ let circle = null;
+
+ const statusEl =
+ document.getElementById('status');
+
+ const contentEl =
+ document.getElementById('content');
+
+ const refreshBtn =
+ document.getElementById('refreshBtn');
+
+ function escapeHTML(value) {
+
+ return String(value ?? '')
+ .replace(/&/g, '&amp;')
+ .replace(/</g, '&lt;')
+ .replace(/>/g, '&gt;')
+ .replace(/"/g, '&quot;')
+ .replace(/'/g, '&#039;');
+
+ }
 
-  const statusEl =
-    document.getElementById('status');
+ function setStatus(
+ text,
+ type = ''
+ ) {
 
-  const contentEl =
-    document.getElementById('content');
+ statusEl.textContent = text;
 
-  const refreshBtn =
-    document.getElementById('refreshBtn');
+ statusEl.className =
+ 'status ' + type;
 
+ }
 
-  function escapeHTML(value) {
+ function initMap(
+ lat,
+ lon,
+ magnitude
+ ) {
 
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+ if (!Number.isFinite(lat) ||
+ !Number.isFinite(lon)) {
 
-  }
+ return;
 
+ }
 
-  function setStatus(
-    text,
-    type = ''
-  ) {
+ if (!map) {
 
-    statusEl.textContent = text;
+ map = L.map(
+ 'gempaMap',
+ {
+ zoomControl: true
+ }
+ );
 
-    statusEl.className =
-      'status ' + type;
+ L.tileLayer(
+ 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+ {
+ maxZoom: 19,
+ attribution:
+ '&copy; OpenStreetMap contributors'
+ }
+ ).addTo(map);
 
-  }
+ }
 
+ map.setView(
+ [lat, lon],
+ 6
+ );
 
-  function initMap(
-    lat,
-    lon,
-    magnitude
-  ) {
+ if (marker) {
+ map.removeLayer(marker);
+ }
 
-    if (!Number.isFinite(lat) ||
-        !Number.isFinite(lon)) {
+ if (circle) {
+ map.removeLayer(circle);
+ }
 
-      return;
+ marker = L.marker(
+ [lat, lon]
+ ).addTo(map);
 
-    }
+ marker.bindPopup(
+ `<b>Epicenter Gempa</b><br>` +
+ `Magnitudo ${escapeHTML(magnitude)}`
+ ).openPopup();
 
-    if (!map) {
+ /*
+ * Lingkaran visual epicenter.
+ * Bukan radius dampak resmi BMKG.
+ */
+ const radius =
+ Math.max(
+ 10000,
+ Number(magnitude || 1) * 12000
+ );
 
-      map = L.map(
-        'gempaMap',
-        {
-          zoomControl: true
-        }
-      );
+ circle = L.circle(
+ [lat, lon],
+ {
+ radius: radius,
+ fillOpacity: 0.15,
+ weight: 2
+ }
+ ).addTo(map);
 
-      L.tileLayer(
-        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        {
-          maxZoom: 19,
-          attribution:
-            '&copy; OpenStreetMap contributors'
-        }
-      ).addTo(map);
+ }
 
-    }
+ function renderEarthquake(data) {
 
-    map.setView(
-      [lat, lon],
-      6
-    );
+ if (!data || !data.earthquake) {
 
-    if (marker) {
-      map.removeLayer(marker);
-    }
+ throw new Error(
+ 'Data earthquake tidak ditemukan'
+ );
 
-    if (circle) {
-      map.removeLayer(circle);
-    }
+ }
 
-    marker = L.marker(
-      [lat, lon]
-    ).addTo(map);
+ const eq =
+ data.earthquake;
 
-    marker.bindPopup(
-      `<b>Epicenter Gempa</b><br>` +
-      `Magnitudo ${escapeHTML(magnitude)}`
-    ).openPopup();
+ const coords =
+ eq.coordinates || {};
 
-    /*
-     * Lingkaran visual epicenter.
-     * Bukan radius dampak resmi BMKG.
-     */
-    const radius =
-      Math.max(
-        10000,
-        Number(magnitude || 1) * 12000
-      );
+ const lat =
+ Number(coords.latitude);
 
-    circle = L.circle(
-      [lat, lon],
-      {
-        radius: radius,
-        fillOpacity: 0.15,
-        weight: 2
-      }
-    ).addTo(map);
+ const lon =
+ Number(coords.longitude);
 
-  }
+ const magnitude =
+ Number(eq.magnitude);
 
+ const source =
+ data.source ||
+ (data.fallback
+ ? 'BMKG'
+ : 'NexaDev');
 
-  function renderEarthquake(data) {
+ const sourceText =
+ data.fallback
+ ? 'BMKG • Fallback'
+ : 'NexaDev';
 
-    if (!data || !data.earthquake) {
+ initMap(
+ lat,
+ lon,
+ magnitude
+ );
 
-      throw new Error(
-        'Data earthquake tidak ditemukan'
-      );
+ const date =
+ eq.date || '-';
 
-    }
+ const time =
+ eq.time || '-';
 
-    const eq =
-      data.earthquake;
+ const depth =
+ eq.depth || '-';
 
-    const coords =
-      eq.coordinates || {};
+ const location =
+ eq.location || '-';
 
-    const lat =
-      Number(coords.latitude);
+ const potential =
+ eq.potential || '-';
 
-    const lon =
-      Number(coords.longitude);
+ const felt =
+ eq.felt || '-';
 
-    const magnitude =
-      Number(eq.magnitude);
+ const latText =
+ coords.latitude_string ||
+ lat;
 
-    const source =
-      data.source ||
-      (data.fallback
-        ? 'BMKG'
-        : 'NexaDev');
+ const lonText =
+ coords.longitude_string ||
+ lon;
 
-    const sourceText =
-      data.fallback
-        ? 'BMKG • Fallback'
-        : 'NexaDev';
+ const mapURL =
+ eq.map_url ||
+ (
+ Number.isFinite(lat) &&
+ Number.isFinite(lon)
+ ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
+ : '#'
+ );
 
-    initMap(
-      lat,
-      lon,
-      magnitude
-    );
+ const shakemap =
+ eq.shakemap_url ||
+ eq.shakemap ||
+ '';
 
-    const date =
-      eq.date || '-';
+ contentEl.innerHTML = `
 
-    const time =
-      eq.time || '-';
+ <div class="info-head">
 
-    const depth =
-      eq.depth || '-';
+ <h2>${escapeHTML(
+ data.title ||
+ 'Gempa Bumi Terkini'
+ )}</h2>
 
-    const location =
-      eq.location || '-';
+ <div class="source">
+ ${escapeHTML(sourceText)}
+ </div>
 
-    const potential =
-      eq.potential || '-';
+ </div>
 
-    const felt =
-      eq.felt || '-';
+ <div class="magnitude">
 
-    const latText =
-      coords.latitude_string ||
-      lat;
+ <div>
 
-    const lonText =
-      coords.longitude_string ||
-      lon;
+ <div class="m-value">
+ M ${
+ Number.isFinite(magnitude)
+ ? escapeHTML(magnitude)
+ : '-'
+ }
+ </div>
 
-    const mapURL =
-      eq.map_url ||
-      (
-        Number.isFinite(lat) &&
-        Number.isFinite(lon)
-          ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
-          : '#'
-      );
+ <div class="m-label">
+ Magnitudo
+ </div>
 
-    const shakemap =
-      eq.shakemap_url ||
-      eq.shakemap ||
-      '';
+ </div>
 
-    contentEl.innerHTML = `
+ </div>
 
-      <div class="info-head">
+ <div class="grid">
 
-        <h2>
-          ${escapeHTML(
-            data.title ||
-            'Gempa Bumi Terkini'
-          )}
-        </h2>
+ <div class="item">
 
-        <div class="source">
-          ${escapeHTML(sourceText)}
-        </div>
+ <div class="label">
+ Tanggal
+ </div>
 
-      </div>
+ <div class="value">
+ ${escapeHTML(date)}
+ </div>
 
+ </div>
 
-      <div class="magnitude">
+ <div class="item">
 
-        <div>
+ <div class="label">
+ Waktu
+ </div>
 
-          <div class="m-value">
-            M ${
-              Number.isFinite(magnitude)
-                ? escapeHTML(magnitude)
-                : '-'
-            }
-          </div>
+ <div class="value">
+ ${escapeHTML(time)}
+ </div>
 
-          <div class="m-label">
-            Magnitudo
-          </div>
+ </div>
 
-        </div>
+ <div class="item">
 
-      </div>
+ <div class="label">
+ Kedalaman
+ </div>
 
+ <div class="value">
+ ${escapeHTML(depth)}
+ </div>
 
-      <div class="grid">
+ </div>
 
-        <div class="item">
+ <div class="item">
 
-          <div class="label">
-            Tanggal
-          </div>
+ <div class="label">
+ Koordinat
+ </div>
 
-          <div class="value">
-            ${escapeHTML(date)}
-          </div>
+ <div class="value">
+ ${escapeHTML(latText)}
+ ,
+ ${escapeHTML(lonText)}
+ </div>
 
-        </div>
+ </div>
 
+ <div class="item wide">
 
-        <div class="item">
+ <div class="label">
+ Lokasi
+ </div>
 
-          <div class="label">
-            Waktu
-          </div>
+ <div class="value">
+ ${escapeHTML(location)}
+ </div>
 
-          <div class="value">
-            ${escapeHTML(time)}
-          </div>
+ </div>
 
-        </div>
+ <div class="item wide">
 
+ <div class="label">
+ Potensi
+ </div>
 
-        <div class="item">
+ <div class="value">
+ ${escapeHTML(potential)}
+ </div>
 
-          <div class="label">
-            Kedalaman
-          </div>
+ </div>
 
-          <div class="value">
-            ${escapeHTML(depth)}
-          </div>
+ <div class="item wide">
 
-        </div>
+ <div class="label">
+ Wilayah Dirasakan
+ </div>
 
+ <div class="value">
+ ${escapeHTML(felt)}
+ </div>
 
-        <div class="item">
+ </div>
 
-          <div class="label">
-            Koordinat
-          </div>
+ </div>
 
-          <div class="value">
-            ${escapeHTML(latText)}
-            ,
-            ${escapeHTML(lonText)}
-          </div>
+ ${
+ shakemap
+ ? `
 
-        </div>
+ <div class="shakemap">
 
+ <h3>Shakemap BMKG</h3>
 
-        <div class="item wide">
+ <a
+ href="${escapeHTML(shakemap)}"
+ target="_blank"
+ rel="noopener noreferrer"
+ >
 
-          <div class="label">
-            Lokasi
-          </div>
+ <img
+ class="shake-img"
+ src="${escapeHTML(shakemap)}"
+ alt="Shakemap BMKG"
+ loading="lazy"
+ >
 
-          <div class="value">
-            ${escapeHTML(location)}
-          </div>
+ </a>
 
-        </div>
+ </div>
 
+ `
+ : ''
+ }
 
-        <div class="item wide">
+ <div class="actions">
 
-          <div class="label">
-            Potensi
-          </div>
+ ${
+ mapURL !== '#'
+ ? `
 
-          <div class="value">
-            ${escapeHTML(potential)}
-          </div>
+ <a
+ class="button"
+ href="${escapeHTML(mapURL)}"
+ target="_blank"
+ rel="noopener noreferrer"
+ >
+ 📍 Lihat Lokasi
+ </a>
 
-        </div>
+ `
+ : ''
+ }
 
+ </div>
 
-        <div class="item wide">
+ `;
 
-          <div class="label">
-            Wilayah Dirasakan
-          </div>
+ if (data.fallback) {
 
-          <div class="value">
-            ${escapeHTML(felt)}
-          </div>
+ setStatus(
+ 'NexaDev tidak merespons. Data ditampilkan dari BMKG.',
+ 'warn'
+ );
 
-        </div>
+ } else {
 
-      </div>
+ setStatus(
+ 'Data berhasil diperbarui dari NexaDev.',
+ 'ok'
+ );
 
+ }
 
-      ${
-        shakemap
-          ? `
+ }
 
-            <div class="shakemap">
+ async function loadGempa() {
 
-              <h3>
-                Shakemap BMKG
-              </h3>
+ refreshBtn.disabled = true;
 
-              <a
-                href="${escapeHTML(shakemap)}"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+ setStatus(
+ 'Mengambil data gempa...'
+ );
 
-                <img
-                  class="shake-img"
-                  src="${escapeHTML(shakemap)}"
-                  alt="Shakemap BMKG"
-                  loading="lazy"
-                >
+ try {
 
-              </a>
+ const response =
+ await fetch(
+ '/api/info-gempa',
+ {
+ cache: 'no-store'
+ }
+ );
 
-            </div>
+ const data =
+ await response.json();
 
-          `
-          : ''
-      }
+ if (!response.ok ||
+ !data ||
+ !data.earthquake) {
 
+ throw new Error(
+ data?.message ||
+ 'Data gempa tidak tersedia'
+ );
 
-      <div class="actions">
+ }
 
-        ${
-          mapURL !== '#'
-            ? `
+ renderEarthquake(data);
 
-              <a
-                class="button"
-                href="${escapeHTML(mapURL)}"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                📍 Lihat Lokasi
-              </a>
+ } catch (err) {
 
-            `
-            : ''
-        }
+ console.error(
+ 'INFO GEMPA FRONTEND:',
+ err
+ );
 
-      </div>
+ setStatus(
+ 'Gagal mengambil data gempa.',
+ 'error'
+ );
 
-    `;
+ contentEl.innerHTML = `
 
-    if (data.fallback) {
+ <div class="empty error">
 
-      setStatus(
-        'NexaDev tidak merespons. Data ditampilkan dari BMKG.',
-        'warn'
-      );
+ ${escapeHTML(
+ err.message ||
+ 'Data tidak tersedia'
+ )}
 
-    } else {
+ <br><br>
 
-      setStatus(
-        'Data berhasil diperbarui dari NexaDev.',
-        'ok'
-      );
+ Tekan tombol Refresh untuk
+ mencoba lagi.
 
-    }
+ </div>
 
-  }
+ `;
 
+ } finally {
 
-  async function loadGempa() {
+ refreshBtn.disabled = false;
 
-    refreshBtn.disabled = true;
+ }
 
-    setStatus(
-      'Mengambil data gempa...'
-    );
+ }
 
-    try {
+ refreshBtn.addEventListener(
+ 'click',
+ loadGempa
+ );
 
-      const response =
-        await fetch(
-          '/api/info-gempa',
-          {
-            cache: 'no-store'
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (!response.ok ||
-          !data ||
-          !data.earthquake) {
-
-        throw new Error(
-          data?.message ||
-          'Data gempa tidak tersedia'
-        );
-
-      }
-
-      renderEarthquake(data);
-
-    } catch (err) {
-
-      console.error(
-        'INFO GEMPA FRONTEND:',
-        err
-      );
-
-      setStatus(
-        'Gagal mengambil data gempa.',
-        'error'
-      );
-
-      contentEl.innerHTML = `
-
-        <div class="empty error">
-
-          ${escapeHTML(
-            err.message ||
-            'Data tidak tersedia'
-          )}
-
-          <br><br>
-
-          Tekan tombol Refresh untuk
-          mencoba lagi.
-
-        </div>
-
-      `;
-
-    } finally {
-
-      refreshBtn.disabled = false;
-
-    }
-
-  }
-
-
-  refreshBtn.addEventListener(
-    'click',
-    loadGempa
-  );
-
-
-  loadGempa();
+ loadGempa();
 
 </script>
 

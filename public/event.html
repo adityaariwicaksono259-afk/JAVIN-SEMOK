@@ -20,26 +20,26 @@
 </head>
 <body>
 <div class="event-page">
-  <header class="event-header">
-    <a href="/" class="header-btn">🏠</a>
-    <h1>🎉 Event Center</h1>
-  </header>
-  <div class="event-tabs">
-    <button class="event-tab active" data-tab="lottery">🎟️ Lottery</button>
-    <button class="event-tab" data-tab="leaderboard">🏆 Leaderboard</button>
-    <button class="event-tab" data-tab="achievement">🏅 Achievement</button>
-  </div>
-  <iframe id="eventFrame" class="event-frame" src="/lottery.html"></iframe>
+ <header class="event-header">
+ <a href="/" class="header-btn">🏠</a>
+ <h1>Event Center</h1>
+ </header>
+ <div class="event-tabs">
+ <button class="event-tab active" data-tab="lottery">🎟️ Lottery</button>
+ <button class="event-tab" data-tab="leaderboard">🏆 Leaderboard</button>
+ <button class="event-tab" data-tab="achievement">🏅 Achievement</button>
+ </div>
+ <iframe id="eventFrame" class="event-frame" src="/lottery.html"></iframe>
 </div>
 <script src="common.js"></script>
 <script>
-  document.querySelectorAll('.event-tab').forEach(function(tab) {
-    tab.onclick = function() {
-      document.querySelectorAll('.event-tab').forEach(function(x) { x.classList.remove('active'); });
-      tab.classList.add('active');
-      document.getElementById('eventFrame').src = '/' + tab.dataset.tab + '.html';
-    };
-  });
+ document.querySelectorAll('.event-tab').forEach(function(tab) {
+ tab.onclick = function() {
+ document.querySelectorAll('.event-tab').forEach(function(x) { x.classList.remove('active'); });
+ tab.classList.add('active');
+ document.getElementById('eventFrame').src = '/' + tab.dataset.tab + '.html';
+ };
+ });
 </script>
 </body>
 </html>

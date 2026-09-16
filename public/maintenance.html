@@ -9,38 +9,38 @@
 </head>
 <body>
 <div class="mt-page">
-  <div class="mt-box">
-    <div class="mt-icon">🔧</div>
-    <h1 class="mt-title">MAINTENANCE</h1>
-    <div class="mt-msg" id="mtMsg">Server lagi di-maintenance. Balik lagi nanti ya!</div>
-    <div class="mt-status">
-      <span class="mt-dot"></span>
-      <span>Admin sedang bekerja</span>
-    </div>
-    <div class="mt-actions">
-      <button id="mtCheck" class="mt-btn">CEK LAGI</button>
-      <a href="/admin.html" class="mt-btn mt-btn-ghost">LOGIN ADMIN</a>
-    </div>
-    <div class="mt-footer">© 2026 JAVIN SEMOK</div>
-  </div>
+ <div class="mt-box">
+ <div class="mt-icon">🔧</div>
+ <h1 class="mt-title">MAINTENANCE</h1>
+ <div class="mt-msg" id="mtMsg">Server lagi di-maintenance. Balik lagi nanti ya!</div>
+ <div class="mt-status">
+ <span class="mt-dot"></span>
+ <span>Admin sedang bekerja</span>
+ </div>
+ <div class="mt-actions">
+ <button id="mtCheck" class="mt-btn">CEK LAGI</button>
+ <a href="/admin.html" class="mt-btn mt-btn-ghost">LOGIN ADMIN</a>
+ </div>
+ <div class="mt-footer">© 2026 JAVIN SEMOK</div>
+ </div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  var socket = io({ auth: { userId: 'mt-' + Date.now(), token: '' } });
-  socket.on('maintenance-changed', function(d) {
-    if (!d.active) { location.reload(); }
-  });
-  document.getElementById('mtCheck').onclick = function() {
-    socket.emit('maintenance-check', function(r) {
-      if (r && r.maintenance && !r.maintenance.active) {
-        location.href = '/';
-      } else {
-        var m = (r && r.maintenance && r.maintenance.message) || 'Server lagi di-maintenance.';
-        document.getElementById('mtMsg').textContent = m;
-      }
-    });
-  };
-  document.getElementById('mtMsg').textContent = 'Server lagi di-maintenance. Balik lagi nanti ya!';
+ var socket = io({ auth: { userId: 'mt-' + Date.now(), token: '' } });
+ socket.on('maintenance-changed', function(d) {
+ if (!d.active) { location.reload(); }
+ });
+ document.getElementById('mtCheck').onclick = function() {
+ socket.emit('maintenance-check', function(r) {
+ if (r && r.maintenance && !r.maintenance.active) {
+ location.href = '/';
+ } else {
+ var m = (r && r.maintenance && r.maintenance.message) || 'Server lagi di-maintenance.';
+ document.getElementById('mtMsg').textContent = m;
+ }
+ });
+ };
+ document.getElementById('mtMsg').textContent = 'Server lagi di-maintenance. Balik lagi nanti ya!';
 </script>
 </body>
 </html>

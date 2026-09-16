@@ -7,108 +7,108 @@
 <link rel="stylesheet" href="style.css">
 <style>
 .douyin-wrap{
-  max-width:900px;
-  margin:0 auto;
-  padding:20px;
+ max-width:900px;
+ margin:0 auto;
+ padding:20px;
 }
 
 .douyin-search{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin:20px 0;
+ display:flex;
+ gap:10px;
+ flex-wrap:wrap;
+ margin:20px 0;
 }
 
 .douyin-search input{
-  flex:1;
-  min-width:220px;
-  padding:14px;
-  border:1px solid #333;
-  border-radius:12px;
-  background:#111;
-  color:#fff;
-  outline:none;
+ flex:1;
+ min-width:220px;
+ padding:14px;
+ border:1px solid #333;
+ border-radius:12px;
+ background:#111;
+ color:#fff;
+ outline:none;
 }
 
 .douyin-search button{
-  padding:14px 20px;
-  border:0;
-  border-radius:12px;
-  cursor:pointer;
-  font-weight:800;
+ padding:14px 20px;
+ border:0;
+ border-radius:12px;
+ cursor:pointer;
+ font-weight:800;
 }
 
 #douyinStatus{
-  margin:12px 0;
-  opacity:.8;
+ margin:12px 0;
+ opacity:.8;
 }
 
 .douyin-results{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-  gap:14px;
+ display:grid;
+ grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+ gap:14px;
 }
 
 .douyin-item{
-  overflow:hidden;
-  border:1px solid #292929;
-  border-radius:15px;
-  background:#111;
+ overflow:hidden;
+ border:1px solid #292929;
+ border-radius:15px;
+ background:#111;
 }
 
 .douyin-cover{
-  width:100%;
-  aspect-ratio:9/14;
-  object-fit:cover;
-  display:block;
-  background:#1b1b1b;
+ width:100%;
+ aspect-ratio:9/14;
+ object-fit:cover;
+ display:block;
+ background:#1b1b1b;
 }
 
 .douyin-body{
-  padding:12px;
+ padding:12px;
 }
 
 .douyin-title{
-  font-weight:800;
-  line-height:1.35;
-  margin-bottom:7px;
+ font-weight:800;
+ line-height:1.35;
+ margin-bottom:7px;
 }
 
 .douyin-author{
-  font-size:12px;
-  opacity:.65;
-  margin-bottom:10px;
+ font-size:12px;
+ opacity:.65;
+ margin-bottom:10px;
 }
 
 .douyin-desc{
-  font-size:12px;
-  opacity:.75;
-  line-height:1.45;
-  display:-webkit-box;
-  -webkit-line-clamp:3;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
+ font-size:12px;
+ opacity:.75;
+ line-height:1.45;
+ display:-webkit-box;
+ -webkit-line-clamp:3;
+ -webkit-box-orient:vertical;
+ overflow:hidden;
 }
 
 .douyin-btn{
-  display:block;
-  margin-top:10px;
-  width:100%;
-  box-sizing:border-box;
-  text-align:center;
-  padding:10px;
-  border-radius:10px;
-  background:#222;
-  color:#fff;
-  text-decoration:none;
-  font-size:12px;
-  font-weight:800;
+ display:block;
+ margin-top:10px;
+ width:100%;
+ box-sizing:border-box;
+ text-align:center;
+ padding:10px;
+ border-radius:10px;
+ background:#222;
+ color:#fff;
+ text-decoration:none;
+ font-size:12px;
+ font-weight:800;
 }
 
 .douyin-empty{
-  padding:30px 10px;
-  text-align:center;
-  opacity:.6;
+ padding:30px 10px;
+ text-align:center;
+ opacity:.6;
 }
 </style>
 <link rel="stylesheet" href="/theme-accent.css?v=1">
@@ -116,221 +116,221 @@
 
 <body>
 <div class="page tools-page">
-  <header class="page-header">
-    <a href="/tools.html" class="header-btn">Tools</a>
-    <h1>🎵 Douyin</h1>
-  </header>
+ <header class="page-header">
+ <a href="/tools.html" class="header-btn">Tools</a>
+ <h1>Douyin</h1>
+ </header>
 
-  <div class="page-content">
-    <div class="douyin-wrap">
+ <div class="page-content">
+ <div class="douyin-wrap">
 
-      <div class="tools-hero">
-        <div class="tools-hero-icon">🎵</div>
-        <div class="tools-hero-title">Douyin</div>
-        <div class="tools-hero-sub">
-          Cari video Douyin langsung dari JAVIN SEMOK
-        </div>
-      </div>
+ <div class="tools-hero">
+ <div class="tools-hero-icon">🎵</div>
+ <div class="tools-hero-title">Douyin</div>
+ <div class="tools-hero-sub">
+ Cari video Douyin langsung dari JAVIN SEMOK
+ </div>
+ </div>
 
-      <div class="douyin-search">
-        <input
-          id="douyinQuery"
-          type="search"
-          placeholder="Cari video Douyin..."
-          autocomplete="off"
-        >
-        <button id="douyinSearch" type="button">
-          🔎 Cari
-        </button>
-      </div>
+ <div class="douyin-search">
+ <input
+ id="douyinQuery"
+ type="search"
+ placeholder="Cari video Douyin..."
+ autocomplete="off"
+ >
+ <button id="douyinSearch" type="button">
+ 🔎 Cari
+ </button>
+ </div>
 
-      <div id="douyinStatus"></div>
+ <div id="douyinStatus"></div>
 
-      <div id="douyinResults" class="douyin-results"></div>
+ <div id="douyinResults" class="douyin-results"></div>
 
-    </div>
-  </div>
+ </div>
+ </div>
 </div>
 
 <script>
 (function () {
-  const input = document.getElementById('douyinQuery');
-  const button = document.getElementById('douyinSearch');
-  const status = document.getElementById('douyinStatus');
-  const results = document.getElementById('douyinResults');
+ const input = document.getElementById('douyinQuery');
+ const button = document.getElementById('douyinSearch');
+ const status = document.getElementById('douyinStatus');
+ const results = document.getElementById('douyinResults');
 
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
+ function escapeHtml(value) {
+ return String(value ?? '')
+ .replace(/&/g, '&amp;')
+ .replace(/</g, '&lt;')
+ .replace(/>/g, '&gt;')
+ .replace(/"/g, '&quot;')
+ .replace(/'/g, '&#039;');
+ }
 
-  function firstUrl(value) {
-    if (Array.isArray(value)) {
-      return value.find(Boolean) || '';
-    }
+ function firstUrl(value) {
+ if (Array.isArray(value)) {
+ return value.find(Boolean) || '';
+ }
 
-    return typeof value === 'string' ? value : '';
-  }
+ return typeof value === 'string' ? value : '';
+ }
 
-  function getCover(item) {
-    return (
-      firstUrl(item?.video?.cover?.url_list) ||
-      firstUrl(item?.video?.origin_cover?.url_list) ||
-      firstUrl(item?.video?.dynamic_cover?.url_list) ||
-      ''
-    );
-  }
+ function getCover(item) {
+ return (
+ firstUrl(item?.video?.cover?.url_list) ||
+ firstUrl(item?.video?.origin_cover?.url_list) ||
+ firstUrl(item?.video?.dynamic_cover?.url_list) ||
+ ''
+ );
+ }
 
-  function getVideoUrl(item) {
-    return (
-      firstUrl(item?.video?.play_addr?.url_list) ||
-      firstUrl(item?.video?.download_addr?.url_list) ||
-      ''
-    );
-  }
+ function getVideoUrl(item) {
+ return (
+ firstUrl(item?.video?.play_addr?.url_list) ||
+ firstUrl(item?.video?.download_addr?.url_list) ||
+ ''
+ );
+ }
 
-  function getAuthor(item) {
-    return (
-      item?.author?.nickname ||
-      item?.author?.unique_id ||
-      item?.author?.uid ||
-      'Douyin'
-    );
-  }
+ function getAuthor(item) {
+ return (
+ item?.author?.nickname ||
+ item?.author?.unique_id ||
+ item?.author?.uid ||
+ 'Douyin'
+ );
+ }
 
-  function getTitle(item) {
-    return (
-      item?.desc ||
-      item?.share_info?.share_title ||
-      'Video Douyin'
-    );
-  }
+ function getTitle(item) {
+ return (
+ item?.desc ||
+ item?.share_info?.share_title ||
+ 'Video Douyin'
+ );
+ }
 
-  function getShareUrl(item) {
-    return (
-      item?.share_url ||
-      item?.share_info?.share_url ||
-      ''
-    );
-  }
+ function getShareUrl(item) {
+ return (
+ item?.share_url ||
+ item?.share_info?.share_url ||
+ ''
+ );
+ }
 
-  function render(items) {
-    results.innerHTML = '';
+ function render(items) {
+ results.innerHTML = '';
 
-    if (!Array.isArray(items) || !items.length) {
-      results.innerHTML =
-        '<div class="douyin-empty">Tidak ada hasil ditemukan.</div>';
-      return;
-    }
+ if (!Array.isArray(items) || !items.length) {
+ results.innerHTML =
+ '<div class="douyin-empty">Tidak ada hasil ditemukan.</div>';
+ return;
+ }
 
-    results.innerHTML = items.map(function (item) {
-      const cover = getCover(item);
-      const video = getVideoUrl(item);
-      const share = getShareUrl(item);
+ results.innerHTML = items.map(function (item) {
+ const cover = getCover(item);
+ const video = getVideoUrl(item);
+ const share = getShareUrl(item);
 
-      let action = '';
+ let action = '';
 
-      if (video) {
-        action =
-          '<a class="douyin-btn" href="' +
-          escapeHtml(video) +
-          '" target="_blank" rel="noopener noreferrer">▶️ Buka Video</a>';
-      } else if (share) {
-        action =
-          '<a class="douyin-btn" href="' +
-          escapeHtml(share) +
-          '" target="_blank" rel="noopener noreferrer">▶️ Buka Douyin</a>';
-      }
+ if (video) {
+ action =
+ '<a class="douyin-btn" href="' +
+ escapeHtml(video) +
+ '" target="_blank" rel="noopener noreferrer">▶️ Buka Video</a>';
+ } else if (share) {
+ action =
+ '<a class="douyin-btn" href="' +
+ escapeHtml(share) +
+ '" target="_blank" rel="noopener noreferrer">▶️ Buka Douyin</a>';
+ }
 
-      return `
-        <article class="douyin-item">
-          ${
-            cover
-              ? `<img class="douyin-cover"
-                   src="${escapeHtml(cover)}"
-                   loading="lazy"
-                   referrerpolicy="no-referrer"
-                   alt="Douyin">`
-              : '<div class="douyin-cover"></div>'
-          }
+ return `
+ <article class="douyin-item">
+ ${
+ cover
+ ? `<img class="douyin-cover"
+ src="${escapeHtml(cover)}"
+ loading="lazy"
+ referrerpolicy="no-referrer"
+ alt="Douyin">`
+ : '<div class="douyin-cover"></div>'
+ }
 
-          <div class="douyin-body">
-            <div class="douyin-title">
-              ${escapeHtml(getTitle(item))}
-            </div>
+ <div class="douyin-body">
+ <div class="douyin-title">
+ ${escapeHtml(getTitle(item))}
+ </div>
 
-            <div class="douyin-author">
-              @${escapeHtml(getAuthor(item))}
-            </div>
+ <div class="douyin-author">
+ @${escapeHtml(getAuthor(item))}
+ </div>
 
-            <div class="douyin-desc">
-              ${escapeHtml(item?.desc || '')}
-            </div>
+ <div class="douyin-desc">
+ ${escapeHtml(item?.desc || '')}
+ </div>
 
-            ${action}
-          </div>
-        </article>
-      `;
-    }).join('');
-  }
+ ${action}
+ </div>
+ </article>
+ `;
+ }).join('');
+ }
 
-  async function search() {
-    const query = input.value.trim();
+ async function search() {
+ const query = input.value.trim();
 
-    if (!query) {
-      status.textContent = '❌ Masukkan keyword dulu.';
-      results.innerHTML = '';
-      return;
-    }
+ if (!query) {
+ status.textContent = '❌ Masukkan keyword dulu.';
+ results.innerHTML = '';
+ return;
+ }
 
-    button.disabled = true;
-    button.textContent = 'Mencari...';
-    status.textContent = '⏳ Mengambil hasil Douyin...';
-    results.innerHTML = '';
+ button.disabled = true;
+ button.textContent = 'Mencari...';
+ status.textContent = '⏳ Mengambil hasil Douyin...';
+ results.innerHTML = '';
 
-    try {
-      const response = await fetch(
-        '/api/douyin/search?q=' + encodeURIComponent(query),
-        {
-          headers: {
-            'Accept': 'application/json'
-          }
-        }
-      );
+ try {
+ const response = await fetch(
+ '/api/douyin/search?q=' + encodeURIComponent(query),
+ {
+ headers: {
+ 'Accept': 'application/json'
+ }
+ }
+ );
 
-      const data = await response.json();
+ const data = await response.json();
 
-      if (!response.ok || !data.ok) {
-        throw new Error(
-          data.error || 'Gagal mengambil hasil Douyin.'
-        );
-      }
+ if (!response.ok || !data.ok) {
+ throw new Error(
+ data.error || 'Gagal mengambil hasil Douyin.'
+ );
+ }
 
-      status.textContent =
-        '✅ Ditemukan ' + (data.count || 0) + ' hasil.';
+ status.textContent =
+ '✅ Ditemukan ' + (data.count || 0) + ' hasil.';
 
-      render(data.results);
-    } catch (error) {
-      console.error('DOUYIN:', error);
-      status.textContent = '❌ ' + error.message;
-      results.innerHTML = '';
-    } finally {
-      button.disabled = false;
-      button.textContent = '🔎 Cari';
-    }
-  }
+ render(data.results);
+ } catch (error) {
+ console.error('DOUYIN:', error);
+ status.textContent = '❌ ' + error.message;
+ results.innerHTML = '';
+ } finally {
+ button.disabled = false;
+ button.textContent = '🔎 Cari';
+ }
+ }
 
-  button.addEventListener('click', search);
+ button.addEventListener('click', search);
 
-  input.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      search();
-    }
-  });
+ input.addEventListener('keydown', function (event) {
+ if (event.key === 'Enter') {
+ search();
+ }
+ });
 })();
 </script>
 

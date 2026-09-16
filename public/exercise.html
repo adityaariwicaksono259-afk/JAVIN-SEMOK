@@ -9,46 +9,46 @@
 </head>
 <body>
 <div class="page ex-page">
-  <header class="page-header">
-    <a href="/workout.html" class="header-btn">←</a>
-    <h1 id="exTitle">Exercise</h1>
-  </header>
-  <div class="page-content ex-content">
+ <header class="page-header">
+ <a href="/workout.html" class="header-btn">←</a>
+ <h1 id="exTitle">Exercise</h1>
+ </header>
+ <div class="page-content ex-content">
 
-    <div class="ex-3d-wrap">
-      <canvas id="exCanvas"></canvas>
-      <div class="ex-loading" id="exLoading">
-        <div class="rbg-spinner"></div>
-        <div>Memuat 3D viewer...</div>
-      </div>
-      <div class="ex-badge" id="exBadge">▶ DEMO</div>
-    </div>
+ <div class="ex-3d-wrap">
+ <canvas id="exCanvas"></canvas>
+ <div class="ex-loading" id="exLoading">
+ <div class="rbg-spinner"></div>
+ <div>Memuat 3D viewer...</div>
+ </div>
+ <div class="ex-badge" id="exBadge">▶ DEMO</div>
+ </div>
 
-    <div class="ex-controls">
-      <button class="ex-btn" id="exPlay">⏸️ PAUSE</button>
-      <button class="ex-btn" id="exReset">🔄 RESET</button>
-      <button class="ex-btn" id="exSpeed">⚡ 1x</button>
-    </div>
+ <div class="ex-controls">
+ <button class="ex-btn" id="exPlay">⏸️ PAUSE</button>
+ <button class="ex-btn" id="exReset">🔄 RESET</button>
+ <button class="ex-btn" id="exSpeed">⚡ 1x</button>
+ </div>
 
-    <div class="ex-info">
-      <div class="ex-info-icon" id="exIcon">💪</div>
-      <div class="ex-info-body">
-        <div class="ex-name" id="exName">-</div>
-        <div class="ex-desc" id="exDesc">-</div>
-        <div class="ex-target" id="exTarget">-</div>
-      </div>
-    </div>
+ <div class="ex-info">
+ <div class="ex-info-icon" id="exIcon">💪</div>
+ <div class="ex-info-body">
+ <div class="ex-name" id="exName">-</div>
+ <div class="ex-desc" id="exDesc">-</div>
+ <div class="ex-target" id="exTarget">-</div>
+ </div>
+ </div>
 
-    <div class="ex-timer-wrap">
-      <div class="ex-timer-label">⏱️ TIMER</div>
-      <div class="ex-timer-display" id="exTimer">00:00</div>
-      <div class="ex-timer-btns">
-        <button class="ex-timer-btn" id="exStartTimer">▶ START</button>
-        <button class="ex-timer-btn ex-timer-ghost" id="exResetTimer">🔄</button>
-      </div>
-    </div>
+ <div class="ex-timer-wrap">
+ <div class="ex-timer-label">⏱️ TIMER</div>
+ <div class="ex-timer-display" id="exTimer">00:00</div>
+ <div class="ex-timer-btns">
+ <button class="ex-timer-btn" id="exStartTimer">▶ START</button>
+ <button class="ex-timer-btn ex-timer-ghost" id="exResetTimer">🔄</button>
+ </div>
+ </div>
 
-  </div>
+ </div>
 </div>
 <script src="common.js"></script>
 <script src="/socket.io/socket.io.js"></script>

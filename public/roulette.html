@@ -9,53 +9,53 @@
 </head>
 <body>
 <div class="page rl-page">
-  <header class="page-header">
-    <a href="/" class="header-btn">Home</a>
-    <h1>🎰 Roulette</h1>
-  </header>
-  <div class="page-content rl-content">
+ <header class="page-header">
+ <a href="/" class="header-btn">Home</a>
+ <h1>Roulette</h1>
+ </header>
+ <div class="page-content rl-content">
 
-    <div class="rl-balance">
-      <span class="rl-label">SALDO</span>
-      <span class="rl-value" id="rlBalance">0</span>
-    </div>
+ <div class="rl-balance">
+ <span class="rl-label">SALDO</span>
+ <span class="rl-value" id="rlBalance">0</span>
+ </div>
 
-    <div class="rl-wheel-wrap">
-      <div class="rl-wheel-rotator" id="rlWheel"></div>
-      <div class="rl-wheel-inner"></div>
-      <div class="rl-pointer"></div>
-      <div class="rl-result-num" id="rlResultNum">?</div>
-    </div>
+ <div class="rl-wheel-wrap">
+ <div class="rl-wheel-rotator" id="rlWheel"></div>
+ <div class="rl-wheel-inner"></div>
+ <div class="rl-pointer"></div>
+ <div class="rl-result-num" id="rlResultNum">?</div>
+ </div>
 
-    <button class="rl-spin-btn" id="rlSpin">🎰 SPIN</button>
+ <button class="rl-spin-btn" id="rlSpin">🎰 SPIN</button>
 
-    <div class="rl-status" id="rlStatus">Pilih bet, lalu spin!</div>
+ <div class="rl-status" id="rlStatus">Pilih bet, lalu spin!</div>
 
-    <div class="rl-bet-row">
-      <button class="rl-chip" data-bet="10">10</button>
-      <button class="rl-chip active" data-bet="50">50</button>
-      <button class="rl-chip" data-bet="100">100</button>
-      <button class="rl-chip" data-bet="500">500</button>
-      <button class="rl-chip rl-chip-max" data-bet="max">MAX</button>
-    </div>
+ <div class="rl-bet-row">
+ <button class="rl-chip" data-bet="10">10</button>
+ <button class="rl-chip active" data-bet="50">50</button>
+ <button class="rl-chip" data-bet="100">100</button>
+ <button class="rl-chip" data-bet="500">500</button>
+ <button class="rl-chip rl-chip-max" data-bet="max">MAX</button>
+ </div>
 
-    <div class="rl-picks">
-      <button class="rl-pick p-red" data-pick="red"><span class="rp-title">MERAH</span><span class="rp-sub">x2</span></button>
-      <button class="rl-pick p-black" data-pick="black"><span class="rp-title">HITAM</span><span class="rp-sub">x2</span></button>
-      <button class="rl-pick p-green" data-pick="green"><span class="rp-title">HIJAU (0)</span><span class="rp-sub">x14</span></button>
-      <button class="rl-pick p-low" data-pick="low"><span class="rp-title">1-18</span><span class="rp-sub">x2</span></button>
-      <button class="rl-pick p-high" data-pick="high"><span class="rp-title">19-36</span><span class="rp-sub">x2</span></button>
-    </div>
+ <div class="rl-picks">
+ <button class="rl-pick p-red" data-pick="red"><span class="rp-title">MERAH</span><span class="rp-sub">x2</span></button>
+ <button class="rl-pick p-black" data-pick="black"><span class="rp-title">HITAM</span><span class="rp-sub">x2</span></button>
+ <button class="rl-pick p-green" data-pick="green"><span class="rp-title">HIJAU (0)</span><span class="rp-sub">x14</span></button>
+ <button class="rl-pick p-low" data-pick="low"><span class="rp-title">1-18</span><span class="rp-sub">x2</span></button>
+ <button class="rl-pick p-high" data-pick="high"><span class="rp-title">19-36</span><span class="rp-sub">x2</span></button>
+ </div>
 
-    <div class="rl-num-title">Tebak ANGKA (x36)</div>
-    <div class="rl-nums" id="rlNums"></div>
+ <div class="rl-num-title">Tebak ANGKA (x36)</div>
+ <div class="rl-nums" id="rlNums"></div>
 
-    <!-- spin moved -->
+ <!-- spin moved -->
 
-    <div class="rl-history-title">Riwayat</div>
-    <div class="rl-history" id="rlHistory"></div>
+ <div class="rl-history-title">Riwayat</div>
+ <div class="rl-history" id="rlHistory"></div>
 
-  </div>
+ </div>
 </div>
 <div id="toast" class="toast hidden"></div>
 <script src="common.js"></script>

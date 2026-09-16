@@ -9,39 +9,39 @@
 </head>
 <body>
 <div class="page brat-page">
-  <header class="page-header">
-    <a href="/tools.html" class="header-btn">←</a>
-    <h1>Brat Video</h1>
-  </header>
-  <div class="page-content brat-content">
+ <header class="page-header">
+ <a href="/tools.html" class="header-btn">←</a>
+ <h1>Brat Video</h1>
+ </header>
+ <div class="page-content brat-content">
 
-    <div class="brat-info">Bikin video brat dari teks lo sendiri. Preview + download MP4.</div>
+ <div class="brat-info">Bikin video brat dari teks lo sendiri. Preview + download MP4.</div>
 
-    <div class="brat-input-box">
-      <label class="qr-label">TEKS LO</label>
-      <textarea id="bratText" placeholder="contoh: halo ges, apa kabar?" maxlength="200" rows="3"></textarea>
-      <div class="brat-count"><span id="bratCount">0</span>/200</div>
-    </div>
+ <div class="brat-input-box">
+ <label class="qr-label">TEKS LO</label>
+ <textarea id="bratText" placeholder="contoh: halo ges, apa kabar?" maxlength="200" rows="3"></textarea>
+ <div class="brat-count"><span id="bratCount">0</span>/200</div>
+ </div>
 
-    <button class="qr-generate-btn" id="bratGenerate">GENERATE VIDEO</button>
+ <button class="qr-generate-btn" id="bratGenerate">GENERATE VIDEO</button>
 
-    <div class="brat-loading hidden" id="bratLoading">
-      <div class="rbg-spinner"></div>
-      <div class="rbg-loading-text">Membuat video... (3-5 detik)</div>
-    </div>
+ <div class="brat-loading hidden" id="bratLoading">
+ <div class="rbg-spinner"></div>
+ <div class="rbg-loading-text">Membuat video... (3-5 detik)</div>
+ </div>
 
-    <div class="brat-result hidden" id="bratResult">
-      <video id="bratPlayer" class="brat-video" controls playsinline loop preload="metadata"></video>
-      <div class="qr-actions">
-        <button class="rbg-btn rbg-btn-preview" id="bratPreviewBtn">👁️ Fullscreen</button>
-        <button class="rbg-btn rbg-btn-download" id="bratDownloadBtn">⬇️ Download MP4</button>
-        <button class="rbg-btn rbg-btn-reset" id="bratResetBtn">🔄 Ganti Teks</button>
-      </div>
-    </div>
+ <div class="brat-result hidden" id="bratResult">
+ <video id="bratPlayer" class="brat-video" controls playsinline loop preload="metadata"></video>
+ <div class="qr-actions">
+ <button class="rbg-btn rbg-btn-preview" id="bratPreviewBtn">👁️ Fullscreen</button>
+ <button class="rbg-btn rbg-btn-download" id="bratDownloadBtn">⬇️ Download MP4</button>
+ <button class="rbg-btn rbg-btn-reset" id="bratResetBtn">🔄 Ganti Teks</button>
+ </div>
+ </div>
 
-    <div class="rbg-error hidden" id="bratError"></div>
+ <div class="rbg-error hidden" id="bratError"></div>
 
-  </div>
+ </div>
 </div>
 
 <div id="toast" class="toast hidden"></div>
