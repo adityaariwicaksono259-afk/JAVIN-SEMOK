@@ -253,11 +253,7 @@ app.get('/health', (req, res) => {
 });
 
 // 8. Endpoint admin — lihat blacklist (butuh admin password)
-app.get('/api/admin/security', (req, res) => {
-  const pw = req.query.pw || req.headers['x-admin-pw'];
-  if (pw !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ status: false, message: 'Unauthorized' });
-  }
+app.get('/api/admin/security', requireAdmin, (req, res) => {
   const list = [];
   for (const [ip, v] of ipBlacklist.entries()) {
     list.push({ ip: ip, reason: v.reason, sisa: Math.ceil((v.until - Date.now()) / 1000) + 's' });
@@ -423,11 +419,7 @@ app.use('/api', (req, res, next) => {
 });
 
 // 10. Admin endpoint log viewer
-app.get('/api/admin/logs', (req, res) => {
-  const pw = req.query.pw || req.headers['x-admin-pw'];
-  if (pw !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ status: false, message: 'Unauthorized' });
-  }
+app.get('/api/admin/logs', requireAdmin, (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 50, 200);
   res.json({
     status: true,
@@ -437,11 +429,7 @@ app.get('/api/admin/logs', (req, res) => {
 });
 
 // 11. Admin endpoint — unban IP
-app.get('/api/admin/unban', (req, res) => {
-  const pw = req.query.pw || req.headers['x-admin-pw'];
-  if (pw !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ status: false, message: 'Unauthorized' });
-  }
+app.get('/api/admin/unban', requireAdmin, (req, res) => {
   const ip = req.query.ip;
   if (!ip) return res.status(400).json({ status: false, message: 'IP wajib diisi' });
   if (ip === 'all') {
@@ -813,11 +801,7 @@ setInterval(() => {
 }, 30 * 60 * 1000);
 
 // Endpoint admin — lihat reputation
-app.get('/api/admin/reputation', (req, res) => {
-  const pw = req.query.pw || req.headers['x-admin-pw'];
-  if (pw !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ status: false, message: 'Unauthorized' });
-  }
+app.get('/api/admin/reputation', requireAdmin, (req, res) => {
   const list = [];
   for (const [ip, rep] of ipReputation.entries()) {
     list.push({ ip: ip, score: rep.score, events: rep.events, lastUpdate: rep.lastUpdate });
@@ -975,11 +959,7 @@ app.use((req, res, next) => {
 // PROTECTION LAYER 5D — ADMIN DASHBOARD
 // ============================================
 
-app.get('/api/admin/dashboard', (req, res) => {
-  const pw = req.query.pw || req.headers['x-admin-pw'];
-  if (pw !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ status: false, message: 'Unauthorized' });
-  }
+app.get('/api/admin/dashboard', requireAdmin, (req, res) => {
 
   // Hitung stats
   let totalRep = 0, lowRep = 0, highRep = 0;
@@ -3725,5 +3705,231 @@ app.get('/api/turnstile/status', function(req, res) {
 });
 
 // === END LAYER 8 ===
+
+
+
+// ============================================
+// PROTECTION LAYER 9 — GLOBAL TURNSTILE GATE
+// ============================================
+
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || 'fallback-change-me-please';
+const VERIFY_COOKIE = 'jav_verified';
+const VERIFY_MAX_AGE = 24 * 60 * 60 * 1000;
+
+function gvSignToken(value) {
+  return crypto.createHmac('sha256', SESSION_SECRET).update(String(value)).digest('hex');
+}
+
+function gvCreateToken(ip) {
+  var ts = Date.now();
+  var ipHash = crypto.createHash('sha256').update(String(ip)).digest('hex').slice(0, 12);
+  var payload = ts + '.' + ipHash;
+  return payload + '.' + gvSignToken(payload);
+}
+
+function gvVerifyToken(token, ip) {
+  if (!token || typeof token !== 'string') return false;
+  var parts = token.split('.');
+  if (parts.length !== 3) return false;
+  var ts = parseInt(parts[0], 10);
+  if (isNaN(ts) || Date.now() - ts > VERIFY_MAX_AGE) return false;
+  var ipHash = parts[1];
+  var sig = parts[2];
+  var expectIP = crypto.createHash('sha256').update(String(ip)).digest('hex').slice(0, 12);
+  if (ipHash !== expectIP) return false;
+  var expectSig = gvSignToken(ts + '.' + ipHash);
+  return sig === expectSig;
+}
+
+function gvGetCookie(req, name) {
+  var cookies = req.headers.cookie || '';
+  var parts = cookies.split(';');
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i].trim();
+    var idx = p.indexOf('=');
+    if (idx > 0 && p.slice(0, idx) === name) return decodeURIComponent(p.slice(idx + 1));
+  }
+  return null;
+}
+
+function gvSetCookie(res, name, value, maxAge) {
+  var secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  var ck = name + '=' + encodeURIComponent(value) + '; Path=/; Max-Age=' + Math.floor(maxAge / 1000) + '; HttpOnly; SameSite=Lax;' + secure;
+  var existing = res.getHeader('Set-Cookie');
+  if (existing) {
+    if (Array.isArray(existing)) {
+      res.setHeader('Set-Cookie', existing.concat([ck]));
+    } else {
+      res.setHeader('Set-Cookie', [existing, ck]);
+    }
+  } else {
+    res.setHeader('Set-Cookie', ck);
+  }
+}
+
+function gvShouldSkip(req) {
+  var p = req.path;
+  if (p === '/health') return true;
+  if (p === '/favicon.ico') return true;
+  if (p === '/api/verify-global') return true;
+  if (p === '/api/turnstile/status') return true;
+  if (p.indexOf('/api/turnstile/') === 0) return true;
+  if (p.indexOf('/socket.io/') === 0) return true;
+  if (/\.[a-z0-9]+$/i.test(p)) return true;
+  return false;
+}
+
+function gvRenderVerifyPage(redirect) {
+  var safe = String(redirect || '/').replace(/[<>"']/g, '');
+  var h = '';
+  h += '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8" />';
+  h += '<meta name="viewport" content="width=device-width, initial-scale=1.0" />';
+  h += '<title>Verifikasi - JAVIN SEMOK</title>';
+  h += '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
+  h += '<style>';
+  h += '* { margin:0; padding:0; box-sizing:border-box; }';
+  h += 'body { font-family: system-ui, sans-serif; background:#0a0a0f; color:#e8e8f0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }';
+  h += '.box { background:#12121a; border:1px solid #2a2a3a; border-radius:16px; padding:32px 24px; max-width:400px; width:100%; text-align:center; box-shadow: 0 4px 24px rgba(0,0,0,0.5); }';
+  h += '.icon { font-size:3rem; margin-bottom:12px; }';
+  h += 'h1 { font-size:1.3rem; margin-bottom:8px; color:#00d4aa; }';
+  h += 'p { color:#8888a0; font-size:0.88rem; line-height:1.5; margin-bottom:20px; }';
+  h += '.status { font-size:0.82rem; color:#8888a0; margin-top:12px; min-height:18px; }';
+  h += '.cf-turnstile { display: flex; justify-content: center; }';
+  h += '</style></head><body>';
+  h += '<div class="box">';
+  h += '<div class="icon">&#x1F6E1;&#xFE0F;</div>';
+  h += '<h1>Verifikasi Keamanan</h1>';
+  h += '<p>Selesaikan verifikasi untuk melanjutkan ke JAVIN SEMOK</p>';
+  h += '<div class="cf-turnstile" data-sitekey="0x4AAAAAAE4FZCAnVyrCpu3y" data-callback="onGvVerify" data-action="global"></div>';
+  h += '<div class="status" id="gvStatus">Menunggu verifikasi...</div>';
+  h += '</div>';
+  h += '<script>';
+  h += 'window.onGvVerify = async function(token) {';
+  h += '  var s = document.getElementById("gvStatus");';
+  h += '  s.textContent = "Memverifikasi..."; s.style.color = "#8888a0";';
+  h += '  try {';
+  h += '    var r = await fetch("/api/verify-global", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: token }) });';
+  h += '    var d = await r.json();';
+  h += '    if (d.status) {';
+  h += '      s.textContent = "Berhasil! Mengalihkan..."; s.style.color = "#00d4aa";';
+  h += '      setTimeout(function(){ window.location.href = "' + safe + '"; }, 600);';
+  h += '    } else {';
+  h += '      s.textContent = d.message || "Gagal"; s.style.color = "#ff4d6d";';
+  h += '    }';
+  h += '  } catch (e) { s.textContent = "Error: " + e.message; s.style.color = "#ff4d6d"; }';
+  h += '};';
+  h += '</script></body></html>';
+  return h;
+}
+
+app.post('/api/verify-global', express.json({ limit: '1kb' }), async function(req, res) {
+  var token = req.body && req.body.token;
+  if (!token) return res.status(400).json({ status: false, message: 'Token wajib' });
+  var result = await verifyTurnstile(token, req.ip);
+  if (!result.ok) {
+    logSecurity('GV-FAIL', { ip: req.ip, path: req.path, detail: result.reason || 'unknown' });
+    return res.status(403).json({ status: false, message: 'Verifikasi gagal' });
+  }
+  var cookie = gvCreateToken(req.ip);
+  gvSetCookie(res, VERIFY_COOKIE, cookie, VERIFY_MAX_AGE);
+  res.json({ status: true, message: 'OK' });
+});
+
+app.use(function(req, res, next) {
+  if (gvShouldSkip(req)) return next();
+  var token = gvGetCookie(req, VERIFY_COOKIE);
+  if (gvVerifyToken(token, req.ip)) return next();
+
+  var isHTML = (req.headers.accept || '').indexOf('text/html') !== -1;
+  var isAPI = req.path.indexOf('/api/') === 0 || req.xhr;
+
+  if (isAPI) {
+    return res.status(403).json({
+      status: false,
+      message: 'Verifikasi diperlukan. Buka halaman utama dulu.',
+      need_verification: true
+    });
+  }
+
+  if (isHTML) {
+    res.status(200).set('Content-Type', 'text/html').send(gvRenderVerifyPage(req.originalUrl));
+    return;
+  }
+
+  next();
+});
+
+// === END LAYER 9 ===
+
+
+// ============================================
+// PROTECTION LAYER 10 — ADMIN LOGIN
+// ============================================
+
+const ADMIN_COOKIE = 'jav_admin';
+const adminAttempts = new Map();
+
+function requireAdmin(req, res, next) {
+  var token = gvGetCookie(req, ADMIN_COOKIE);
+  if (!gvVerifyToken(token, 'admin_' + req.ip)) {
+    return res.status(401).json({ status: false, message: 'Admin login diperlukan', need_admin: true });
+  }
+  next();
+}
+
+app.post('/api/admin/login', express.json({ limit: '1kb' }), function(req, res) {
+  var ip = req.ip;
+  var now = Date.now();
+  var att = adminAttempts.get(ip);
+  if (!att || now > att.resetAt) {
+    att = { count: 0, resetAt: now + 15 * 60 * 1000 };
+  }
+  if (att.count >= 3) {
+    var wait = Math.ceil((att.resetAt - now) / 1000);
+    logSecurity('ADMIN-LOCK', { ip: ip, path: req.path, detail: 'wait=' + wait + 's' });
+    return res.status(429).json({
+      status: false,
+      message: 'Terlalu banyak percobaan. Tunggu ' + wait + ' detik.',
+      wait_seconds: wait
+    });
+  }
+  var pw = (req.body && req.body.password) || '';
+  if (pw !== process.env.ADMIN_PASSWORD) {
+    att.count++;
+    adminAttempts.set(ip, att);
+    logSecurity('ADMIN-FAIL', { ip: ip, path: req.path, detail: 'attempt ' + att.count + '/3' });
+    return res.status(401).json({
+      status: false,
+      message: 'Password salah. Sisa percobaan: ' + (3 - att.count),
+      attempts_left: 3 - att.count
+    });
+  }
+  adminAttempts.delete(ip);
+  var token = gvCreateToken('admin_' + ip);
+  gvSetCookie(res, ADMIN_COOKIE, token, VERIFY_MAX_AGE);
+  logSecurity('ADMIN-LOGIN', { ip: ip, path: req.path, detail: 'success' });
+  res.json({ status: true, message: 'Login berhasil' });
+});
+
+app.get('/api/admin/check', function(req, res) {
+  var token = gvGetCookie(req, ADMIN_COOKIE);
+  var isAdmin = gvVerifyToken(token, 'admin_' + req.ip);
+  res.json({ status: true, isAdmin: isAdmin });
+});
+
+app.post('/api/admin/logout', function(req, res) {
+  gvSetCookie(res, ADMIN_COOKIE, '', 0);
+  res.json({ status: true, message: 'Logout berhasil' });
+});
+
+setInterval(function() {
+  var now = Date.now();
+  for (var entry of adminAttempts.entries()) {
+    if (now > entry[1].resetAt) adminAttempts.delete(entry[0]);
+  }
+}, 30 * 60 * 1000);
+
+// === END LAYER 10 ===
+
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
