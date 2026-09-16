@@ -474,6 +474,257 @@ app.use((err, req, res, next) => {
 // END PROTECTION LAYER 3
 // ============================================
 
+// ============================================
+// PROTECTION LAYER 4A — CONCURRENT + BURST
+// ============================================
+
+let globalConcurrent = 0;
+const perIpConcurrent = new Map();
+const MAX_GLOBAL_CONCURRENT = 300;
+const MAX_PER_IP_CONCURRENT = 15;
+
+app.use((req, res, next) => {
+  const ip = req.ip;
+  if (globalConcurrent >= MAX_GLOBAL_CONCURRENT) {
+    return res.status(503).json({ status: false, message: 'Server penuh. Coba lagi.' });
+  }
+  const cur = perIpConcurrent.get(ip) || 0;
+  if (cur >= MAX_PER_IP_CONCURRENT) {
+    addStrike(ip, 'too-many-concurrent');
+    return res.status(429).json({ status: false, message: 'Terlalu banyak koneksi aktif.' });
+  }
+  globalConcurrent++;
+  perIpConcurrent.set(ip, cur + 1);
+
+  let released = false;
+  function release() {
+    if (released) return;
+    released = true;
+    globalConcurrent = Math.max(0, globalConcurrent - 1);
+    const c2 = perIpConcurrent.get(ip) || 1;
+    if (c2 <= 1) perIpConcurrent.delete(ip);
+    else perIpConcurrent.set(ip, c2 - 1);
+  }
+  res.on('finish', release);
+  res.on('close', release);
+  res.on('error', release);
+  next();
+});
+
+// Token bucket burst protection
+const burstBuckets = new Map();
+const BURST_CAPACITY = 30;
+const BURST_REFILL = 5;
+
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const now = Date.now();
+  let b = burstBuckets.get(ip);
+  if (!b) b = { tokens: BURST_CAPACITY, lastRefill: now };
+  else {
+    const elapsed = (now - b.lastRefill) / 1000;
+    b.tokens = Math.min(BURST_CAPACITY, b.tokens + elapsed * BURST_REFILL);
+    b.lastRefill = now;
+  }
+  if (b.tokens < 1) {
+    burstBuckets.set(ip, b);
+    return res.status(429).json({ status: false, message: 'Terlalu cepat. Perlambat.' });
+  }
+  b.tokens -= 1;
+  burstBuckets.set(ip, b);
+  next();
+});
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, b] of burstBuckets.entries()) {
+    if (now - b.lastRefill > 10 * 60 * 1000) burstBuckets.delete(ip);
+  }
+}, 5 * 60 * 1000);
+
+// ============================================
+// END LAYER 4A
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 4B — RPM + BOT
+// ============================================
+
+let globalRPM = 0;
+const GLOBAL_RPM_LIMIT = 3000;
+
+setInterval(() => { globalRPM = 0; }, 60 * 1000);
+
+app.use((req, res, next) => {
+  globalRPM++;
+  if (globalRPM > GLOBAL_RPM_LIMIT) {
+    return res.status(503).json({ status: false, message: 'Server overload.' });
+  }
+  next();
+});
+
+// Bot signature detection
+app.use((req, res, next) => {
+  const ua = (req.headers['user-agent'] || '').toLowerCase();
+
+  // Legit bots diizinkan
+  const legitBots = /(googlebot|bingbot|yandexbot|duckduckbot|baiduspider|facebookexternalhit|twitterbot|whatsapp|telegrambot|discordbot|slackbot|linkedinbot|applebot)/;
+  if (legitBots.test(ua)) return next();
+
+  // Bot scraper diblok
+  const badBots = /(scrapy|python-requests|python-urllib|go-http-client|libwww-perl|postmanruntime|insomnia|httpx|aiohttp|bot|crawler|spider|scanner)/;
+  if (badBots.test(ua)) {
+    addStrike(req.ip, 'bad-bot');
+    logSecurity('BAD-BOT', { ip: req.ip, path: req.path, detail: ua.slice(0, 100) });
+    return res.status(403).json({ status: false, message: 'Akses ditolak.' });
+  }
+
+  next();
+});
+
+// Path normalization
+app.use((req, res, next) => {
+  try {
+    const decoded = decodeURIComponent(req.path);
+    if (decoded.indexOf('..') !== -1) {
+      addStrike(req.ip, 'path-traversal');
+      return res.status(400).json({ status: false, message: 'Path tidak valid' });
+    }
+  } catch (e) {
+    return res.status(400).json({ status: false, message: 'URL tidak valid' });
+  }
+  next();
+});
+
+// ============================================
+// END LAYER 4B
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 4C — FINGERPRINT + CACHE
+// ============================================
+
+// Fingerprint: cek konsistensi UA per IP
+const fingerprints = new Map();
+
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const ua = (req.headers['user-agent'] || '').slice(0, 200);
+  const now = Date.now();
+  let f = fingerprints.get(ip);
+  if (!f) {
+    fingerprints.set(ip, { ua: ua, firstSeen: now, changes: 0 });
+  } else {
+    if (f.ua !== ua && (now - f.firstSeen) < 5 * 60 * 1000) {
+      f.changes++;
+      if (f.changes >= 5) {
+        addStrike(ip, 'ua-rotate');
+        logSecurity('UA-ROTATE', { ip: ip, path: req.path, detail: 'changes=' + f.changes });
+        f.changes = 0;
+      }
+    }
+    f.ua = ua;
+  }
+  next();
+});
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, f] of fingerprints.entries()) {
+    if (now - f.firstSeen > 30 * 60 * 1000) fingerprints.delete(ip);
+  }
+}, 10 * 60 * 1000);
+
+// Static asset cache
+app.use((req, res, next) => {
+  if (/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|webp|mp4|webm)$/i.test(req.path)) {
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+  }
+  next();
+});
+
+// Slow request logger
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const dur = Date.now() - start;
+    if (dur > 15000) {
+      logSecurity('SLOW', {
+        ip: req.ip,
+        path: req.path,
+        detail: 'duration=' + dur + 'ms'
+      });
+    }
+  });
+  next();
+});
+
+// ============================================
+// END LAYER 4C
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 4D — BANNED PAGE
+// ============================================
+
+function renderBannedPage(reason, waitSec) {
+  var html = '';
+  html += '<!DOCTYPE html><html lang="id"><head>';
+  html += '<meta charset="UTF-8" />';
+  html += '<meta name="viewport" content="width=device-width, initial-scale=1.0" />';
+  html += '<title>Akses Diblokir - JAVIN SEMOK</title>';
+  html += '<style>';
+  html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
+  html += 'body { font-family: system-ui, -apple-system, sans-serif; background: #0a0a0f; color: #e8e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; text-align: center; }';
+  html += '.box { background: #12121a; border: 1px solid #2a2a3a; border-radius: 16px; padding: 32px 24px; max-width: 420px; }';
+  html += '.icon { font-size: 4rem; margin-bottom: 16px; }';
+  html += 'h1 { font-size: 1.4rem; margin-bottom: 12px; color: #ff4d6d; }';
+  html += 'p { color: #8888a0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px; }';
+  html += '.reason { background: rgba(255,77,109,0.1); border: 1px solid #ff4d6d; border-radius: 8px; padding: 12px; font-size: 0.85rem; color: #ff8fa3; margin-bottom: 16px; word-break: break-word; }';
+  html += '.meta { font-size: 0.75rem; color: #555; margin-top: 16px; }';
+  html += '</style></head><body>';
+  html += '<div class="box">';
+  html += '<div class="icon">🚫</div>';
+  html += '<h1>Akses Kamu Diblokir</h1>';
+  html += '<p>Sistem mendeteksi aktivitas mencurigakan dari koneksi kamu.</p>';
+  html += '<div class="reason">Alasan: ' + String(reason).replace(/[<>]/g, '') + '</div>';
+  html += '<p>Coba lagi dalam <strong>' + waitSec + '</strong> detik.</p>';
+  html += '<div class="meta">Jika ini salah, hubungi admin.</div>';
+  html += '</div></body></html>';
+  return html;
+}
+
+// Override blacklist check — pakai HTML page
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const entry = ipBlacklist.get(ip);
+  if (entry && Date.now() < entry.until) {
+    const wait = Math.ceil((entry.until - Date.now()) / 1000);
+    if (req.path.indexOf('/api/') === 0) {
+      return res.status(403).json({
+        status: false,
+        banned: true,
+        message: 'Akses diblokir: ' + entry.reason,
+        wait_seconds: wait
+      });
+    }
+    res.status(403).set('Content-Type', 'text/html').send(renderBannedPage(entry.reason, wait));
+    return;
+  }
+  if (entry && Date.now() >= entry.until) {
+    ipBlacklist.delete(ip);
+  }
+  next();
+});
+
+// ============================================
+// END LAYER 4D
+// ============================================
+
+
+
+
+
 
 
 
