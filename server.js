@@ -5048,6 +5048,227 @@ var originalHealthHandler = function(req, res) {
 // === END FINAL FORTRESS ===
 
 
+// ============================================
+// PROTECTION LAYER 15 — ANTI-DDOS SHIELD
+// ============================================
+
+// 15.1 — Circuit Breaker (auto-pause kalau error rate tinggi)
+var cbState = {
+  failures: 0,
+  successes: 0,
+  lastReset: Date.now(),
+  openUntil: 0,
+  threshold: 50,
+  windowMs: 30000,
+  openMs: 15000
+};
+
+setInterval(function() {
+  cbState.failures = 0;
+  cbState.successes = 0;
+  cbState.lastReset = Date.now();
+}, cbState.windowMs);
+
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+
+  var now = Date.now();
+  if (cbState.openUntil > now) {
+    // Circuit still open — kasih 503 cepat
+    return res.status(503).json({
+      status: false,
+      message: 'Server sedang melindungi diri. Coba lagi dalam ' + Math.ceil((cbState.openUntil - now) / 1000) + ' detik.'
+    });
+  }
+
+  // Track response
+  res.on('finish', function() {
+    if (res.statusCode >= 500) cbState.failures++;
+    else if (res.statusCode < 400) cbState.successes++;
+
+    // Buka circuit kalau banyak error
+    if (cbState.failures > cbState.threshold && cbState.openUntil < now) {
+      cbState.openUntil = now + cbState.openMs;
+      logSecurity('CIRCUIT-OPEN', { ip: '-', path: '-', detail: 'failures=' + cbState.failures });
+      console.warn('[CIRCUIT] Opened because of', cbState.failures, 'failures');
+    }
+  });
+
+  next();
+});
+
+// 15.2 — Request queue limiter (cegah penumpukan)
+var pendingRequests = { count: 0, max: 400 };
+
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+
+  if (pendingRequests.count >= pendingRequests.max) {
+    return res.status(503).json({
+      status: false,
+      message: 'Server sedang penuh. Coba lagi sebentar.'
+    });
+  }
+
+  pendingRequests.count++;
+  var done = false;
+  function release() {
+    if (done) return;
+    done = true;
+    pendingRequests.count = Math.max(0, pendingRequests.count - 1);
+  }
+  res.on('finish', release);
+  res.on('close', release);
+  res.on('error', release);
+  next();
+});
+
+// 15.3 — Response time shedding (auto-reject kalau rata-rata lambat)
+var respTime = { sum: 0, count: 0, avg: 0, slowUntil: 0 };
+
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+
+  var now = Date.now();
+
+  // Kalau server lemot, auto-shed request non-penting
+  if (respTime.slowUntil > now) {
+    var critical = ['/api/verify-global', '/api/admin/', '/health'];
+    var isCritical = critical.some(function(p) { return req.path.indexOf(p) === 0; });
+    if (!isCritical && Math.random() < 0.7) {
+      return res.status(503).json({
+        status: false,
+        message: 'Server sedang sibuk. Coba lagi.'
+      });
+    }
+  }
+
+  var start = Date.now();
+  res.on('finish', function() {
+    var dur = Date.now() - start;
+    respTime.sum += dur;
+    respTime.count++;
+
+    if (respTime.count >= 50) {
+      respTime.avg = respTime.sum / respTime.count;
+      // Kalau rata-rata > 3000ms, aktifin slow mode 20 detik
+      if (respTime.avg > 3000 && respTime.slowUntil < now) {
+        respTime.slowUntil = now + 20000;
+        logSecurity('SLOW-MODE', { ip: '-', path: '-', detail: 'avg=' + Math.round(respTime.avg) + 'ms' });
+      }
+      respTime.sum = 0;
+      respTime.count = 0;
+    }
+  });
+
+  next();
+});
+
+// 15.4 — Slowloris killer (connection timeout ketat)
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+  // Timeout 15 detik — lebih ketat dari default
+  req.setTimeout(15000, function() {
+    if (!res.headersSent) {
+      res.status(408).json({ status: false, message: 'Request timeout' });
+    }
+    req.destroy();
+  });
+  next();
+});
+
+// 15.5 — Body read timeout (untuk POST)
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+  if (req.method !== 'POST' && req.method !== 'PUT') return next();
+
+  var readStart = Date.now();
+  var dataReceived = false;
+  req.on('data', function() {
+    dataReceived = true;
+    // Kalau body kebaca >5 detik, abort
+    if (Date.now() - readStart > 5000) {
+      req.destroy();
+    }
+  });
+  req.on('end', function() {
+    // Cek kalau body terlalu lambat
+    var dur = Date.now() - readStart;
+    if (dur > 5000) {
+      logSecurity('SLOW-BODY', { ip: req.ip, path: req.path, detail: 'dur=' + dur + 'ms' });
+    }
+  });
+  next();
+});
+
+// 15.6 — Global request counter (per 10 detik)
+var globalWindow = { count: 0, resetAt: Date.now() + 10000, peak: 0 };
+setInterval(function() {
+  if (globalWindow.count > globalWindow.peak) globalWindow.peak = globalWindow.count;
+  globalWindow.count = 0;
+  globalWindow.resetAt = Date.now() + 10000;
+}, 10000);
+
+app.use(function(req, res, next) {
+  globalWindow.count++;
+  // Kalau >800 request/10 detik → server overload, shed
+  if (globalWindow.count > 800 && !req._isAdmin && !isAdminIP(req)) {
+    return res.status(503).json({ status: false, message: 'Server overload' });
+  }
+  next();
+});
+
+// 15.7 — Auto-cleanup memory pressure
+setInterval(function() {
+  var mem = process.memoryUsage().heapUsed / 1024 / 1024;
+  if (mem > 400) {
+    // Hapus map yang gak penting
+    if (typeof messageLimits !== 'undefined' && messageLimits.clear) messageLimits.clear();
+    if (typeof ipStrikes !== 'undefined' && ipStrikes.size > 5000) ipStrikes.clear();
+    console.log('[MEMORY] Cleanup triggered. Was:', Math.round(mem), 'MB');
+  }
+}, 2 * 60 * 1000);
+
+// 15.8 — Static asset cache hint (biar CDN friendly)
+app.use(function(req, res, next) {
+  if (/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|webp)$/i.test(req.path)) {
+    if (!res.getHeader('Cache-Control')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+    }
+  }
+  next();
+});
+
+// 15.9 — Health endpoint upgrade (tampilkan DDOS stats)
+app.get('/health/ddos', function(req, res) {
+  res.json({
+    status: 'ok',
+    circuit: {
+      failures: cbState.failures,
+      successes: cbState.successes,
+      open: cbState.openUntil > Date.now()
+    },
+    queue: {
+      pending: pendingRequests.count,
+      max: pendingRequests.max
+    },
+    responseTime: {
+      avg: Math.round(respTime.avg),
+      slowMode: respTime.slowUntil > Date.now()
+    },
+    window: {
+      count: globalWindow.count,
+      peak: globalWindow.peak
+    },
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+    uptime: Math.floor(process.uptime() / 60) + ' menit'
+  });
+});
+
+// === END ANTI-DDOS SHIELD ===
+
+
+
 
 
 
