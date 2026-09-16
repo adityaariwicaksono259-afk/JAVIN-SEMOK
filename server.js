@@ -721,6 +721,310 @@ app.use((req, res, next) => {
 // END LAYER 4D
 // ============================================
 
+// ============================================
+// PROTECTION LAYER 5A — IP REPUTATION
+// ============================================
+
+// Setiap IP punya skor 0-100
+// 100 = angel, 0 = ke ban
+const ipReputation = new Map(); // ip -> { score, lastUpdate, events }
+
+const REPUTATION_EVENTS = {
+  'good-request': +1,
+  'successful-auth': +5,
+  'bad-ua': -15,
+  'honeypot': -20,
+  'malformed': -10,
+  'dangerous-payload': -25,
+  'too-many-concurrent': -10,
+  'bad-bot': -30,
+  'path-traversal': -30,
+  'proto-pollution': -30,
+  'scan-attempt': -20,
+  'rate-limit-hit': -5,
+  'ua-rotate': -15
+};
+
+function updateReputation(ip, event, detail) {
+  if (!ip) return 50;
+  let rep = ipReputation.get(ip);
+  if (!rep) {
+    rep = { score: 50, lastUpdate: Date.now(), events: 0 };
+  }
+
+  const delta = REPUTATION_EVENTS[event] || 0;
+  rep.score = Math.max(0, Math.min(100, rep.score + delta));
+  rep.lastUpdate = Date.now();
+  rep.events++;
+
+  ipReputation.set(ip, rep);
+
+  // Auto-ban kalau skor terlalu rendah
+  if (rep.score <= 5 && !ipBlacklist.has(ip)) {
+    banIP(ip, 60 * 60 * 1000, 'reputation (score=' + rep.score + ', ' + event + ')');
+    logSecurity('REP-BAN', { ip: ip, path: '-', detail: 'event=' + event + ' score=' + rep.score });
+  } else if (rep.score <= 20) {
+    // Skor rendah tapi belum ban — auto-tighten
+    if (!ipBlacklist.has(ip)) {
+      banIP(ip, 5 * 60 * 1000, 'low-reputation');
+    }
+  }
+  return rep.score;
+}
+
+// Pasang reputation check + auto-update
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const rep = ipReputation.get(ip);
+
+  // Blok kalau skor terlalu rendah (walaupun belum ke-ban formal)
+  if (rep && rep.score <= 10) {
+    const wait = Math.max(60, Math.ceil((300000 - (Date.now() - rep.lastUpdate)) / 1000));
+    if (req.path.indexOf('/api/') === 0) {
+      return res.status(403).json({
+        status: false,
+        banned: true,
+        message: 'IP kamu diblokir karena reputasi buruk.',
+        wait_seconds: wait
+      });
+    }
+    return res.status(403).set('Content-Type', 'text/html').send(
+      renderBannedPage('Reputasi buruk', wait)
+    );
+  }
+
+  // Update reputasi kalau request normal (1x per 30 detik)
+  if (!rep || Date.now() - rep.lastUpdate > 30000) {
+    updateReputation(ip, 'good-request');
+  }
+
+  next();
+});
+
+// Bersihin reputation map tiap jam
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, rep] of ipReputation.entries()) {
+    // Skor 50+ yang idle >2 jam → hapus
+    if (now - rep.lastUpdate > 2 * 60 * 60 * 1000 && rep.score >= 50) {
+      ipReputation.delete(ip);
+    }
+  }
+}, 30 * 60 * 1000);
+
+// Endpoint admin — lihat reputation
+app.get('/api/admin/reputation', (req, res) => {
+  const pw = req.query.pw || req.headers['x-admin-pw'];
+  if (pw !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ status: false, message: 'Unauthorized' });
+  }
+  const list = [];
+  for (const [ip, rep] of ipReputation.entries()) {
+    list.push({ ip: ip, score: rep.score, events: rep.events, lastUpdate: rep.lastUpdate });
+  }
+  list.sort((a, b) => a.score - b.score);
+  res.json({ status: true, total: list.length, list: list.slice(0, 50) });
+});
+
+// ============================================
+// END LAYER 5A
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 5B — TIMING ANALYSIS
+// ============================================
+
+// Bot biasanya kirim request dengan interval konstan
+// Manusia interval-nya random
+const requestTiming = new Map(); // ip -> { times: [timestamps], pattern }
+
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const now = Date.now();
+  let t = requestTiming.get(ip);
+  if (!t) t = { times: [] };
+
+  t.times.push(now);
+  if (t.times.length > 20) t.times.shift();
+
+  // Butuh minimal 10 request untuk analyze
+  if (t.times.length >= 10) {
+    const intervals = [];
+    for (let i = 1; i < t.times.length; i++) {
+      intervals.push(t.times[i] - t.times[i - 1]);
+    }
+
+    // Hitung standar deviasi
+    const mean = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    const variance = intervals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / intervals.length;
+    const stdDev = Math.sqrt(variance);
+    const cv = mean > 0 ? (stdDev / mean) : 0; // coefficient of variation
+
+    // Manusia: CV > 0.3 (interval tidak beraturan)
+    // Bot: CV < 0.1 (interval terlalu konsisten)
+    if (cv < 0.1 && mean < 5000) {
+      // Bot terdeteksi — interval konsisten < 5 detik
+      if (mean < 200) {
+        // Sangat cepat = attacker
+        updateReputation(ip, 'dangerous-payload', 'timing-bot-fast');
+        addStrike(ip, 'timing-bot');
+        logSecurity('TIMING', { ip: ip, path: req.path, detail: 'cv=' + cv.toFixed(3) + ' mean=' + Math.round(mean) });
+      } else if (mean < 2000) {
+        // Cukup cepat = suspicious
+        updateReputation(ip, 'rate-limit-hit', 'timing-fast');
+      }
+    }
+  }
+
+  requestTiming.set(ip, t);
+  next();
+});
+
+// Bersihin timing data tiap 15 menit
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, t] of requestTiming.entries()) {
+    const recent = t.times.filter(x => now - x < 5 * 60 * 1000);
+    if (recent.length === 0) requestTiming.delete(ip);
+    else { t.times = recent; requestTiming.set(ip, t); }
+  }
+}, 15 * 60 * 1000);
+
+// ============================================
+// END LAYER 5B
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 5C — STRICT VALIDATION
+// ============================================
+
+// Strict Content-Type untuk POST
+function strictContentType(req, res, next) {
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+    const ct = (req.headers['content-type'] || '').toLowerCase();
+    // Skip kalau multipart (upload file)
+    if (ct.indexOf('multipart/form-data') !== -1) return next();
+    // Skip kalau request body kosong
+    const cl = parseInt(req.headers['content-length'] || '0');
+    if (cl === 0) return next();
+
+    // Harus JSON
+    if (ct.indexOf('application/json') === -1) {
+      addStrike(req.ip, 'bad-content-type');
+      return res.status(415).json({ status: false, message: 'Content-Type harus application/json' });
+    }
+  }
+  next();
+}
+
+// Pasang ke endpoint API (bukan static)
+app.use('/api', strictContentType);
+
+// Referer check — block request dari domain asing
+app.use((req, res, next) => {
+  // Skip GET dan health check
+  if (req.method === 'GET' || req.path === '/' || req.path === '/health') return next();
+  // Skip static file
+  if (/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|webp|mp4|webm)$/i.test(req.path)) return next();
+
+  const ref = req.headers['referer'] || req.headers['origin'] || '';
+  if (!ref) return next(); // Beberapa client gak kirim referer, izinin
+
+  // Whitelist domain
+  const allowed = [
+    'javincakep.onrender.com',
+    'javin-semok.onrender.com',
+    'localhost',
+    '127.0.0.1'
+  ];
+  const isAllowed = allowed.some(d => ref.indexOf(d) !== -1);
+
+  if (!isAllowed) {
+    updateReputation(req.ip, 'malformed', 'bad-referer');
+    logSecurity('REFERER', { ip: req.ip, path: req.path, detail: ref.slice(0, 100) });
+    return res.status(403).json({ status: false, message: 'Origin tidak diizinkan' });
+  }
+  next();
+});
+
+// Block suspicious headers
+app.use((req, res, next) => {
+  const headers = req.headers;
+  // Header yang gak mungkin dikirim browser normal
+  const suspicious = [
+    'x-forwarded-host',  // bisa dipake host header injection
+    'x-original-url',
+    'x-rewrite-url',
+    'x-http-method-override'
+  ];
+  for (const h of suspicious) {
+    if (headers[h]) {
+      updateReputation(req.ip, 'malformed', 'suspicious-header');
+      logSecurity('HEADER', { ip: req.ip, path: req.path, detail: h + '=' + String(headers[h]).slice(0, 100) });
+      delete headers[h];
+    }
+  }
+  next();
+});
+
+// ============================================
+// END LAYER 5C
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 5D — ADMIN DASHBOARD
+// ============================================
+
+app.get('/api/admin/dashboard', (req, res) => {
+  const pw = req.query.pw || req.headers['x-admin-pw'];
+  if (pw !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ status: false, message: 'Unauthorized' });
+  }
+
+  // Hitung stats
+  let totalRep = 0, lowRep = 0, highRep = 0;
+  for (const [_, rep] of ipReputation.entries()) {
+    totalRep++;
+    if (rep.score <= 20) lowRep++;
+    if (rep.score >= 80) highRep++;
+  }
+
+  // Top 10 IP dengan skor terendah (paling suspicious)
+  const worstIPs = Array.from(ipReputation.entries())
+    .map(([ip, r]) => ({ ip: ip, score: r.score, events: r.events }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 10);
+
+  res.json({
+    status: true,
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+    stats: {
+      totalIPsTracked: totalRep,
+      lowReputation: lowRep,
+      highReputation: highRep,
+      currentBlacklist: ipBlacklist.size,
+      currentConcurrent: globalConcurrent,
+      currentRPM: globalRPM,
+      securityLogs: securityLog.length,
+      burstBuckets: burstBuckets.size,
+      fingerprints: fingerprints.size,
+      timingTracks: requestTiming.size
+    },
+    worstIPs: worstIPs,
+    recentLogs: securityLog.slice(-15).reverse()
+  });
+});
+
+// ============================================
+// END LAYER 5D
+// ============================================
+
+
+
+
+
 
 
 
