@@ -1021,6 +1021,120 @@ app.get('/api/admin/dashboard', (req, res) => {
 // END LAYER 5D
 // ============================================
 
+// ============================================
+// PROTECTION LAYER 6A — MEMORY GUARD
+// ============================================
+
+// Memory monitor
+const MEMORY_LIMIT_MB = 450; // Render free tier biasanya 512MB
+
+setInterval(() => {
+  const used = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  if (used > MEMORY_LIMIT_MB) {
+    console.error('[MEMORY GUARD] Memory tinggi:', used + 'MB, restart...');
+    logSecurity('MEMORY-RESTART', { ip: '-', path: '-', detail: 'used=' + used + 'MB' });
+    process.exit(1); // Render auto-restart
+  }
+}, 30000);
+
+// Cleanup semua Map secara periodic
+setInterval(() => {
+  const now = Date.now();
+
+  // Cleanup messageLimits (dari ratelimit.js)
+  if (typeof messageLimits !== 'undefined' && messageLimits.clear) {
+    messageLimits.clear();
+  }
+
+  // Force garbage collection hint
+  if (global.gc) global.gc();
+}, 10 * 60 * 1000);
+
+// Unhandled error handlers
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT]', err.message);
+  logSecurity('UNCAUGHT', { ip: '-', path: '-', detail: err.message.slice(0, 200) });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[UNHANDLED REJECTION]', reason);
+  logSecurity('UNHANDLED', { ip: '-', path: '-', detail: String(reason).slice(0, 200) });
+});
+
+// ============================================
+// END LAYER 6A
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 6B — ANTI-REPLAY
+// ============================================
+
+// Simpan signature request terakhir per IP
+const antiReplay = new Map(); // ip -> Set of signatures
+
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const sig = req.method + ':' + req.path + ':' + JSON.stringify(req.query);
+
+  let s = antiReplay.get(ip);
+  if (!s) { s = new Set(); }
+  else if (s.size > 100) {
+    // Reset kalau terlalu banyak
+    antiReplay.delete(ip);
+    s = new Set();
+  }
+
+  // Kalau signature sama dalam <2 detik → suspek replay
+  const key = sig + ':' + Math.floor(Date.now() / 2000);
+  if (s.has(key)) {
+    updateReputation(ip, 'rate-limit-hit', 'replay');
+    return res.status(429).json({ status: false, message: 'Request duplikat terdeteksi.' });
+  }
+  s.add(key);
+  antiReplay.set(ip, s);
+
+  next();
+});
+
+setInterval(() => {
+  antiReplay.clear();
+}, 5 * 60 * 1000);
+
+// ============================================
+// END LAYER 6B
+// ============================================
+
+// ============================================
+// PROTECTION LAYER 6C — ORIGIN VERIFY
+// ============================================
+
+// Kalau nanti pakai Cloudflare, endpoint kita cuma boleh diakses lewat CF
+function cloudflareVerify(req, res, next) {
+  // Skip kalau mode dev (env CF_STRICT=0)
+  if (process.env.CF_STRICT === '0') return next();
+
+  // Kalau CF_SECRET diset, wajib ada header X-CF-Secret
+  const secret = process.env.CF_SECRET;
+  if (secret) {
+    const got = req.headers['x-cf-secret'];
+    if (got !== secret) {
+      logSecurity('CF-BLOCK', { ip: req.ip, path: req.path, detail: 'bad-secret' });
+      return res.status(403).send('Forbidden');
+    }
+  }
+
+  next();
+}
+
+app.use('/api', cloudflareVerify);
+
+// ============================================
+// END LAYER 6C
+// ============================================
+
+
+
+
 
 
 
