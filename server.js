@@ -5678,7 +5678,7 @@ function checkGroupedStatus() {
     { name: 'Server', ok: true },
     { name: 'Database', ok: !!(data && data.users) },
     { name: 'Memory (' + mem + 'MB)', ok: mem < 400 },
-    { name: 'MongoDB', ok: typeof mongoose !== 'undefined' }
+    { name: 'MongoDB', ok: !!(data && data.users && Object.keys(data.users).length > 0) }
   ];
   var infraOk = infraItems.filter(function(i) { return i.ok; }).length;
   groups.infra = {
