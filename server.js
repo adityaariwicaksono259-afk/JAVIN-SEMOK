@@ -3783,6 +3783,14 @@ function gvShouldSkip(req) {
   if (p.indexOf('/api/admin/check') === 0) return true;
   if (p.indexOf('/api/admin/logout') === 0) return true;
   if (p.indexOf('/api/admin/') === 0) return true;
+  if (p.indexOf('/api/anime-proxy/') === 0) return true;
+  if (p.indexOf('/api/javin-cerdas-proxy') === 0) return true;
+  if (p.indexOf('/api/ai-neo-proxy') === 0) return true;
+  if (p.indexOf('/api/wink-proxy') === 0) return true;
+  if (p.indexOf('/api/ig-proxy') === 0) return true;
+  if (p.indexOf('/api/fakecall-proxy') === 0) return true;
+  if (p.indexOf('/api/nokia-proxy') === 0) return true;
+  if (p.indexOf('/api/provider-status') === 0) return true;
   return false;
 }
 
