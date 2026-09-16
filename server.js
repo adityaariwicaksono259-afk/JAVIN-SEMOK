@@ -3778,7 +3778,7 @@ function gvShouldSkip(req) {
   if (/\.[a-z0-9]+$/i.test(p)) return true;
   // Endpoint yang HARUS bisa diakses tanpa verify
   if (p === '/api/ban-status') return true;
-  if (p === '/api/system-status') return true;
+  if (p.indexOf('/api/system-status') === 0) return true;
   if (p.indexOf('/api/admin/login') === 0) return true;
   if (p.indexOf('/api/admin/check') === 0) return true;
   if (p.indexOf('/api/admin/logout') === 0) return true;
