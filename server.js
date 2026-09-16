@@ -106,6 +106,184 @@ app.use((req, res, next) => {
 // END SECURITY MIDDLEWARE
 // ============================================
 
+// ============================================
+// PROTECTION LAYER 2 — ADVANCED
+// ============================================
+
+// 1. Trust proxy (Render di belakang Cloudflare + LB)
+app.set('trust proxy', 1);
+
+// 2. Per-user rate limit (bukan cuma IP) — anti multi-account abuse
+const userRateMap = new Map(); // userId -> { count, resetAt }
+
+function userRateLimit(maxPerMin) {
+  return (req, res, next) => {
+    const token = req.headers['x-auth-token'] || req.query.token;
+    if (!token) return next();
+    const now = Date.now();
+
+    let entry = userRateMap.get(token);
+    if (!entry || now > entry.resetAt) {
+      entry = { count: 0, resetAt: now + 60 * 1000 };
+    }
+    entry.count++;
+    userRateMap.set(token, entry);
+
+    if (entry.count > maxPerMin) {
+      return res.status(429).json({
+        status: false,
+        message: 'Terlalu banyak request dari akun ini. Tunggu sebentar.'
+      });
+    }
+    next();
+  };
+}
+
+// Bersihin map tiap 5 menit (hemat memory)
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of userRateMap.entries()) {
+    if (now > v.resetAt) userRateMap.delete(k);
+  }
+}, 5 * 60 * 1000);
+
+// 3. Auto IP blacklist sementara — deteksi abuse
+const ipBlacklist = new Map(); // ip -> { reason, until, strikes }
+const ipStrikes = new Map();   // ip -> { count, firstAt }
+
+function banIP(ip, durationMs, reason) {
+  ipBlacklist.set(ip, {
+    reason: reason || 'abuse',
+    until: Date.now() + durationMs
+  });
+  console.warn('[SECURITY] IP banned:', ip, '| reason:', reason, '| duration:', durationMs + 'ms');
+}
+
+function addStrike(ip, reason) {
+  const now = Date.now();
+  let s = ipStrikes.get(ip) || { count: 0, firstAt: now };
+  // Reset kalau lebih dari 1 jam
+  if (now - s.firstAt > 60 * 60 * 1000) {
+    s = { count: 0, firstAt: now };
+  }
+  s.count++;
+  ipStrikes.set(ip, s);
+
+  if (s.count >= 10) {
+    banIP(ip, 30 * 60 * 1000, reason + ' (10x)');
+    ipStrikes.delete(ip);
+  } else if (s.count >= 5) {
+    banIP(ip, 5 * 60 * 1000, reason + ' (5x)');
+  }
+}
+
+// Cek blacklist tiap request
+app.use((req, res, next) => {
+  const ip = req.ip;
+  const entry = ipBlacklist.get(ip);
+  if (entry && Date.now() < entry.until) {
+    const wait = Math.ceil((entry.until - Date.now()) / 1000);
+    return res.status(403).json({
+      status: false,
+      message: 'Akses kamu diblokir sementara. Tunggu ' + wait + ' detik.'
+    });
+  }
+  if (entry && Date.now() >= entry.until) {
+    ipBlacklist.delete(ip);
+  }
+  next();
+});
+
+// 4. Block empty / abnormal User-Agent
+app.use((req, res, next) => {
+  const ua = req.headers['user-agent'] || '';
+  // Block kalau kosong (kecuali health check)
+  if (!ua && req.path !== '/' && req.path !== '/health') {
+    addStrike(req.ip, 'empty-ua');
+    return res.status(400).json({ status: false, message: 'User-Agent required' });
+  }
+  // Block bot scanner yang umum
+  const badUA = /(sqlmap|nikto|nmap|masscan|nessus|acunetix|dirbuster|gobuster|hydra|zap|w3af|curl\/7|wget\/1)/i;
+  if (badUA.test(ua)) {
+    addStrike(req.ip, 'scanner-ua');
+    return res.status(403).json({ status: false, message: 'Blocked' });
+  }
+  next();
+});
+
+// 5. Block request dengan query/body mencurigakan
+app.use((req, res, next) => {
+  const checkStr = JSON.stringify(req.query) + JSON.stringify(req.body || {});
+  const dangerous = [
+    /<script/i, /javascript:/i, /onerror=/i, /onload=/i,
+    /\$where/i, /\$ne/i, /\$gt/i, /\$regex/i,
+    /union.*select/i, /insert.*into/i, /drop.*table/i,
+    /\.\.\//, /\/etc\/passwd/, /\/proc\/self/
+  ];
+  for (const pat of dangerous) {
+    if (pat.test(checkStr)) {
+      addStrike(req.ip, 'dangerous-payload');
+      console.warn('[SECURITY] Blocked payload from', req.ip);
+      return res.status(400).json({ status: false, message: 'Request tidak valid' });
+    }
+  }
+  next();
+});
+
+// 6. Honeypot endpoints — siapa pun yang akses = bot
+const honeypots = ['/admin', '/wp-login.php', '/.env', '/phpmyadmin', '/api/v1/users', '/api/debug'];
+app.use((req, res, next) => {
+  if (honeypots.includes(req.path.toLowerCase())) {
+    addStrike(req.ip, 'honeypot');
+    console.warn('[SECURITY] Honeypot hit:', req.ip, req.path);
+    return res.status(404).send('Not Found');
+  }
+  next();
+});
+
+// 7. Endpoint health check (buat Render)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+    blacklist: ipBlacklist.size,
+    rateMap: userRateMap.size
+  });
+});
+
+// 8. Endpoint admin — lihat blacklist (butuh admin password)
+app.get('/api/admin/security', (req, res) => {
+  const pw = req.query.pw || req.headers['x-admin-pw'];
+  if (pw !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ status: false, message: 'Unauthorized' });
+  }
+  const list = [];
+  for (const [ip, v] of ipBlacklist.entries()) {
+    list.push({ ip: ip, reason: v.reason, sisa: Math.ceil((v.until - Date.now()) / 1000) + 's' });
+  }
+  res.json({
+    status: true,
+    blacklist: list,
+    strikes: Array.from(ipStrikes.entries()).map(([ip, v]) => ({ ip: ip, count: v.count })),
+    totalBlacklisted: ipBlacklist.size
+  });
+});
+
+// 9. Security headers tambahan
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+
+// ============================================
+// END PROTECTION LAYER 2
+// ============================================
+
+
 
 /* JAVIN-DOUYIN-API-V1 */
 const { DouyinSearchPage } = require('./api/douyin.cjs');
@@ -2379,7 +2557,7 @@ async function anitaPost(action, data) {
 }
 
 // POST /api/javin-analog/send  → send-magiclink
-app.post('/api/javin-analog/send', heavyLimiter, express.json({ limit: '10kb' }), async (req, res) => {
+app.post('/api/javin-analog/send', heavyLimiter, userRateLimit(3), express.json({ limit: '10kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     if (!email) return res.status(400).json({ status: false, message: 'Email wajib diisi' });
@@ -2392,7 +2570,7 @@ app.post('/api/javin-analog/send', heavyLimiter, express.json({ limit: '10kb' })
 });
 
 // POST /api/javin-analog/verify → verify-account + AUTO apply-premium
-app.post('/api/javin-analog/verify', heavyLimiter, express.json({ limit: '50kb' }), async (req, res) => {
+app.post('/api/javin-analog/verify', heavyLimiter, userRateLimit(3), express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     const rawLink = (req.body && (req.body.rawLink || req.body.link || req.body.oob_link)) || req.query.link;
@@ -2545,7 +2723,7 @@ app.get('/api/ngl/balance' , (req, res) => {
 });
 
 // Kirim NGL + potong coin
-app.get('/api/ngl', heavyLimiter, async (req, res) => {
+app.get('/api/ngl', heavyLimiter, userRateLimit(5), async (req, res) => {
   var token = req.headers['x-auth-token'] || req.query.token;
   var auth = nglGetUserByToken(token);
   if (!auth) {
