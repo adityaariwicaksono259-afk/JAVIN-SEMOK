@@ -3932,4 +3932,201 @@ setInterval(function() {
 // === END LAYER 10 ===
 
 
+// ============================================
+// PROTECTION LAYER 11 — ADVANCED BOT DEFENSE
+// ============================================
+
+// 11.1 — Headless browser detection
+function detectHeadless(req) {
+  var ua = (req.headers['user-agent'] || '').toLowerCase();
+  var signals = 0;
+
+  if (ua.indexOf('headless') !== -1) signals++;
+  if (ua.indexOf('phantom') !== -1) signals++;
+  if (ua.indexOf('puppeteer') !== -1) signals++;
+  if (ua.indexOf('playwright') !== -1) signals++;
+  if (ua.indexOf('electron/') !== -1) signals++;
+  if (!ua) signals++;
+
+  // Cek header khas headless
+  if (!req.headers['accept-language']) signals++;
+  if (!req.headers['accept-encoding']) signals++;
+  if (req.headers['sec-ch-ua'] === undefined && ua.indexOf('chrome') !== -1) signals++;
+
+  return signals >= 2;
+}
+
+app.use(function(req, res, next) {
+  if (detectHeadless(req)) {
+    logSecurity('HEADLESS', { ip: req.ip, path: req.path, detail: 'ua=' + (req.headers['user-agent'] || 'none').slice(0, 80) });
+    updateReputation(req.ip, 'bad-ua', 'headless');
+    addStrike(req.ip, 'headless');
+    return res.status(403).json({ status: false, message: 'Browser tidak didukung' });
+  }
+  next();
+});
+
+// 11.2 — Honeypot form check
+function honeypotCheck(req, res, next) {
+  var body = req.body || {};
+  // Field jebakan yang cuma diisi bot
+  var traps = ['website', 'url_confirm', 'email_confirm', 'hp_extra', 'fax_number'];
+  for (var i = 0; i < traps.length; i++) {
+    if (body[traps[i]] && String(body[traps[i]]).trim() !== '') {
+      logSecurity('HONEYPOT-FORM', { ip: req.ip, path: req.path, detail: 'field=' + traps[i] });
+      updateReputation(req.ip, 'honeypot', 'form-trap');
+      addStrike(req.ip, 'honeypot-form');
+      return res.status(200).json({ status: true, message: 'OK' }); // Fake success
+    }
+  }
+  next();
+}
+app.use('/api', honeypotCheck);
+
+// 11.3 — IP rotation detection (bot ganti-ganti IP dari subnet sama)
+var subnetHistory = new Map(); // /24 subnet -> { ips: Set, lastSeen }
+function getSubnet(ip) {
+  if (!ip) return 'unknown';
+  var parts = String(ip).split('.');
+  if (parts.length === 4) return parts[0] + '.' + parts[1] + '.' + parts[2] + '.0/24';
+  return ip;
+}
+
+app.use(function(req, res, next) {
+  var subnet = getSubnet(req.ip);
+  var now = Date.now();
+  var h = subnetHistory.get(subnet);
+  if (!h) {
+    h = { ips: new Set([req.ip]), lastSeen: now, firstSeen: now };
+    subnetHistory.set(subnet, h);
+  } else {
+    h.ips.add(req.ip);
+    h.lastSeen = now;
+
+    // >10 IP beda dalam 5 menit dari subnet yang sama = bot rotation
+    if (h.ips.size > 10 && (now - h.firstSeen) < 5 * 60 * 1000) {
+      logSecurity('IP-ROTATION', { ip: req.ip, path: req.path, detail: 'subnet=' + subnet + ' ips=' + h.ips.size });
+      // Ban seluruh subnet
+      h.ips.forEach(function(badIP) {
+        if (!ipBlacklist.has(badIP)) banIP(badIP, 10 * 60 * 1000, 'ip-rotation');
+      });
+      return res.status(403).json({ status: false, message: 'Akses ditolak' });
+    }
+  }
+  next();
+});
+
+setInterval(function() {
+  var now = Date.now();
+  for (var entry of subnetHistory.entries()) {
+    if (now - entry[1].lastSeen > 30 * 60 * 1000) subnetHistory.delete(entry[0]);
+  }
+}, 10 * 60 * 1000);
+
+// 11.4 — Endpoint-specific rate limit (granular)
+function epRateLimit(max, windowSec) {
+  var store = new Map();
+  var win = (windowSec || 60) * 1000;
+  setInterval(function() {
+    var now = Date.now();
+    for (var e of store.entries()) {
+      if (now > e[1].resetAt) store.delete(e[0]);
+    }
+  }, 5 * 60 * 1000);
+  return function(req, res, next) {
+    var key = req.ip + ':' + req.path;
+    var now = Date.now();
+    var e = store.get(key);
+    if (!e || now > e.resetAt) {
+      e = { count: 0, resetAt: now + win };
+    }
+    e.count++;
+    store.set(key, e);
+    if (e.count > max) {
+      return res.status(429).json({ status: false, message: 'Terlalu banyak request ke endpoint ini.' });
+    }
+    next();
+  };
+}
+
+// Pasang ke endpoint kritis
+app.post('/api/admin/login', epRateLimit(3, 900), function(req, res, next) { next(); });
+app.post('/api/verify-global', epRateLimit(5, 300), function(req, res, next) { next(); });
+
+// 11.5 — Bot behavior analysis (input kecepatan)
+var behaviorStore = new Map(); // ip -> { lastInput, fastCount }
+
+app.use('/api', function(req, res, next) {
+  var ip = req.ip;
+  var now = Date.now();
+  var b = behaviorStore.get(ip);
+  if (!b) { b = { lastInput: now, fastCount: 0 }; }
+  else {
+    var diff = now - b.lastInput;
+    // Bot input < 200ms konsisten
+    if (diff < 200) {
+      b.fastCount++;
+      if (b.fastCount >= 5) {
+        logSecurity('BEHAVIOR-BOT', { ip: ip, path: req.path, detail: 'fast-submit x' + b.fastCount });
+        updateReputation(ip, 'dangerous-payload', 'behavior');
+        b.fastCount = 0;
+      }
+    } else {
+      b.fastCount = 0;
+    }
+    b.lastInput = now;
+  }
+  behaviorStore.set(ip, b);
+  next();
+});
+
+setInterval(function() {
+  behaviorStore.clear();
+}, 30 * 60 * 1000);
+
+// 11.6 — Fingerprint token (cek konsistensi)
+var clientFingerprints = new Map();
+app.use('/api', function(req, res, next) {
+  var fp = req.headers['x-client-fp'];
+  if (!fp) return next();
+
+  var ip = req.ip;
+  var existing = clientFingerprints.get(ip);
+  if (existing && existing !== fp) {
+    // Fingerprint berubah di IP yang sama = suspek
+    logSecurity('FP-CHANGE', { ip: ip, path: req.path, detail: 'old=' + existing.slice(0,8) + ' new=' + fp.slice(0,8) });
+    updateReputation(ip, 'malformed', 'fp-change');
+  }
+  clientFingerprints.set(ip, fp);
+  next();
+});
+
+setInterval(function() {
+  if (clientFingerprints.size > 5000) clientFingerprints.clear();
+}, 60 * 60 * 1000);
+
+// 11.7 — Global bot block stats
+app.get('/api/admin/bot-stats', requireAdmin, function(req, res) {
+  var headless = 0, honey = 0, rot = 0;
+  securityLog.forEach(function(l) {
+    if (l.type === 'HEADLESS') headless++;
+    if (l.type === 'HONEYPOT-FORM') honey++;
+    if (l.type === 'IP-ROTATION') rot++;
+  });
+  res.json({
+    status: true,
+    total: {
+      headless: headless,
+      honeypot: honey,
+      ip_rotation: rot,
+      blacklisted: ipBlacklist.size,
+      reputation_tracked: ipReputation.size
+    }
+  });
+});
+
+// === END LAYER 11 ===
+
+
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
