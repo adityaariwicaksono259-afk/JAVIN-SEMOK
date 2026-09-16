@@ -3776,6 +3776,12 @@ function gvShouldSkip(req) {
   if (p.indexOf('/api/turnstile/') === 0) return true;
   if (p.indexOf('/socket.io/') === 0) return true;
   if (/\.[a-z0-9]+$/i.test(p)) return true;
+  // Endpoint yang HARUS bisa diakses tanpa verify
+  if (p === '/api/ban-status') return true;
+  if (p.indexOf('/api/admin/login') === 0) return true;
+  if (p.indexOf('/api/admin/check') === 0) return true;
+  if (p.indexOf('/api/admin/logout') === 0) return true;
+  if (p.indexOf('/api/admin/') === 0) return true;
   return false;
 }
 
