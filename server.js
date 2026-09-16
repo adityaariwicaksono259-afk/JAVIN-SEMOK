@@ -1327,13 +1327,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'wasm-unsafe-eval'", "blob:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'wasm-unsafe-eval'", "blob:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://challenges.cloudflare.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:", "https://cdn.jsdelivr.net", "https://staticimgly.com", "https://cdnjs.cloudflare.com", "blob:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://cdn.jsdelivr.net", "https://staticimgly.com", "https://cdnjs.cloudflare.com", "https://challenges.cloudflare.com", "blob:"],
       workerSrc: ["'self'", "blob:"],
-      childSrc: ["'self'", "blob:"]
+      childSrc: ["'self'", "blob:", "https://challenges.cloudflare.com"],
+      frameSrc: ["'self'", "https://challenges.cloudflare.com"]
     }
   },
   crossOriginEmbedderPolicy: false,
