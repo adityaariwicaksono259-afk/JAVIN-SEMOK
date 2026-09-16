@@ -8,91 +8,62 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: system-ui, -apple-system, sans-serif; background:#0a0a0f; color:#e8e8f0; min-height:100vh; padding:16px; }
 .page { max-width: 640px; margin: 0 auto; }
-
 .header { text-align: center; margin-bottom: 20px; }
 .header h1 { font-size: 1.4rem; background: linear-gradient(135deg, #7c5cff, #00d4aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .header p { color: #8888a0; font-size: 0.82rem; margin-top: 4px; }
 
-/* Overall banner */
-.overall {
-  border-radius: 14px;
-  padding: 20px;
-  margin-bottom: 16px;
-  text-align: center;
-  border: 2px solid;
-  transition: all 0.3s;
-}
+.overall { border-radius: 14px; padding: 20px; margin-bottom: 16px; text-align: center; border: 2px solid; }
 .overall.healthy { background: rgba(0,212,170,0.08); border-color: #00d4aa; }
 .overall.warning { background: rgba(255,176,32,0.08); border-color: #ffb020; }
 .overall.error { background: rgba(255,77,109,0.08); border-color: #ff4d6d; }
-.overall-icon { font-size: 2.8rem; margin-bottom: 8px; }
-.overall-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+.overall-emoji { font-size: 2.6rem; margin-bottom: 8px; }
+.overall-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
 .overall.healthy .overall-title { color: #00d4aa; }
 .overall.warning .overall-title { color: #ffb020; }
 .overall.error .overall-title { color: #ff4d6d; }
-.overall-sub { font-size: 0.82rem; color: #8888a0; }
+.overall-sub { font-size: 0.8rem; color: #8888a0; }
 
-/* Summary row */
 .summary { display: flex; gap: 8px; margin-bottom: 16px; }
-.summary-item { flex: 1; background: #12121a; border: 1px solid #2a2a3a; border-radius: 10px; padding: 10px; text-align: center; }
-.summary-num { font-size: 1.3rem; font-weight: 700; }
-.summary-lbl { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: #8888a0; margin-top: 2px; }
-.summary-item.ready .summary-num { color: #00d4aa; }
-.summary-item.warning .summary-num { color: #ffb020; }
-.summary-item.error .summary-num { color: #ff4d6d; }
-.summary-item.disabled .summary-num { color: #8888a0; }
+.sum-item { flex: 1; background: #12121a; border: 1px solid #2a2a3a; border-radius: 10px; padding: 12px 8px; text-align: center; }
+.sum-num { font-size: 1.4rem; font-weight: 800; }
+.sum-lbl { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: #8888a0; margin-top: 4px; font-weight: 700; }
+.sum-item.ok .sum-num { color: #00d4aa; }
+.sum-item.warn .sum-num { color: #ffb020; }
+.sum-item.err .sum-num { color: #ff4d6d; }
 
-/* Feature cards */
-.section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #8888a0; margin: 16px 0 10px; font-weight: 600; }
+.section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #8888a0; margin: 20px 0 10px; font-weight: 700; }
 
-.feature {
-  background: #12121a;
-  border: 1px solid #2a2a3a;
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.3s;
-}
-.feature-icon { font-size: 1.6rem; flex-shrink: 0; }
-.feature-body { flex: 1; min-width: 0; }
-.feature-label { font-size: 0.92rem; font-weight: 600; margin-bottom: 2px; }
-.feature-detail { font-size: 0.75rem; color: #8888a0; }
-.feature-metric { font-size: 0.72rem; color: #555; margin-top: 2px; }
+.group { background: #12121a; border: 1px solid #2a2a3a; border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+.group.ready { border-left: 3px solid #00d4aa; }
+.group.warning { border-left: 3px solid #ffb020; }
+.group.error { border-left: 3px solid #ff4d6d; }
+.group-header { padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+.group-header:active { background: #1a1a26; }
+.group-emoji { font-size: 1.5rem; }
+.group-info { flex: 1; min-width: 0; }
+.group-label { font-size: 0.92rem; font-weight: 700; }
+.group-detail { font-size: 0.75rem; color: #8888a0; margin-top: 2px; }
+.group-badge { font-size: 0.62rem; font-weight: 800; padding: 3px 8px; border-radius: 10px; letter-spacing: 0.5px; }
+.group.ready .group-badge { background: rgba(0,212,170,0.15); color: #00d4aa; }
+.group.warning .group-badge { background: rgba(255,176,32,0.15); color: #ffb020; }
+.group.error .group-badge { background: rgba(255,77,109,0.15); color: #ff4d6d; }
+.group-arrow { font-size: 0.7rem; color: #666; transition: transform 0.2s; }
+.group.expanded .group-arrow { transform: rotate(90deg); }
+.group-items { display: none; padding: 6px 14px 12px; background: rgba(0,0,0,0.3); }
+.group.expanded .group-items { display: block; }
+.item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.8rem; color: #aaa; border-bottom: 1px solid #1a1a26; }
+.item:last-child { border-bottom: none; }
+.item-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.item.ok .item-dot { background: #00d4aa; }
+.item.bad .item-dot { background: #ff4d6d; }
+.item-name { flex: 1; }
+.item-status { font-size: 0.62rem; font-weight: 800; padding: 2px 6px; border-radius: 6px; }
+.item.ok .item-status { background: rgba(0,212,170,0.15); color: #00d4aa; }
+.item.bad .item-status { background: rgba(255,77,109,0.15); color: #ff4d6d; }
 
-.feature-status {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  flex-shrink: 0;
-}
-.feature.ready .feature-status { background: rgba(0,212,170,0.15); color: #00d4aa; }
-.feature.warning .feature-status { background: rgba(255,176,32,0.15); color: #ffb020; }
-.feature.error .feature-status { background: rgba(255,77,109,0.15); color: #ff4d6d; }
-.feature.disabled .feature-status { background: rgba(128,128,128,0.15); color: #8888a0; }
-.feature.error { border-color: rgba(255,77,109,0.4); }
-.feature.warning { border-color: rgba(255,176,32,0.4); }
-
-/* Footer */
 .footer { text-align: center; margin-top: 20px; padding: 16px; border-top: 1px solid #2a2a3a; }
 .footer-info { font-size: 0.75rem; color: #555; line-height: 1.6; }
-.refresh-btn {
-  background: linear-gradient(135deg, #7c5cff, #9d7cff);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 12px;
-  font-family: inherit;
-}
+.refresh-btn { background: linear-gradient(135deg, #7c5cff, #9d7cff); color: white; border: none; border-radius: 10px; padding: 11px 22px; font-size: 0.88rem; font-weight: 700; cursor: pointer; margin-top: 12px; font-family: inherit; }
 .refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .loading { text-align: center; padding: 40px 0; color: #8888a0; }
 .spinner { width: 30px; height: 30px; border: 3px solid #2a2a3a; border-top-color: #7c5cff; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
@@ -103,7 +74,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background:#0a0a0f; co
 <div class="page">
   <div class="header">
     <h1>📊 Status Sistem</h1>
-    <p>Monitoring real-time semua fitur JAVIN SEMOK</p>
+    <p>Monitoring semua fitur JAVIN SEMOK</p>
   </div>
 
   <div id="loading" class="loading">
@@ -113,15 +84,19 @@ body { font-family: system-ui, -apple-system, sans-serif; background:#0a0a0f; co
 
   <div id="content" style="display:none">
     <div id="overall" class="overall healthy">
-      <div class="overall-icon" id="overallIcon">✅</div>
+      <div class="overall-emoji" id="overallEmoji">✅</div>
       <div class="overall-title" id="overallTitle">Semua Sistem Normal</div>
-      <div class="overall-sub" id="overallSub">Terakhir update: -</div>
+      <div class="overall-sub" id="overallSub">-</div>
     </div>
 
-    <div class="summary" id="summary"></div>
+    <div class="summary">
+      <div class="sum-item ok"><div class="sum-num" id="sumOk">0</div><div class="sum-lbl">Ready</div></div>
+      <div class="sum-item warn"><div class="sum-num" id="sumWarn">0</div><div class="sum-lbl">Warning</div></div>
+      <div class="sum-item err"><div class="sum-num" id="sumErr">0</div><div class="sum-lbl">Error</div></div>
+    </div>
 
-    <div class="section-title">Fitur</div>
-    <div id="features"></div>
+    <div class="section-title">Kategori Fitur</div>
+    <div id="groups"></div>
 
     <div class="footer">
       <div class="footer-info" id="footerInfo">-</div>
@@ -131,75 +106,91 @@ body { font-family: system-ui, -apple-system, sans-serif; background:#0a0a0f; co
 </div>
 
 <script>
-var autoRefreshTimer = null;
+var expanded = {};
 
-function statusLabel(s) {
-  if (s === 'ready') return 'READY';
-  if (s === 'warning') return 'WARN';
-  if (s === 'error') return 'ERROR';
-  if (s === 'disabled') return 'OFF';
-  return 'UNKNOWN';
+function renderStatus(d) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  // Overall
+  var ov = document.getElementById('overall');
+  ov.className = 'overall ' + d.overall;
+  var emojiMap = { healthy: '✅', warning: '⚠️', error: '❌' };
+  var titleMap = { healthy: 'Semua Sistem Normal', warning: 'Ada Peringatan', error: 'Ada Masalah Terdeteksi' };
+  document.getElementById('overallEmoji').textContent = emojiMap[d.overall] || '❓';
+  document.getElementById('overallTitle').textContent = titleMap[d.overall] || 'Unknown';
+  document.getElementById('overallSub').textContent = 'Update: ' + d.time;
+
+  // Summary
+  var okCount = 0, warnCount = 0, errCount = 0;
+  Object.keys(d.groups).forEach(function(k) {
+    var s = d.groups[k].status;
+    if (s === 'ready') okCount++;
+    else if (s === 'warning') warnCount++;
+    else errCount++;
+  });
+  document.getElementById('sumOk').textContent = okCount;
+  document.getElementById('sumWarn').textContent = warnCount;
+  document.getElementById('sumErr').textContent = errCount;
+
+  // Groups
+  var cont = document.getElementById('groups');
+  cont.innerHTML = '';
+  var order = ['chat', 'games', 'tools', 'account', 'islamic', 'infra', 'security'];
+  order.forEach(function(k) {
+    var g = d.groups[k];
+    if (!g) return;
+    var lbl = g.status === 'ready' ? 'READY' : g.status === 'warning' ? 'WARN' : 'ERROR';
+    var itemOk = (g.items || []).filter(function(i) { return i.ok; }).length;
+    var itemTotal = (g.items || []).length;
+
+    var el = document.createElement('div');
+    el.className = 'group ' + g.status + (expanded[k] ? ' expanded' : '');
+    el.setAttribute('data-key', k);
+
+    var itemsHtml = '';
+    (g.items || []).forEach(function(it) {
+      itemsHtml += '<div class="item ' + (it.ok ? 'ok' : 'bad') + '">' +
+        '<div class="item-dot"></div>' +
+        '<div class="item-name">' + it.name + '</div>' +
+        '<div class="item-status">' + (it.ok ? 'OK' : 'ERR') + '</div>' +
+      '</div>';
+    });
+
+    el.innerHTML =
+      '<div class="group-header">' +
+        '<div class="group-emoji">' + g.icon + '</div>' +
+        '<div class="group-info">' +
+          '<div class="group-label">' + g.label + '</div>' +
+          '<div class="group-detail">' + itemOk + '/' + itemTotal + ' • ' + g.detail + '</div>' +
+        '</div>' +
+        '<div class="group-badge">' + lbl + '</div>' +
+        '<div class="group-arrow">▶</div>' +
+      '</div>' +
+      '<div class="group-items">' + itemsHtml + '</div>';
+
+    el.querySelector('.group-header').addEventListener('click', function() {
+      expanded[k] = !expanded[k];
+      el.classList.toggle('expanded');
+    });
+
+    cont.appendChild(el);
+  });
+
+  // Footer
+  document.getElementById('footerInfo').innerHTML =
+    '✅ ' + d.summary.ok + ' / ' + d.summary.totalItems + ' fitur normal<br>' +
+    'Auto-refresh tiap 30 detik';
 }
 
 async function loadStatus() {
   var btn = document.getElementById('refreshBtn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Memuat...'; }
-
   try {
     var r = await fetch('/api/system-status?t=' + Date.now());
     var d = await r.json();
-
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
-
-    // Overall
-    var overallEl = document.getElementById('overall');
-    overallEl.className = 'overall ' + d.overall;
-    var iconMap = { healthy: '✅', warning: '⚠️', error: '❌' };
-    var titleMap = { healthy: 'Semua Sistem Normal', warning: 'Ada Peringatan', error: 'Ada Masalah Terdeteksi' };
-    document.getElementById('overallIcon').textContent = iconMap[d.overall] || '❓';
-    document.getElementById('overallTitle').textContent = titleMap[d.overall] || 'Status Tidak Diketahui';
-    document.getElementById('overallSub').textContent = 'Terakhir update: ' + d.time;
-
-    // Summary
-    var sm = document.getElementById('summary');
-    sm.innerHTML = '';
-    var s = d.summary;
-    [
-      { key: 'ready', label: 'Ready', num: s.ready },
-      { key: 'warning', label: 'Warning', num: s.warning },
-      { key: 'error', label: 'Error', num: s.error },
-      { key: 'disabled', label: 'Disabled', num: s.disabled }
-    ].forEach(function(x) {
-      var el = document.createElement('div');
-      el.className = 'summary-item ' + x.key;
-      el.innerHTML = '<div class="summary-num">' + x.num + '</div><div class="summary-lbl">' + x.label + '</div>';
-      sm.appendChild(el);
-    });
-
-    // Features
-    var fEl = document.getElementById('features');
-    fEl.innerHTML = '';
-    Object.keys(d.features).forEach(function(k) {
-      var f = d.features[k];
-      var card = document.createElement('div');
-      card.className = 'feature ' + f.status;
-      card.innerHTML =
-        '<div class="feature-icon">' + f.icon + '</div>' +
-        '<div class="feature-body">' +
-          '<div class="feature-label">' + f.label + '</div>' +
-          '<div class="feature-detail">' + f.detail + '</div>' +
-          (f.metric ? '<div class="feature-metric">' + f.metric + '</div>' : '') +
-        '</div>' +
-        '<div class="feature-status">' + statusLabel(f.status) + '</div>';
-      fEl.appendChild(card);
-    });
-
-    // Footer
-    document.getElementById('footerInfo').innerHTML =
-      'Auto-refresh tiap 60 detik<br>' +
-      'Error log 1 jam terakhir: ' + d.errorLogCount;
-  } catch (e) {
+    renderStatus(d);
+  } catch(e) {
     document.getElementById('loading').innerHTML =
       '<div style="color:#ff4d6d">❌ Gagal memuat status: ' + e.message + '</div>';
   } finally {
@@ -207,14 +198,8 @@ async function loadStatus() {
   }
 }
 
-// Auto refresh 60 detik
-function startAutoRefresh() {
-  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-  autoRefreshTimer = setInterval(loadStatus, 60000);
-}
-
 loadStatus();
-startAutoRefresh();
+setInterval(loadStatus, 30000);
 </script>
 </body>
 </html>
