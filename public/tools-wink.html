@@ -6,26 +6,195 @@
 <title>Wink - Image Upscaler</title>
 <link rel="stylesheet" href="/style.css">
 <style>
-.wk-wrap{max-width:620px;margin:0 auto;padding:20px}
-.wk-card{background:rgba(20,25,40,0.65);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px}
-.wk-card h2{margin:0 0 6px;color:#fff}
-.wk-sub{color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:20px}
-.wk-label{display:block;margin:16px 0 6px;font-weight:600;color:#fff}
-.wk-input{width:100%;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px;font:inherit;background:rgba(0,0,0,0.3);color:#fff}
-.wk-input:focus{outline:none;border-color:#7c5cff}
-.wk-btn{width:100%;margin-top:16px;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7c5cff,#9d7cff);color:#fff;transition:transform 0.1s}
-.wk-btn:active{transform:scale(0.97)}
-.wk-btn:disabled{opacity:0.6;cursor:not-allowed}
-.wk-result{margin-top:20px;padding:16px;border-radius:12px;text-align:center;display:none}
-.wk-result.show{display:block}
-.wk-result.ok{background:rgba(0,212,170,0.12);border:1.5px solid #00d4aa;color:#00d4aa}
-.wk-result.err{background:rgba(255,77,109,0.12);border:1.5px solid #ff4d6d;color:#ff8fa3}
-.wk-img{margin-top:16px;max-width:100%;border-radius:12px;display:none}
-.wk-img.show{display:block}
-.wk-loading{text-align:center;padding:20px;color:rgba(255,255,255,0.6);display:none}
-.wk-loading.show{display:block}
-.wk-spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,0.15);border-top-color:#7c5cff;border-radius:50%;animation:wk-spin 0.8s linear infinite;margin:0 auto 10px}
-@keyframes wk-spin{to{transform:rotate(360deg)}}
+/* === FIX SCROLL & LAYOUT === */
+html, body {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+.page {
+  display: block !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-bottom: 80px !important;
+}
+.page-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-direction: row !important;
+}
+
+.wk-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 100px;
+  display: block;
+}
+.wk-card {
+  background: rgba(20,25,40,0.72);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 18px;
+  padding: 26px 22px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  display: block;
+}
+.wk-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff, #00ffaa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+.wk-sub {
+  color: rgba(255,255,255,0.6);
+  font-size: 0.86rem;
+  margin: 0 0 22px;
+  line-height: 1.5;
+  display: block;
+}
+.wk-label {
+  display: block;
+  margin: 18px 0 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+  color: rgba(255,255,255,0.9);
+  text-transform: uppercase;
+}
+.wk-input,
+.wk-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 13px 14px;
+  font: inherit;
+  font-size: 0.95rem;
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  display: block;
+}
+.wk-input:focus,
+.wk-textarea:focus {
+  outline: none;
+  border-color: #7c5cff;
+  box-shadow: 0 0 0 3px rgba(124,92,255,0.15);
+}
+.wk-input::placeholder,
+.wk-textarea::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+.wk-textarea {
+  min-height: 110px;
+  resize: vertical;
+  font-family: inherit;
+}
+.wk-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+@media (max-width: 480px) {
+  .wk-row { grid-template-columns: 1fr; }
+}
+.wk-btn {
+  width: 100%;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 14px;
+  padding: 15px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7c5cff, #9d7cff);
+  color: #fff;
+  transition: transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 6px 20px rgba(124,92,255,0.35);
+  display: block;
+}
+.wk-btn:active { transform: scale(0.97); }
+.wk-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.wk-btn:hover:not(:disabled) {
+  box-shadow: 0 10px 28px rgba(124,92,255,0.5);
+  transform: translateY(-2px);
+}
+.wk-result {
+  margin-top: 22px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.92rem;
+  display: none;
+  line-height: 1.5;
+}
+.wk-result.show { display: block; }
+.wk-result.ok {
+  background: rgba(0,212,170,0.12);
+  border: 1.5px solid #00d4aa;
+  color: #00ffcc;
+}
+.wk-result.err {
+  background: rgba(255,77,109,0.12);
+  border: 1.5px solid #ff4d6d;
+  color: #ff8fa3;
+}
+.wk-img,
+.wk-video {
+  margin-top: 18px;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 14px;
+  display: none;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.wk-img.show,
+.wk-video.show { display: block; }
+.wk-dl {
+  display: none;
+  margin-top: 14px;
+  padding: 13px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00d4aa, #00b894);
+  color: #001a16;
+  font-weight: 800;
+  text-decoration: none;
+  text-align: center;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  box-shadow: 0 6px 20px rgba(0,212,170,0.3);
+}
+.wk-dl.show { display: block; }
+.wk-loading {
+  text-align: center;
+  padding: 22px 0;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem;
+  display: none;
+}
+.wk-loading.show { display: block; }
+.wk-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: #7c5cff;
+  border-radius: 50%;
+  animation: wk-spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes wk-spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -36,15 +205,14 @@
 </header>
 <div class="wk-wrap">
 <div class="wk-card">
-<h2>Wink Image Upscaler</h2>
-<p class="wk-sub">Perjelas gambar jadi HD berkualitas tinggi</p>
+<h2>✨ Wink Upscaler</h2>
+<p class="wk-sub">Perjelas gambar jadi HD berkualitas tinggi dengan AI</p>
 <label class="wk-label">URL Gambar</label>
 <input id="wkUrl" class="wk-input" type="url" placeholder="https://example.com/image.jpg" autocomplete="off">
 <button id="wkBtn" class="wk-btn">🚀 Proses Sekarang</button>
 <div id="wkLoading" class="wk-loading"><div class="wk-spinner"></div>Memproses gambar...</div>
 <div id="wkResult" class="wk-result"></div>
 <img id="wkImg" class="wk-img" alt="Result">
-</div>
 </div>
 </div>
 <script>
