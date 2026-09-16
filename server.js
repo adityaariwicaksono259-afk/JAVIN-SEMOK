@@ -283,6 +283,198 @@ app.use((req, res, next) => {
 // END PROTECTION LAYER 2
 // ============================================
 
+// ============================================
+// PROTECTION LAYER 3 — HARDENING
+// ============================================
+
+// 1. Security event logger
+const securityLog = []; // max 500 entries
+function logSecurity(type, data) {
+  securityLog.push({
+    ts: Date.now(),
+    type: type,
+    ip: data.ip,
+    path: data.path,
+    user: data.user,
+    detail: data.detail
+  });
+  if (securityLog.length > 500) securityLog.shift();
+  console.warn('[SECURITY-' + type + ']', JSON.stringify(data).slice(0, 200));
+}
+
+// 2. Adaptive rate limit — deteksi lonjakan lalu auto-tighten
+const adaptiveWindow = new Map(); // ip -> { count, windowStart, tightUntil }
+function adaptiveCheck(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+  let entry = adaptiveWindow.get(ip);
+
+  if (!entry || now - entry.windowStart > 10000) {
+    entry = { count: 0, windowStart: now, tightUntil: entry ? entry.tightUntil : 0 };
+  }
+  entry.count++;
+  adaptiveWindow.set(ip, entry);
+
+  // >50 req dalam 10 detik → tandai tight selama 60 detik
+  if (entry.count > 50 && now > (entry.tightUntil || 0)) {
+    entry.tightUntil = now + 60 * 1000;
+    logSecurity('ADAPTIVE-TIGHT', { ip: ip, path: req.path, detail: 'count=' + entry.count });
+  }
+
+  // Kalau sedang tight → block kalau >10 req dalam 10 detik
+  if (now < (entry.tightUntil || 0) && entry.count > 10) {
+    return res.status(429).json({ status: false, message: 'Server sedang sibuk. Coba lagi sebentar.' });
+  }
+
+  next();
+}
+app.use(adaptiveCheck);
+
+// Bersihin adaptive window tiap 5 menit
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, v] of adaptiveWindow.entries()) {
+    if (now - v.windowStart > 5 * 60 * 1000 && now > (v.tightUntil || 0)) {
+      adaptiveWindow.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// 3. Content-Length spoofing detection
+app.use((req, res, next) => {
+  const cl = req.headers['content-length'];
+  const te = req.headers['transfer-encoding'];
+  // Gak boleh ada dua-duanya sekaligus
+  if (cl && te) {
+    addStrike(req.ip, 'spoofed-length');
+    logSecurity('SPOOF', { ip: req.ip, path: req.path, detail: 'CL+TE both present' });
+    return res.status(400).json({ status: false, message: 'Request tidak valid' });
+  }
+  // Content-Length gak boleh negatif atau absurd
+  if (cl && (isNaN(cl) || parseInt(cl) < 0 || parseInt(cl) > 5 * 1024 * 1024)) {
+    addStrike(req.ip, 'invalid-length');
+    return res.status(400).json({ status: false, message: 'Content-Length tidak valid' });
+  }
+  next();
+});
+
+// 4. Prototype pollution protection
+app.use((req, res, next) => {
+  function checkProto(obj, depth) {
+    if (depth > 5 || !obj || typeof obj !== 'object') return false;
+    for (const k in obj) {
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') return true;
+      if (typeof obj[k] === 'object' && checkProto(obj[k], depth + 1)) return true;
+    }
+    return false;
+  }
+  if (checkProto(req.body, 0) || checkProto(req.query, 0)) {
+    addStrike(req.ip, 'proto-pollution');
+    logSecurity('PROTO', { ip: req.ip, path: req.path });
+    return res.status(400).json({ status: false, message: 'Request tidak valid' });
+  }
+  next();
+});
+
+// 5. HTTP Method whitelist — cuma GET/POST/PUT/DELETE/HEAD/OPTIONS
+app.use((req, res, next) => {
+  const allowed = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'];
+  if (!allowed.includes(req.method.toUpperCase())) {
+    addStrike(req.ip, 'bad-method');
+    return res.status(405).json({ status: false, message: 'Method tidak diizinkan' });
+  }
+  next();
+});
+
+// 6. Block oversized query string
+app.use((req, res, next) => {
+  const qs = req.originalUrl || '';
+  if (qs.length > 2000) {
+    addStrike(req.ip, 'huge-query');
+    logSecurity('HUGE-QS', { ip: req.ip, path: req.path, detail: 'len=' + qs.length });
+    return res.status(414).json({ status: false, message: 'Query string terlalu panjang' });
+  }
+  next();
+});
+
+// 7. Block too many query parameters
+app.use((req, res, next) => {
+  const count = Object.keys(req.query || {}).length;
+  if (count > 20) {
+    addStrike(req.ip, 'many-params');
+    return res.status(400).json({ status: false, message: 'Terlalu banyak parameter' });
+  }
+  next();
+});
+
+// 8. Slowloris protection — timeout request
+app.use((req, res, next) => {
+  req.setTimeout(30000);
+  res.setTimeout(30000);
+  next();
+});
+
+// 9. Cache control untuk endpoint API
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+// 10. Admin endpoint log viewer
+app.get('/api/admin/logs', (req, res) => {
+  const pw = req.query.pw || req.headers['x-admin-pw'];
+  if (pw !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ status: false, message: 'Unauthorized' });
+  }
+  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  res.json({
+    status: true,
+    total: securityLog.length,
+    logs: securityLog.slice(-limit).reverse()
+  });
+});
+
+// 11. Admin endpoint — unban IP
+app.get('/api/admin/unban', (req, res) => {
+  const pw = req.query.pw || req.headers['x-admin-pw'];
+  if (pw !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ status: false, message: 'Unauthorized' });
+  }
+  const ip = req.query.ip;
+  if (!ip) return res.status(400).json({ status: false, message: 'IP wajib diisi' });
+  if (ip === 'all') {
+    const count = ipBlacklist.size;
+    ipBlacklist.clear();
+    ipStrikes.clear();
+    res.json({ status: true, message: 'Semua IP di-unban', count: count });
+  } else {
+    ipBlacklist.delete(ip);
+    ipStrikes.delete(ip);
+    res.json({ status: true, message: 'IP ' + ip + ' di-unban' });
+  }
+});
+
+// 12. Error handler aman — jangan bocorin stack trace
+app.use((err, req, res, next) => {
+  logSecurity('ERROR', {
+    ip: req.ip,
+    path: req.path,
+    detail: (err && err.message) ? err.message.slice(0, 200) : 'unknown'
+  });
+  // Jangan tampilkan err.message ke user kalau production
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(500).json({ status: false, message: 'Terjadi kesalahan internal' });
+  }
+  next(err);
+});
+
+// ============================================
+// END PROTECTION LAYER 3
+// ============================================
+
+
 
 
 /* JAVIN-DOUYIN-API-V1 */
