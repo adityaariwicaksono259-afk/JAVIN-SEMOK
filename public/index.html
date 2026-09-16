@@ -71,14 +71,17 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
 <div id="sysStatusWidget" class="sys-status-widget">
   <div class="ssw-header">
     <div class="ssw-title">📊 STATUS SISTEM</div>
-    <div class="ssw-overall" id="sswOverall">🟢 ONLINE</div>
+    <div class="ssw-overall" id="sswOverall">⏳ LOADING</div>
+  </div>
+  <div class="ssw-summary" id="sswSummary">
+    <div class="ssw-sum-item"><span class="ssw-num" id="sswOkNum">-</span><span class="ssw-lbl">NORMAL</span></div>
+    <div class="ssw-sum-item"><span class="ssw-num" id="sswWarnNum">-</span><span class="ssw-lbl">WARNING</span></div>
+    <div class="ssw-sum-item"><span class="ssw-num" id="sswErrNum">-</span><span class="ssw-lbl">ERROR</span></div>
   </div>
   <div class="ssw-body" id="sswBody">
     <div class="ssw-loading">Memuat status...</div>
   </div>
-  <div class="ssw-footer" id="sswFooter">
-    Auto-refresh tiap 30 detik
-  </div>
+  <div class="ssw-footer" id="sswFooter">Auto-refresh tiap 30 detik</div>
 </div>
 
 <style>
@@ -88,7 +91,8 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
   border-radius: 14px;
   margin-bottom: 24px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  font-family: inherit;
 }
 .ssw-header {
   background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
@@ -105,98 +109,233 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
   color: #fff;
 }
 .ssw-overall {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   padding: 4px 12px;
   border-radius: 20px;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 .ssw-overall.healthy { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid #4caf50; }
 .ssw-overall.warning { background: rgba(255,176,32,0.2); color: #ffb020; border: 1px solid #ffb020; }
 .ssw-overall.error { background: rgba(255,77,109,0.2); color: #ff4d6d; border: 1px solid #ff4d6d; }
 
+.ssw-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: #2a2a2a;
+  border-bottom: 2px solid #2a2a2a;
+}
+.ssw-sum-item {
+  background: #0f0f0f;
+  padding: 12px 8px;
+  text-align: center;
+}
+.ssw-num {
+  display: block;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+.ssw-lbl {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #666;
+  margin-top: 4px;
+  font-weight: 700;
+}
+.ssw-sum-item:nth-child(1) .ssw-num { color: #4caf50; }
+.ssw-sum-item:nth-child(2) .ssw-num { color: #ffb020; }
+.ssw-sum-item:nth-child(3) .ssw-num { color: #ff4d6d; }
+
 .ssw-body {
-  max-height: 340px;
+  max-height: 400px;
   overflow-y: auto;
-  padding: 8px;
+  padding: 10px;
+  background: #0a0a0a;
 }
 .ssw-body::-webkit-scrollbar { width: 6px; }
 .ssw-body::-webkit-scrollbar-track { background: #1a1a1a; }
 .ssw-body::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 3px; }
 
-.ssw-row {
+.ssw-loading { text-align: center; padding: 24px; color: #666; font-size: 13px; }
+
+.ssw-group {
+  margin-bottom: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #141414;
+  border-left: 3px solid #4caf50;
+}
+.ssw-group.warning { border-left-color: #ffb020; }
+.ssw-group.error { border-left-color: #ff4d6d; }
+
+.ssw-group-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  margin-bottom: 4px;
-  background: #0f0f0f;
-  border: 1px solid #252525;
-  transition: all 0.2s;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
 }
-.ssw-row.ready { border-left: 3px solid #4caf50; }
-.ssw-row.warning { border-left: 3px solid #ffb020; background: rgba(255,176,32,0.05); }
-.ssw-row.error { border-left: 3px solid #ff4d6d; background: rgba(255,77,109,0.05); }
-.ssw-row.disabled { border-left: 3px solid #666; opacity: 0.7; }
-
-.ssw-icon { font-size: 18px; }
-.ssw-info { flex: 1; min-width: 0; }
-.ssw-label { font-size: 13px; font-weight: 700; color: #e8e8e8; }
-.ssw-detail { font-size: 11px; color: #888; margin-top: 1px; }
-
-.ssw-badge {
-  font-size: 10px;
+.ssw-group-header:active { background: #1a1a1a; }
+.ssw-group-icon { font-size: 20px; }
+.ssw-group-info { flex: 1; min-width: 0; }
+.ssw-group-label {
+  font-size: 13px;
   font-weight: 800;
-  padding: 4px 8px;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
+  color: #e8e8e8;
+  letter-spacing: 0.3px;
 }
-.ssw-row.ready .ssw-badge { background: rgba(76,175,80,0.15); color: #4caf50; }
-.ssw-row.warning .ssw-badge { background: rgba(255,176,32,0.15); color: #ffb020; }
-.ssw-row.error .ssw-badge { background: rgba(255,77,109,0.15); color: #ff4d6d; }
-.ssw-row.disabled .ssw-badge { background: rgba(128,128,128,0.15); color: #888; }
+.ssw-group-detail {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ssw-group-badge {
+  font-size: 9px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.ssw-group.ready .ssw-group-badge { background: rgba(76,175,80,0.15); color: #4caf50; }
+.ssw-group.warning .ssw-group-badge { background: rgba(255,176,32,0.15); color: #ffb020; }
+.ssw-group.error .ssw-group-badge { background: rgba(255,77,109,0.15); color: #ff4d6d; }
+.ssw-chevron {
+  font-size: 10px;
+  color: #666;
+  transition: transform 0.2s;
+}
+.ssw-group.expanded .ssw-chevron { transform: rotate(90deg); }
 
-.ssw-loading { text-align: center; padding: 20px; color: #666; font-size: 13px; }
+.ssw-items {
+  display: none;
+  padding: 4px 14px 10px;
+  background: rgba(0,0,0,0.4);
+}
+.ssw-group.expanded .ssw-items { display: block; }
+.ssw-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 11.5px;
+  color: #aaa;
+  border-bottom: 1px solid #1a1a1a;
+}
+.ssw-item:last-child { border-bottom: none; }
+.ssw-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ssw-item.ok .ssw-dot { background: #4caf50; box-shadow: 0 0 6px rgba(76,175,80,0.6); }
+.ssw-item.bad .ssw-dot { background: #ff4d6d; box-shadow: 0 0 6px rgba(255,77,109,0.6); }
+.ssw-item-name { flex: 1; }
+.ssw-item-status {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+.ssw-item.ok .ssw-item-status { background: rgba(76,175,80,0.15); color: #4caf50; }
+.ssw-item.bad .ssw-item-status { background: rgba(255,77,109,0.15); color: #ff4d6d; }
+
 .ssw-footer {
   padding: 10px 16px;
   background: #0f0f0f;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid #1a1a1a;
   text-align: center;
-  font-size: 11px;
+  font-size: 10.5px;
   color: #666;
+  letter-spacing: 0.3px;
 }
 </style>
 
 <script>
 (function() {
+  var REFRESH_MS = 30000;
+  var expanded = {};
+
   function renderStatus(d) {
     var overallEl = document.getElementById('sswOverall');
-    var iconMap = { healthy: '🟢 ONLINE', warning: '🟡 WARNING', error: '🔴 ERROR' };
+    var iconMap = { healthy: '🟢 SEMUA NORMAL', warning: '🟡 ADA WARNING', error: '🔴 ADA ERROR' };
     overallEl.textContent = iconMap[d.overall] || '❓ UNKNOWN';
     overallEl.className = 'ssw-overall ' + d.overall;
 
+    // Summary
+    var okCount = 0, warnCount = 0, errCount = 0;
+    Object.keys(d.groups).forEach(function(k) {
+      if (d.groups[k].status === 'ready') okCount++;
+      else if (d.groups[k].status === 'warning') warnCount++;
+      else errCount++;
+    });
+    document.getElementById('sswOkNum').textContent = okCount;
+    document.getElementById('sswWarnNum').textContent = warnCount;
+    document.getElementById('sswErrNum').textContent = errCount;
+
+    // Groups
     var body = document.getElementById('sswBody');
     body.innerHTML = '';
-    var order = ['server', 'database', 'ngl', 'javinAnalog', 'waifu', 'turnstile', 'security', 'admin', 'botDefense'];
+    var order = ['chat', 'games', 'tools', 'account', 'islamic', 'infra', 'security'];
     order.forEach(function(k) {
-      var f = d.features[k];
-      if (!f) return;
-      var lbl = f.status === 'ready' ? 'READY' : f.status === 'warning' ? 'WARN' : f.status === 'error' ? 'ERROR' : 'OFF';
-      var row = document.createElement('div');
-      row.className = 'ssw-row ' + f.status;
-      row.innerHTML =
-        '<div class="ssw-icon">' + f.icon + '</div>' +
-        '<div class="ssw-info">' +
-          '<div class="ssw-label">' + f.label + '</div>' +
-          '<div class="ssw-detail">' + f.detail + '</div>' +
+      var g = d.groups[k];
+      if (!g) return;
+      var lbl = g.status === 'ready' ? 'READY' : g.status === 'warning' ? 'WARN' : 'ERROR';
+      var itemOk = (g.items || []).filter(function(i) { return i.ok; }).length;
+      var itemTotal = (g.items || []).length;
+
+      var groupEl = document.createElement('div');
+      groupEl.className = 'ssw-group ' + g.status + (expanded[k] ? ' expanded' : '');
+
+      var itemsHtml = '';
+      (g.items || []).forEach(function(it) {
+        itemsHtml +=
+          '<div class="ssw-item ' + (it.ok ? 'ok' : 'bad') + '">' +
+            '<div class="ssw-dot"></div>' +
+            '<div class="ssw-item-name">' + it.name + '</div>' +
+            '<div class="ssw-item-status">' + (it.ok ? 'OK' : 'ERR') + '</div>' +
+          '</div>';
+      });
+
+      groupEl.innerHTML =
+        '<div class="ssw-group-header" data-key="' + k + '">' +
+          '<div class="ssw-group-icon">' + g.icon + '</div>' +
+          '<div class="ssw-group-info">' +
+            '<div class="ssw-group-label">' + g.label + '</div>' +
+            '<div class="ssw-group-detail">' + itemOk + '/' + itemTotal + ' • ' + g.detail + '</div>' +
+          '</div>' +
+          '<div class="ssw-group-badge">' + lbl + '</div>' +
+          '<div class="ssw-chevron">▶</div>' +
         '</div>' +
-        '<div class="ssw-badge">' + lbl + '</div>';
-      body.appendChild(row);
+        '<div class="ssw-items">' + itemsHtml + '</div>';
+
+      body.appendChild(groupEl);
     });
 
-    var footer = document.getElementById('sswFooter');
-    footer.textContent = 'Terakhir update: ' + d.time + ' • Auto-refresh 30 detik';
+    // Attach click handlers
+    body.querySelectorAll('.ssw-group-header').forEach(function(h) {
+      h.addEventListener('click', function() {
+        var k = h.getAttribute('data-key');
+        expanded[k] = !expanded[k];
+        var grp = h.parentElement;
+        grp.classList.toggle('expanded');
+      });
+    });
+
+    // Footer
+    document.getElementById('sswFooter').innerHTML =
+      '✅ ' + d.summary.ok + ' / ' + d.summary.totalItems + ' fitur normal<br>' +
+      'Update: ' + d.time + ' • auto-refresh 30s';
   }
 
   async function loadStatus() {
@@ -211,7 +350,7 @@ button,a,input,select,textarea,[role="button"]{min-height:44px}
   }
 
   loadStatus();
-  setInterval(loadStatus, 30000);
+  setInterval(loadStatus, REFRESH_MS);
 })();
 </script>
 <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:48px">

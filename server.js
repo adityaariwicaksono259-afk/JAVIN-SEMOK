@@ -5536,160 +5536,7 @@ app.get('/api/admin/http-hardening', requireAdmin, function(req, res) {
 
 var systemStatusCache = { data: null, cachedAt: 0, ttl: 30000 };
 
-function checkSystemStatus() {
-  var now = Date.now();
-  var features = {};
 
-  // === Server ===
-  var mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
-  var uptime = Math.floor(process.uptime() / 60);
-  features.server = {
-    label: 'Server',
-    icon: '🖥️',
-    status: 'ready',
-    detail: 'Uptime ' + uptime + ' menit',
-    metric: mem + ' MB'
-  };
-  if (mem > 400) {
-    features.server.status = 'warning';
-    features.server.detail = 'Memory tinggi';
-  }
-  if (mem > 450) {
-    features.server.status = 'error';
-    features.server.detail = 'Memory kritis';
-  }
-
-  // === Database ===
-  var dbOk = (typeof data === 'object' && data && data.users);
-  var userCount = dbOk ? Object.keys(data.users).length : 0;
-  features.database = {
-    label: 'Database',
-    icon: '🗄️',
-    status: dbOk ? 'ready' : 'error',
-    detail: dbOk ? 'Terhubung' : 'Tidak terhubung',
-    metric: userCount + ' user'
-  };
-
-  // === NGL Sender ===
-  var nglReady = typeof NGL_COIN_PER_PESAN !== 'undefined' && typeof nglGetUserByToken === 'function';
-  features.ngl = {
-    label: 'NGL Sender',
-    icon: '📨',
-    status: nglReady ? 'ready' : 'error',
-    detail: nglReady ? 'API aktif' : 'Module error',
-    metric: nglReady ? NGL_COIN_PER_PESAN + ' coin/pesan' : 'N/A'
-  };
-
-  // === Javin Analog ===
-  var jaReady = typeof ANITA_API !== 'undefined' && typeof anitaPost === 'function';
-  features.javinAnalog = {
-    label: 'Javin Analog',
-    icon: '🔐',
-    status: jaReady ? 'ready' : 'error',
-    detail: jaReady ? 'Anita Studio aktif' : 'Provider error',
-    metric: jaReady ? 'Alight Premium' : 'N/A'
-  };
-
-  // Cek error Javin Analog 1 jam terakhir
-  var jaErrors = securityLog.filter(function(l) {
-    return l.ts > now - 60 * 60 * 1000 && l.detail && String(l.detail).indexOf('ANALOG') !== -1;
-  });
-  if (jaErrors.length > 3) {
-    features.javinAnalog.status = 'warning';
-    features.javinAnalog.detail = jaErrors.length + ' error/jam';
-  }
-
-  // === Waifu ===
-  features.waifu = {
-    label: 'Random Waifu',
-    icon: '🌸',
-    status: 'ready',
-    detail: 'Provider: waifu.im',
-    metric: 'Aktif'
-  };
-
-  // === Turnstile ===
-  var tsOn = !!process.env.TURNSTILE_SECRET;
-  features.turnstile = {
-    label: 'Cloudflare Turnstile',
-    icon: '🛡️',
-    status: tsOn ? 'ready' : 'disabled',
-    detail: tsOn ? 'CAPTCHA aktif' : 'Belum diset',
-    metric: tsOn ? 'Enabled' : 'Disabled'
-  };
-
-  // === Security Layers ===
-  features.security = {
-    label: 'Security Layers',
-    icon: '🔒',
-    status: 'ready',
-    detail: '16 layer aktif',
-    metric: ipBlacklist.size + ' IP banned'
-  };
-
-  // === Admin Access ===
-  var adminIPs = (process.env.ADMIN_IPS || '').split(',').filter(function(s) { return s.trim(); });
-  features.admin = {
-    label: 'Admin Access',
-    icon: '👑',
-    status: adminIPs.length > 0 ? 'ready' : 'warning',
-    detail: adminIPs.length > 0 ? 'Whitelist aktif' : 'Belum ada whitelist',
-    metric: adminIPs.length + ' IP'
-  };
-
-  // === Bot Defense ===
-  var banned24h = 0;
-  for (var e of ipBlacklist.entries()) {
-    banned24h++;
-  }
-  features.botDefense = {
-    label: 'Bot Defense',
-    icon: '🤖',
-    status: 'ready',
-    detail: 'Turnstile + Honeypot',
-    metric: banned24h + ' diblokir'
-  };
-
-  // === Overall ===
-  var allStatuses = Object.keys(features).map(function(k) { return features[k].status; });
-  var overall = 'healthy';
-  if (allStatuses.indexOf('error') !== -1) overall = 'error';
-  else if (allStatuses.indexOf('warning') !== -1) overall = 'warning';
-
-  // Cek error log
-  var recentErrors = securityLog.filter(function(l) {
-    return l.ts > now - 60 * 60 * 1000 &&
-           (l.type.indexOf('ERROR') !== -1 || l.type === 'UNCAUGHT' || l.type === 'UNHANDLED');
-  });
-  if (recentErrors.length > 10) {
-    if (overall === 'healthy') overall = 'warning';
-  }
-
-  return {
-    timestamp: now,
-    time: new Date().toLocaleString('id-ID'),
-    overall: overall,
-    summary: {
-      ready: allStatuses.filter(function(s) { return s === 'ready'; }).length,
-      warning: allStatuses.filter(function(s) { return s === 'warning'; }).length,
-      error: allStatuses.filter(function(s) { return s === 'error'; }).length,
-      disabled: allStatuses.filter(function(s) { return s === 'disabled'; }).length
-    },
-    features: features,
-    errorLogCount: recentErrors.length
-  };
-}
-
-app.get('/api/system-status', function(req, res) {
-  var now = Date.now();
-  if (systemStatusCache.data && (now - systemStatusCache.cachedAt) < systemStatusCache.ttl) {
-    return res.json(systemStatusCache.data);
-  }
-  var status = checkSystemStatus();
-  systemStatusCache.data = status;
-  systemStatusCache.cachedAt = now;
-  res.json(status);
-});
 
 // Skip dari global verify (buat widget di halaman manapun)
 // Sudah otomatis skip karena /api/system-status gak ada di whitelist layer 9... patch:
@@ -5704,5 +5551,201 @@ app.get('/api/system-status', function(req, res) {
 
 
 
+
+
+
+// ============================================
+// SYSTEM STATUS v2 — FULL MONITOR
+// ============================================
+
+function checkFileExists(relPath) {
+  try {
+    var fs = require('fs');
+    var path = require('path');
+    return fs.existsSync(path.join(__dirname, relPath));
+  } catch (e) { return false; }
+}
+
+function checkGroupedStatus() {
+  var now = Date.now();
+  var groups = {};
+
+  // === CHAT ===
+  var socketActive = typeof io !== 'undefined';
+  var onlineCount = (typeof onlineUsers !== 'undefined') ? onlineUsers.size : 0;
+  var msgCount = (data && data.messages) ? data.messages.length : 0;
+  var chatItems = [
+    { name: 'Real-time Chat', ok: socketActive },
+    { name: 'Chat History', ok: checkFileExists('public/chat.html') },
+    { name: 'Auth Socket', ok: checkFileExists('public/auth-socket.js') },
+    { name: 'Private DM', ok: !!(data && data.dms) }
+  ];
+  var chatOkCount = chatItems.filter(function(i) { return i.ok; }).length;
+  groups.chat = {
+    label: 'Chat System',
+    icon: '💬',
+    status: chatOkCount === chatItems.length ? 'ready' : (chatOkCount > 2 ? 'warning' : 'error'),
+    detail: onlineCount + ' online • ' + msgCount + ' pesan',
+    items: chatItems
+  };
+
+  // === GAMES ===
+  var gameList = [
+    { name: 'Slot', f: 'public/slot.html' },
+    { name: 'Blackjack', f: 'public/blackjack.html' },
+    { name: 'Dadu', f: 'public/dadu.html' },
+    { name: 'Dice', f: 'public/dice.html' },
+    { name: 'Chess', f: 'public/chess.html' },
+    { name: 'Mahjong', f: 'public/mahjong.html' },
+    { name: 'Roulette', f: 'public/roulette.html' },
+    { name: 'Lottery', f: 'public/lottery.html' },
+    { name: 'Tebak', f: 'public/tebak.html' },
+    { name: 'Kartu', f: 'public/kartu.html' }
+  ];
+  var gameItems = gameList.map(function(g) { return { name: g.name, ok: checkFileExists(g.f) }; });
+  var gameOk = gameItems.filter(function(i) { return i.ok; }).length;
+  groups.games = {
+    label: 'Games',
+    icon: '🎮',
+    status: gameOk === gameItems.length ? 'ready' : (gameOk > 5 ? 'warning' : 'error'),
+    detail: gameOk + '/' + gameItems.length + ' game aktif',
+    items: gameItems
+  };
+
+  // === TOOLS ===
+  var toolList = [
+    { name: 'NGL Sender', f: 'public/javin-ngl.html', check: function() { return typeof NGL_COIN_PER_PESAN !== 'undefined'; } },
+    { name: 'Javin Analog', f: 'public/javin-analog.html', check: function() { return typeof ANITA_API !== 'undefined'; } },
+    { name: 'Random Waifu', f: 'public/waifu.html', check: function() { return true; } },
+    { name: 'QR Generator', f: 'public/qr.html', check: function() { return true; } },
+    { name: 'Brat Video', f: 'public/brat.html', check: function() { return true; } },
+    { name: 'Douyin', f: 'public/javin-douyin.html', check: function() { return true; } },
+    { name: 'Asisten AI', f: 'public/llama.html', check: function() { return true; } },
+    { name: 'Sosial', f: 'public/sosial.html', check: function() { return true; } }
+  ];
+  var toolItems = toolList.map(function(t) {
+    return { name: t.name, ok: checkFileExists(t.f) && t.check() };
+  });
+  var toolOk = toolItems.filter(function(i) { return i.ok; }).length;
+  groups.tools = {
+    label: 'Tools & Utility',
+    icon: '🛠️',
+    status: toolOk === toolItems.length ? 'ready' : (toolOk > 4 ? 'warning' : 'error'),
+    detail: toolOk + '/' + toolItems.length + ' tool aktif',
+    items: toolItems
+  };
+
+  // === ACCOUNT ===
+  var totalUsers = (data && data.users) ? Object.keys(data.users).length : 0;
+  var accList = [
+    { name: 'Profile', f: 'public/profile.html' },
+    { name: 'Leaderboard', f: 'public/leaderboard.html' },
+    { name: 'Achievement', f: 'public/achievement.html' },
+    { name: 'Dashboard', f: 'public/dashboard.html' },
+    { name: 'Kartu User', f: 'public/kartu.html' }
+  ];
+  var accItems = accList.map(function(t) { return { name: t.name, ok: checkFileExists(t.f) }; });
+  var accOk = accItems.filter(function(i) { return i.ok; }).length;
+  groups.account = {
+    label: 'Account & Profile',
+    icon: '👤',
+    status: accOk === accItems.length ? 'ready' : 'warning',
+    detail: totalUsers + ' user terdaftar',
+    items: accItems
+  };
+
+  // === ISLAMIC ===
+  var islamList = [
+    { name: 'Sholat', f: 'public/sholat.html' },
+    { name: 'Ibadah', f: 'public/ibadah.html' },
+    { name: 'Harian', f: 'public/harian.html' },
+    { name: 'Doa', f: 'public/doa-data.js' }
+  ];
+  var islamItems = islamList.map(function(t) { return { name: t.name, ok: checkFileExists(t.f) }; });
+  var islamOk = islamItems.filter(function(i) { return i.ok; }).length;
+  groups.islamic = {
+    label: 'Islamic & Daily',
+    icon: '📅',
+    status: islamOk === islamItems.length ? 'ready' : 'warning',
+    detail: islamOk + '/' + islamItems.length + ' aktif',
+    items: islamItems
+  };
+
+  // === INFRASTRUCTURE ===
+  var mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  var uptime = Math.floor(process.uptime() / 60);
+  var infraItems = [
+    { name: 'Server', ok: true },
+    { name: 'Database', ok: !!(data && data.users) },
+    { name: 'Memory (' + mem + 'MB)', ok: mem < 400 },
+    { name: 'MongoDB', ok: typeof mongoose !== 'undefined' }
+  ];
+  var infraOk = infraItems.filter(function(i) { return i.ok; }).length;
+  groups.infra = {
+    label: 'Infrastructure',
+    icon: '🖥️',
+    status: mem > 450 ? 'error' : (mem > 400 ? 'warning' : 'ready'),
+    detail: 'Uptime ' + uptime + ' menit',
+    items: infraItems
+  };
+
+  // === SECURITY ===
+  var tsOn = !!process.env.TURNSTILE_SECRET;
+  var secItems = [
+    { name: 'Turnstile CAPTCHA', ok: tsOn },
+    { name: 'Rate Limiter', ok: typeof globalLimiter !== 'undefined' },
+    { name: 'Auto-Ban System', ok: typeof recordViolation === 'function' },
+    { name: 'IP Whitelist', ok: !!(process.env.ADMIN_IPS || '').trim() },
+    { name: 'Anti-DDoS', ok: typeof cbState !== 'undefined' }
+  ];
+  var secOk = secItems.filter(function(i) { return i.ok; }).length;
+  groups.security = {
+    label: 'Security',
+    icon: '🛡️',
+    status: secOk === secItems.length ? 'ready' : 'warning',
+    detail: (ipBlacklist ? ipBlacklist.size : 0) + ' IP banned',
+    items: secItems
+  };
+
+  // Overall
+  var statuses = Object.keys(groups).map(function(k) { return groups[k].status; });
+  var overall = 'healthy';
+  if (statuses.indexOf('error') !== -1) overall = 'error';
+  else if (statuses.indexOf('warning') !== -1) overall = 'warning';
+
+  var totalItems = 0, okItems = 0, errItems = 0;
+  Object.keys(groups).forEach(function(k) {
+    (groups[k].items || []).forEach(function(it) {
+      totalItems++;
+      if (it.ok) okItems++; else errItems++;
+    });
+  });
+
+  return {
+    timestamp: now,
+    time: new Date().toLocaleString('id-ID'),
+    overall: overall,
+    summary: {
+      groups: Object.keys(groups).length,
+      totalItems: totalItems,
+      ok: okItems,
+      errors: errItems
+    },
+    groups: groups
+  };
+}
+
+app.get('/api/system-status', function(req, res) {
+  var now = Date.now();
+  if (systemStatusCache.data && (now - systemStatusCache.cachedAt) < systemStatusCache.ttl) {
+    return res.json(systemStatusCache.data);
+  }
+  var status = checkGroupedStatus();
+  systemStatusCache.data = status;
+  systemStatusCache.cachedAt = now;
+  res.json(status);
+});
+
+// === END STATUS v2 ===
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
