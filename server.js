@@ -2290,20 +2290,74 @@ app.post('/api/javin-analog/send', express.json({ limit: '10kb' }), async (req, 
   }
 });
 
-// POST /api/javin-analog/verify  → verify-account
+// POST /api/javin-analog/verify → verify-account + AUTO apply-premium
 app.post('/api/javin-analog/verify', express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     const rawLink = (req.body && (req.body.rawLink || req.body.link || req.body.oob_link)) || req.query.link;
     if (!email || !rawLink) return res.status(400).json({ status: false, message: 'Email dan rawLink wajib diisi' });
-    const data = await anitaPost('verify-account', { email: email, rawLink: rawLink });
-    res.json(data);
+
+    // STEP 1: verify-account
+    console.log('[JAVIN-ANALOG] verify-account:', email);
+    const verification = await anitaPost('verify-account', { email: email, rawLink: rawLink });
+    console.log('[JAVIN-ANALOG] verify result:', JSON.stringify(verification).slice(0, 300));
+
+    if (!verification.success) {
+      return res.json({
+        status: false,
+        success: false,
+        step: 'verify-account',
+        message: verification.message || 'Verifikasi gagal',
+        raw: verification
+      });
+    }
+
+    // Ekstrak idToken
+    const idToken = verification.idToken || (verification.profile && verification.profile.idToken);
+
+    if (!idToken) {
+      return res.json({
+        status: false,
+        success: false,
+        step: 'extract-idToken',
+        message: 'Verifikasi sukses tapi idToken tidak ditemukan di response',
+        raw: verification
+      });
+    }
+
+    // STEP 2: AUTO apply-premium
+    console.log('[JAVIN-ANALOG] apply-premium:', email, '| token length:', idToken.length);
+    const premium = await anitaPost('apply-premium', { email: email, idToken: idToken });
+    console.log('[JAVIN-ANALOG] premium result:', JSON.stringify(premium).slice(0, 300));
+
+    if (!premium.success) {
+      return res.json({
+        status: false,
+        success: false,
+        step: 'apply-premium',
+        message: premium.message || 'Verifikasi OK tapi apply premium gagal',
+        verifyData: verification,
+        raw: premium
+      });
+    }
+
+    // SUKSES TOTAL
+    res.json({
+      status: true,
+      success: true,
+      step: 'done',
+      message: premium.message || 'Akun berhasil jadi premium!',
+      email: email,
+      idToken: idToken.slice(0, 20) + '...',
+      verifyData: verification,
+      premiumData: premium
+    });
+
   } catch (e) {
-    console.error('[JAVIN-ANALOG] verify error:', e.message);
+    console.error('[JAVIN-ANALOG] verify+premium error:', e.message);
     res.status(500).json({ status: false, success: false, message: e.message });
   }
 });
-
 // POST /api/javin-analog/magic-link  → alias verify-account
 app.post('/api/javin-analog/magic-link', express.json({ limit: '50kb' }), async (req, res) => {
   try {
