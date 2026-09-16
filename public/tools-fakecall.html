@@ -195,6 +195,8 @@ html, body {
   margin: 0 auto 12px;
 }
 @keyframes fc-spin { to { transform: rotate(360deg); } }
+.fc-dl{display:none;margin-top:14px;padding:13px;border-radius:12px;background:linear-gradient(135deg,#00d4aa,#00b894);color:#001a16;font-weight:800;text-decoration:none;text-align:center;font-size:0.95rem;box-shadow:0 6px 20px rgba(0,212,170,0.3)}
+.fc-dl.show{display:block}
 </style>
 </head>
 <body>
@@ -217,6 +219,7 @@ html, body {
 <div id="fcLoading" class="fc-loading"><div class="fc-spinner"></div>Memproses...</div>
 <div id="fcResult" class="fc-result"></div>
 <img id="fcImg" class="fc-img" alt="Fake Call Result">
+<a id="fcDl" class="fc-dl" download="fakecall.jpg">⬇️ Download Gambar</a>
 </div>
 </div>
 <script>
@@ -224,7 +227,7 @@ html, body {
 var $=function(id){return document.getElementById(id)};
 var btn=$('fcBtn'),pp=$('fcPp'),name=$('fcName'),dur=$('fcDur'),result=$('fcResult'),loading=$('fcLoading'),img=$('fcImg');
 function showStatus(type,msg){result.className='fc-result show '+type;result.textContent=msg}
-function hide(){result.className='fc-result';loading.className='fc-loading';img.className='fc-img'}
+function hide(){result.className='fc-result';loading.className='fc-loading';img.className='fc-img';var d=document.getElementById('fcDl');if(d)d.className='fc-dl'}
 btn.onclick=async function(){
 var ppurl=pp.value.trim(),nm=name.value.trim()||'Unknown',d=dur.value||'19';
 if(!ppurl){showStatus('err','❌ URL foto profil tidak boleh kosong');return}
@@ -234,7 +237,7 @@ var r=await fetch('/api/fakecall-proxy?ppurl='+encodeURIComponent(ppurl)+'&name=
 if(!r.ok)throw new Error('Gagal membuat fake call');
 var blob=await r.blob();
 var objUrl=URL.createObjectURL(blob);
-img.src=objUrl;img.className='fc-img show';
+img.src=objUrl;img.className='fc-img show';var dl=document.getElementById('fcDl');dl.href=objUrl;dl.className='fc-dl show';
 showStatus('ok','✅ Berhasil! Fake call berhasil dibuat');
 }catch(e){
 showStatus('err','❌ Gagal: '+e.message);

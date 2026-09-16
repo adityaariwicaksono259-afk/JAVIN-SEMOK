@@ -195,6 +195,8 @@ html, body {
   margin: 0 auto 12px;
 }
 @keyframes wk-spin { to { transform: rotate(360deg); } }
+.wk-dl{display:none;margin-top:14px;padding:13px;border-radius:12px;background:linear-gradient(135deg,#00d4aa,#00b894);color:#001a16;font-weight:800;text-decoration:none;text-align:center;font-size:0.95rem;box-shadow:0 6px 20px rgba(0,212,170,0.3)}
+.wk-dl.show{display:block}
 </style>
 </head>
 <body>
@@ -213,6 +215,7 @@ html, body {
 <div id="wkLoading" class="wk-loading"><div class="wk-spinner"></div>Memproses gambar...</div>
 <div id="wkResult" class="wk-result"></div>
 <img id="wkImg" class="wk-img" alt="Result">
+<a id="wkDl" class="wk-dl" download="wink-hd.jpg">⬇️ Download Gambar</a>
 </div>
 </div>
 <script>
@@ -220,7 +223,7 @@ html, body {
 var $=function(id){return document.getElementById(id)};
 var btn=$('wkBtn'),input=$('wkUrl'),result=$('wkResult'),loading=$('wkLoading'),img=$('wkImg');
 function showStatus(type,msg){result.className='wk-result show '+type;result.textContent=msg}
-function hide(){result.className='wk-result';loading.className='wk-loading';img.className='wk-img'}
+function hide(){result.className='wk-result';loading.className='wk-loading';img.className='wk-img';var d=document.getElementById('wkDl');if(d)d.className='wk-dl'}
 btn.onclick=async function(){
 var url=input.value.trim();
 if(!url){showStatus('err','❌ URL gambar tidak boleh kosong');return}
@@ -230,7 +233,7 @@ var r=await fetch('/api/wink-proxy?url='+encodeURIComponent(url));
 if(!r.ok)throw new Error('Gagal memproses gambar');
 var blob=await r.blob();
 var objUrl=URL.createObjectURL(blob);
-img.src=objUrl;img.className='wk-img show';
+img.src=objUrl;img.className='wk-img show';var dl=document.getElementById('wkDl');dl.href=objUrl;dl.className='wk-dl show';
 showStatus('ok','✅ Berhasil! Gambar berhasil ditingkatkan');
 }catch(e){
 showStatus('err','❌ Gagal: '+e.message);

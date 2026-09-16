@@ -5617,6 +5617,10 @@ function checkGroupedStatus() {
     { name: 'NGL Sender', f: 'public/javin-ngl.html', check: function() { return typeof NGL_COIN_PER_PESAN !== 'undefined'; } },
     { name: 'Javin Analog', f: 'public/javin-analog.html', check: function() { return typeof ANITA_API !== 'undefined'; } },
     { name: 'Random Waifu', f: 'public/waifu.html', check: function() { return true; } },
+    { name: 'Wink Upscaler', f: 'public/tools-wink.html', check: function() { return true; } },
+    { name: 'IG Downloader', f: 'public/tools-ig.html', check: function() { return true; } },
+    { name: 'Fake Call', f: 'public/tools-fakecall.html', check: function() { return true; } },
+    { name: 'Nokia Text', f: 'public/tools-nokia.html', check: function() { return true; } },
     { name: 'QR Generator', f: 'public/qr.html', check: function() { return true; } },
     { name: 'Brat Video', f: 'public/brat.html', check: function() { return true; } },
     { name: 'Douyin', f: 'public/javin-douyin.html', check: function() { return true; } },
@@ -5630,7 +5634,7 @@ function checkGroupedStatus() {
   groups.tools = {
     label: 'Tools & Utility',
     icon: '🛠️',
-    status: toolOk === toolItems.length ? 'ready' : (toolOk > 4 ? 'warning' : 'error'),
+    status: toolOk === toolItems.length ? 'ready' : (toolOk > 6 ? 'warning' : 'error'),
     detail: toolOk + '/' + toolItems.length + ' tool aktif',
     items: toolItems
   };

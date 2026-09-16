@@ -195,6 +195,8 @@ html, body {
   margin: 0 auto 12px;
 }
 @keyframes nk-spin { to { transform: rotate(360deg); } }
+.nk-dl{display:none;margin-top:14px;padding:13px;border-radius:12px;background:linear-gradient(135deg,#00d4aa,#00b894);color:#001a16;font-weight:800;text-decoration:none;text-align:center;font-size:0.95rem;box-shadow:0 6px 20px rgba(0,212,170,0.3)}
+.nk-dl.show{display:block}
 </style>
 </head>
 <body>
@@ -227,6 +229,7 @@ html, body {
 <div id="nkLoading" class="nk-loading"><div class="nk-spinner"></div>Memproses...</div>
 <div id="nkResult" class="nk-result"></div>
 <img id="nkImg" class="nk-img" alt="Nokia Result">
+<a id="nkDl" class="nk-dl" download="nokia.jpg">⬇️ Download Gambar</a>
 </div>
 </div>
 <script>
@@ -234,7 +237,7 @@ html, body {
 var $=function(id){return document.getElementById(id)};
 var btn=$('nkBtn'),text=$('nkText'),from=$('nkFrom'),title=$('nkTitle'),date=$('nkDate'),time=$('nkTime'),result=$('nkResult'),loading=$('nkLoading'),img=$('nkImg');
 function showStatus(type,msg){result.className='nk-result show '+type;result.textContent=msg}
-function hide(){result.className='nk-result';loading.className='nk-loading';img.className='nk-img'}
+function hide(){result.className='nk-result';loading.className='nk-loading';img.className='nk-img';var d=document.getElementById('nkDl');if(d)d.className='nk-dl'}
 // Auto-fill date/time
 var now=new Date();
 if(!date.value)date.value=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
@@ -248,7 +251,7 @@ var r=await fetch('/api/nokia-proxy?text='+encodeURIComponent(t)+'&from='+encode
 if(!r.ok)throw new Error('Gagal membuat gambar');
 var blob=await r.blob();
 var objUrl=URL.createObjectURL(blob);
-img.src=objUrl;img.className='nk-img show';
+img.src=objUrl;img.className='nk-img show';var dl=document.getElementById('nkDl');dl.href=objUrl;dl.className='nk-dl show';
 showStatus('ok','✅ Berhasil! Gambar berhasil dibuat');
 }catch(e){
 showStatus('err','❌ Gagal: '+e.message);
