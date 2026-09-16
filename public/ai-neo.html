@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Neo - JAVIN SEMOK</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+html, body { overflow-y: auto !important; height: auto !important; min-height: 100vh !important; }
+.page { display: block !important; height: auto !important; min-height: 100vh !important; overflow-y: auto !important; padding-bottom: 40px !important; }
+.page-header { display: flex !important; align-items: center !important; gap: 12px !important; flex-direction: row !important; }
+
+.an-wrap { max-width: 720px; margin: 0 auto; padding: 16px 14px 100px; }
+.an-card {
+  background: rgba(20,25,40,0.72);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 18px;
+  padding: 22px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.an-title {
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff, #00ffaa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.an-sub { color: rgba(255,255,255,0.6); font-size: 0.86rem; margin: 0 0 20px; }
+
+/* Chat area */
+.an-chat {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px;
+  min-height: 280px;
+  max-height: 55vh;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  scroll-behavior: smooth;
+}
+.an-chat::-webkit-scrollbar { width: 6px; }
+.an-chat::-webkit-scrollbar-track { background: transparent; }
+.an-chat::-webkit-scrollbar-thumb { background: rgba(124,92,255,0.4); border-radius: 3px; }
+
+.an-empty {
+  text-align: center;
+  padding: 40px 10px;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.an-empty-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+
+.an-msg { display: flex; margin-bottom: 12px; }
+.an-msg.user { justify-content: flex-end; }
+.an-msg.ai { justify-content: flex-start; }
+
+.an-bubble {
+  max-width: 82%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  animation: anFadeIn 0.3s ease;
+}
+@keyframes anFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.an-msg.user .an-bubble {
+  background: linear-gradient(135deg, #7c5cff, #9d7cff);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.an-msg.ai .an-bubble {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #e8e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+.an-msg.ai .an-bubble.error {
+  background: rgba(255,77,109,0.12);
+  border-color: rgba(255,77,109,0.4);
+  color: #ff8fa3;
+}
+
+.an-typing {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.an-typing span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  animation: anTyping 1.2s infinite;
+}
+.an-typing span:nth-child(2) { animation-delay: 0.2s; }
+.an-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes anTyping {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* Input area */
+.an-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: rgba(0,0,0,0.35);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 8px 8px 8px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.an-input-wrap:focus-within {
+  border-color: #7c5cff;
+  box-shadow: 0 0 0 3px rgba(124,92,255,0.15);
+}
+.an-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 8px 0;
+  resize: none;
+  max-height: 120px;
+  min-height: 24px;
+  outline: none;
+  line-height: 1.4;
+}
+.an-input::placeholder { color: rgba(255,255,255,0.35); }
+.an-send {
+  background: linear-gradient(135deg, #7c5cff, #9d7cff);
+  border: none;
+  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: transform 0.1s, opacity 0.2s;
+  box-shadow: 0 4px 12px rgba(124,92,255,0.35);
+}
+.an-send:active { transform: scale(0.92); }
+.an-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.an-hint {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.4);
+  margin-top: 8px;
+  text-align: center;
+}
+.an-hint kbd {
+  background: rgba(255,255,255,0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+.an-clear {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  padding: 6px 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-top: 12px;
+  width: 100%;
+}
+.an-clear:hover { background: rgba(255,255,255,0.05); }
+</style>
+</head>
+<body>
+<div class="page">
+<header class="page-header">
+<a href="/tools.html" class="header-btn">← Tools</a>
+<h1>🤖 AI Neo</h1>
+</header>
+
+<div class="an-wrap">
+<div class="an-card">
+<h2 class="an-title">🤖 AI Neo</h2>
+<p class="an-sub">Chat dengan Claude AI — powered by NexaDev</p>
+
+<div id="anChat" class="an-chat">
+  <div class="an-empty">
+    <span class="an-empty-icon">💬</span>
+    Mulai percakapan dengan AI Neo<br>
+    Tanya apa aja, kapan aja.
+  </div>
+</div>
+
+<div class="an-input-wrap">
+  <textarea id="anInput" class="an-input" placeholder="Tulis pesan kamu..." rows="1"></textarea>
+  <button id="anSend" class="an-send" type="button" aria-label="Kirim">
+    <span id="anSendIcon">➤</span>
+  </button>
+</div>
+
+<div class="an-hint">
+  Tekan <kbd>Enter</kbd> untuk kirim • <kbd>Shift+Enter</kbd> untuk baris baru
+</div>
+
+<button id="anClear" class="an-clear" type="button">🗑️ Bersihkan Chat</button>
+</div>
+</div>
+</div>
+
+<script>
+(function() {
+  var $ = function(id) { return document.getElementById(id); };
+  var chatEl = $('anChat');
+  var inputEl = $('anInput');
+  var sendBtn = $('anSend');
+  var sendIcon = $('anSendIcon');
+  var clearBtn = $('anClear');
+
+  var isSending = false;
+  var history = [];
+
+  // Auto-resize textarea
+  inputEl.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  function clearEmpty() {
+    var empty = chatEl.querySelector('.an-empty');
+    if (empty) empty.remove();
+  }
+
+  function scrollBottom() {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function addMessage(role, text) {
+    clearEmpty();
+    var msg = document.createElement('div');
+    msg.className = 'an-msg ' + role;
+    var bubble = document.createElement('div');
+    bubble.className = 'an-bubble' + (role === 'ai' && text.indexOf('❌') === 0 ? ' error' : '');
+    bubble.textContent = text;
+    msg.appendChild(bubble);
+    chatEl.appendChild(msg);
+    scrollBottom();
+    return bubble;
+  }
+
+  function addTyping() {
+    clearEmpty();
+    var msg = document.createElement('div');
+    msg.className = 'an-msg ai';
+    msg.id = 'anTypingMsg';
+    var bubble = document.createElement('div');
+    bubble.className = 'an-bubble';
+    bubble.innerHTML = '<div class="an-typing"><span></span><span></span><span></span></div>';
+    msg.appendChild(bubble);
+    chatEl.appendChild(msg);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    var t = document.getElementById('anTypingMsg');
+    if (t) t.remove();
+  }
+
+  function setSending(state) {
+    isSending = state;
+    sendBtn.disabled = state;
+    sendIcon.textContent = state ? '⏳' : '➤';
+  }
+
+  async function sendMessage() {
+    if (isSending) return;
+    var text = inputEl.value.trim();
+    if (!text) return;
+
+    addMessage('user', text);
+    history.push({ role: 'user', text: text });
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    setSending(true);
+    addTyping();
+
+    try {
+      var r = await fetch('/api/ai-neo-proxy?text=' + encodeURIComponent(text));
+      var d = await r.json();
+      removeTyping();
+
+      if (!d.status || !d.reply) {
+        addMessage('ai', '❌ ' + (d.message || 'AI tidak merespon'));
+        return;
+      }
+
+      addMessage('ai', d.reply);
+      history.push({ role: 'ai', text: d.reply });
+    } catch (e) {
+      removeTyping();
+      addMessage('ai', '❌ Gagal terhubung ke AI: ' + e.message);
+    } finally {
+      setSending(false);
+      inputEl.focus();
+    }
+  }
+
+  // Kirim via tombol
+  sendBtn.addEventListener('click', sendMessage);
+
+  // Kirim via Enter (Shift+Enter = newline)
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Clear chat
+  clearBtn.addEventListener('click', function() {
+    if (!confirm('Hapus semua percakapan?')) return;
+    chatEl.innerHTML = '<div class="an-empty"><span class="an-empty-icon">💬</span>Mulai percakapan dengan AI Neo<br>Tanya apa aja, kapan aja.</div>';
+    history = [];
+  });
+
+  inputEl.focus();
+})();
+</script>
+</body>
+</html>

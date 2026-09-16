@@ -5613,20 +5613,103 @@ function checkGroupedStatus() {
   };
 
   // === TOOLS ===
-  var toolList = [
-    { name: 'NGL Sender', f: 'public/javin-ngl.html', check: function() { return typeof NGL_COIN_PER_PESAN !== 'undefined'; } },
-    { name: 'Javin Analog', f: 'public/javin-analog.html', check: function() { return typeof ANITA_API !== 'undefined'; } },
-    { name: 'Random Waifu', f: 'public/waifu.html', check: function() { return true; } },
-    { name: 'Wink Upscaler', f: 'public/tools-wink.html', check: function() { return true; } },
-    { name: 'IG Downloader', f: 'public/tools-ig.html', check: function() { return true; } },
-    { name: 'Fake Call', f: 'public/tools-fakecall.html', check: function() { return true; } },
-    { name: 'Nokia Text', f: 'public/tools-nokia.html', check: function() { return true; } },
-    { name: 'QR Generator', f: 'public/qr.html', check: function() { return true; } },
-    { name: 'Brat Video', f: 'public/brat.html', check: function() { return true; } },
-    { name: 'Douyin', f: 'public/javin-douyin.html', check: function() { return true; } },
-    { name: 'Asisten AI', f: 'public/llama.html', check: function() { return true; } },
-    { name: 'Sosial', f: 'public/sosial.html', check: function() { return true; } }
-  ];
+  // === AUTO-SCAN public/*.html ===
+  var scanPublicFeatures = function() {
+    var fs = require('fs');
+    var pathMod = require('path');
+    var pubDir = pathMod.join(__dirname, 'public');
+
+    // File yang DIKECUALIKAN dari scan
+    var exclude = [
+      'index.html', 'index_backup.html', 'index_backup_v2.html',
+      'admin.html', 'admin-login.html', 'dashboard.html',
+      'banned.html', 'maintenance.html', 'test.html',
+      'log.html', 'status.html', 'chat.html', 'game.html',
+      'ibadah.html', 'sholat.html', 'harian.html', 'event.html',
+      'profile.html', 'leaderboard.html', 'achievement.html'
+    ];
+
+    // Custom label (nama file → label cantik)
+    var labelMap = {
+      'javin-ngl.html': 'NGL Sender',
+      'javin-analog.html': 'Javin Analog',
+      'javin-anonim.html': 'Javin Anonim',
+      'javin-douyin.html': 'Douyin',
+      'javin-guna.html': 'Javin Guna',
+      'waifu.html': 'Random Waifu',
+      'tools-wink.html': 'Wink Upscaler',
+      'tools-ig.html': 'IG Downloader',
+      'tools-fakecall.html': 'Fake Call',
+      'tools-nokia.html': 'Nokia Text',
+      'tools.html': 'Tools Hub',
+      'qr.html': 'QR Generator',
+      'brat.html': 'Brat Video',
+      'llama.html': 'Asisten AI',
+      'sosial.html': 'Sosial',
+      'api-tool.html': 'API Tool',
+      'kartu.html': 'Kartu User',
+      'blackjack.html': 'Blackjack',
+      'slot.html': 'Slot',
+      'dadu.html': 'Dadu',
+      'dice.html': 'Dice',
+      'chess.html': 'Chess',
+      'mahjong.html': 'Mahjong',
+      'roulette.html': 'Roulette',
+      'lottery.html': 'Lottery',
+      'tebak.html': 'Tebak',
+      'workout.html': 'Workout',
+      'exercise.html': 'Exercise'
+    };
+
+    var files;
+    try {
+      files = fs.readdirSync(pubDir);
+    } catch (e) {
+      return [];
+    }
+
+    var result = [];
+    var seen = {};
+
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (f.indexOf('.html') === -1) continue;
+      if (f.indexOf('.backup') !== -1) continue;
+      if (f.indexOf('.before') !== -1) continue;
+      if (exclude.indexOf(f) !== -1) continue;
+      if (seen[f]) continue;
+      seen[f] = true;
+
+      var label = labelMap[f];
+      if (!label) {
+        // Auto-generate label dari nama file
+        label = f.replace('.html', '')
+                 .replace(/[-_]/g, ' ')
+                 .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+      }
+
+      result.push({
+        name: label,
+        file: f,
+        path: pubDir + '/' + f
+      });
+    }
+
+    // Sort by label
+    result.sort(function(a, b) { return a.name.localeCompare(b.name); });
+
+    return result;
+  };
+
+  var scannedFeatures = scanPublicFeatures();
+  var toolList = scannedFeatures.map(function(item) {
+    return {
+      name: item.name,
+      f: 'public/' + item.file,
+      check: function() { return checkFileExists('public/' + item.file); }
+    };
+  });
+  // === END AUTO-SCAN ===
   var toolItems = toolList.map(function(t) {
     return { name: t.name, ok: checkFileExists(t.f) && t.check() };
   });
@@ -5634,7 +5717,7 @@ function checkGroupedStatus() {
   groups.tools = {
     label: 'Tools & Utility',
     icon: '🛠️',
-    status: toolOk === toolItems.length ? 'ready' : (toolOk > 6 ? 'warning' : 'error'),
+    status: toolOk === toolItems.length ? 'ready' : (toolOk > toolItems.length * 0.6 ? 'warning' : 'error'),
     detail: toolOk + '/' + toolItems.length + ' tool aktif',
     items: toolItems
   };
@@ -6125,6 +6208,60 @@ app.post('/api/admin/force-recovery', requireAdmin, function(req, res) {
 });
 
 // === END AUTO-RECOVERY ===
+
+
+// === AI NEO — CLAUDE PROXY ===
+app.get('/api/ai-neo-proxy', async function(req, res) {
+  try {
+    var text = req.query.text;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ status: false, message: 'Pesan tidak boleh kosong' });
+    }
+    if (text.length > 2000) {
+      return res.status(400).json({ status: false, message: 'Pesan maksimal 2000 karakter' });
+    }
+
+    var target = 'https://api.nexadev.my.id/ai/claude?text=' + encodeURIComponent(text);
+    var r = await fetch(target, { signal: AbortSignal.timeout(60000) });
+
+    var text_raw = await r.text();
+    var data;
+    try { data = JSON.parse(text_raw); }
+    catch (e) { data = { raw: text_raw }; }
+
+    // Normalize response — cari field yang berisi balasan
+    var reply =
+      (data && (data.result || data.response || data.message || data.reply || data.answer || data.output || data.text)) ||
+      (data && data.data && (data.data.result || data.data.message || data.data.response)) ||
+      (typeof data === 'string' ? data : null);
+
+    if (!reply && data && data.raw) reply = data.raw;
+
+    if (!r.ok || !reply) {
+      return res.status(r.status || 400).json({
+        status: false,
+        message: (data && data.message) || 'AI tidak memberikan respon'
+      });
+    }
+
+    // Bersihin reply dari karakter aneh
+    var cleanReply = String(reply)
+      .replace(/\r\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    if (!cleanReply) {
+      return res.status(400).json({ status: false, message: 'Respon AI kosong' });
+    }
+
+    res.json({ status: true, reply: cleanReply });
+  } catch (e) {
+    console.error('[AI-NEO] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal terhubung ke AI: ' + e.message });
+  }
+});
+// === END AI NEO ===
+
 
 
 // ============================================
