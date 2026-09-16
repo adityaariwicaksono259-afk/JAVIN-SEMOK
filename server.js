@@ -5748,4 +5748,189 @@ app.get('/api/system-status', function(req, res) {
 
 // === END STATUS v2 ===
 
+
+
+// ============================================
+// PROTECTION LAYER 18 — URL/API MASKING
+// ============================================
+
+// Mapping endpoint asli → nama user-friendly
+var ENDPOINT_LABELS = {
+  '/api/ngl': 'NGL Sender',
+  '/api/ngl/balance': 'NGL Balance',
+  '/api/ngl/get-token': 'NGL Auth',
+  '/api/javin-analog/send': 'Javin Analog Send',
+  '/api/javin-analog/verify': 'Javin Analog Verify',
+  '/api/javin-analog/premium': 'Javin Analog Premium',
+  '/api/javin-analog/stats': 'Javin Analog Stats',
+  '/api/ai/chat': 'AI Chat',
+  '/api/brat': 'Brat Video',
+  '/api/douyin/search': 'Douyin Search',
+  '/api/sholat': 'Jadwal Sholat',
+  '/api/waifu': 'Random Waifu',
+  '/api/verify-global': 'Security Check',
+  '/api/admin/login': 'Admin Login',
+  '/api/admin/check': 'Admin Check',
+  '/api/ban-status': 'Ban Status',
+  '/api/system-status': 'System Status',
+  '/api/provider-status': 'Provider Status'
+};
+
+function maskPath(p) {
+  if (ENDPOINT_LABELS[p]) return ENDPOINT_LABELS[p];
+  // Fallback: ambil segmen terakhir, capitalize
+  var parts = String(p).split('/').filter(Boolean);
+  if (!parts.length) return 'Unknown';
+  return parts[parts.length - 1].replace(/-/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+}
+
+// Mapping provider asli → nama samaran
+var PROVIDER_LABELS = {
+  'NGL (NexaDev)': 'Gateway A',
+  'Anita Studio': 'Gateway B',
+  'Waifu.im': 'Media Provider'
+};
+
+function maskProvider(p) {
+  return PROVIDER_LABELS[p] || p;
+}
+
+// Sanitize pesan error — hapus URL, IP, path sensitif
+function sanitizeErrorMessage(msg) {
+  if (typeof msg !== 'string') return 'Terjadi kesalahan';
+  var s = msg;
+  // Hapus URL lengkap
+  s = s.replace(/https?:\/\/[^\s"'<>]+/gi, '[URL]');
+  // Hapus IP address
+  s = s.replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP]');
+  // Hapus path absolut
+  s = s.replace(/\/(?:data|home|var|usr|etc|root)\/[^\s"'<>]+/gi, '[PATH]');
+  // Hapus nama file sensitif
+  s = s.replace(/\b(server|db|config|env|secret)\.(js|json|env|txt|log)\b/gi, '[FILE]');
+  // Batasi panjang
+  if (s.length > 200) s = s.slice(0, 200) + '...';
+  return s;
+}
+
+// 18.1 — Sanitize semua error response (5xx)
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+
+  var origJson = res.json;
+  res.json = function(body) {
+    // Sanitize error messages
+    if (body && typeof body === 'object') {
+      if (body.message && typeof body.message === 'string') {
+        body.message = sanitizeErrorMessage(body.message);
+      }
+      if (body.error && typeof body.error === 'string') {
+        body.error = sanitizeErrorMessage(body.error);
+      }
+      if (body.raw && typeof body.raw === 'string') {
+        body.raw = sanitizeErrorMessage(body.raw);
+      }
+      // Hapus field yang bisa bocorin internal
+      delete body.stack;
+      delete body.targetUrl;
+      delete body.upstream;
+    }
+    return origJson.call(this, body);
+  };
+  next();
+});
+
+// 18.2 — Ganti endpoint name di live stats dengan label
+var _origGetEndpointStatus = getEndpointStatus;
+getEndpointStatus = function() {
+  var raw = _origGetEndpointStatus();
+  var masked = {};
+  Object.keys(raw).forEach(function(k) {
+    masked[maskPath(k)] = raw[k];
+  });
+  return masked;
+};
+
+// 18.3 — Ganti provider name di health map
+// Patch checkProviderHealth biar key-nya masked
+var _origCheckProviderHealth = checkProviderHealth;
+checkProviderHealth = async function() {
+  await _origCheckProviderHealth();
+  // Rename keys di providerHealth
+  var old = liveErrorMonitor.providerHealth;
+  var fresh = {};
+  Object.keys(old).forEach(function(k) {
+    fresh[maskProvider(k)] = old[k];
+  });
+  liveErrorMonitor.providerHealth = fresh;
+};
+
+// 18.4 — Patch checkGroupedStatus biar gak bocorin path
+var _origCheckGrouped2 = checkGroupedStatus;
+checkGroupedStatus = function() {
+  var g = _origCheckGrouped2();
+
+  // Mask semua item names
+  Object.keys(g.groups).forEach(function(gk) {
+    var grp = g.groups[gk];
+    if (grp.items) {
+      grp.items = grp.items.map(function(it) {
+        return {
+          name: sanitizeErrorMessage(it.name).replace(/^\/api\//, '').replace(/\//g, ' '),
+          ok: it.ok
+        };
+      });
+    }
+    // Mask detail
+    if (grp.detail) grp.detail = sanitizeErrorMessage(grp.detail);
+  });
+
+  return g;
+};
+
+// 18.5 — Ganti title biar gak bocorin "Anita Studio" dll
+// Patch detail Javin Analog (yang tadi kasih tau "Anita Studio aktif")
+var _origCheckGrouped3 = checkGroupedStatus;
+checkGroupedStatus = function() {
+  var g = _origCheckGrouped3();
+  // Sanitize group details
+  Object.keys(g.groups).forEach(function(k) {
+    var grp = g.groups[k];
+    if (grp.detail) {
+      grp.detail = grp.detail
+        .replace(/Anita Studio/gi, 'API')
+        .replace(/NexaDev/gi, 'Gateway')
+        .replace(/waifu\.im/gi, 'Provider')
+        .replace(/api\.[a-z0-9.-]+/gi, 'API');
+    }
+  });
+  return g;
+};
+
+// 18.6 — Admin endpoint tetap nampilin versi asli (buat debugging)
+// Override getEndpointStatus untuk admin
+app.get('/api/admin/raw-stats', requireAdmin, function(req, res) {
+  var raw = _origGetEndpointStatus();
+  var providerList = {};
+  // Ambil provider asli (dari map sebelum masked)
+  Object.keys(liveErrorMonitor.providerHealth).forEach(function(k) {
+    providerList[k] = liveErrorMonitor.providerHealth[k];
+  });
+  res.json({
+    status: true,
+    endpoints: raw,
+    providers: providerList,
+    note: 'Ini versi unmasked — cuma buat admin'
+  });
+});
+
+// 18.7 — Hapus header yang bocorin teknologi
+app.use(function(req, res, next) {
+  res.removeHeader('X-Powered-By');
+  res.removeHeader('Server');
+  res.removeHeader('X-Render-Origin-Server');
+  next();
+});
+
+// === END LAYER 18 ===
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
