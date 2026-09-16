@@ -6424,4 +6424,58 @@ app.get('/api/ai-neo-debug', async function(req, res) {
 });
 // === END AI NEO ===
 
+
+
+// === ANIME PROXY (siputzx) ===
+var ANIME_BASE = 'https://api.siputzx.my.id/api/anime/';
+
+async function animeFetch(endpoint, params) {
+  var qs = params ? '?' + new URLSearchParams(params).toString() : '';
+  var url = ANIME_BASE + endpoint + qs;
+  var r = await fetch(url, {
+    headers: { 'accept': 'application/json', 'user-agent': 'Mozilla/5.0' },
+    signal: AbortSignal.timeout(45000)
+  });
+  var raw = await r.text();
+  var data;
+  try { data = JSON.parse(raw); } catch (e) { data = { raw: raw }; }
+  if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + raw.slice(0, 150));
+  return data;
+}
+
+// Handler generik — 1 route handle semua anime endpoint
+app.get('/api/anime-proxy/:type', async function(req, res) {
+  try {
+    var type = req.params.type;
+    var endpoint = '';
+    var params = {};
+
+    // Otakudesu
+    if (type === 'otakudesu-ongoing') endpoint = 'otakudesu/ongoing';
+    else if (type === 'otakudesu-search') { endpoint = 'otakudesu/search'; params.s = req.query.q || ''; }
+    else if (type === 'otakudesu-detail') { endpoint = 'otakudesu/detail'; params.url = req.query.url || ''; }
+    else if (type === 'otakudesu-download') { endpoint = 'otakudesu/download'; params.url = req.query.url || ''; }
+
+    // Oploverz
+    else if (type === 'oploverz-ongoing') endpoint = 'oploverz-ongoing';
+    else if (type === 'oploverz-search') { endpoint = 'oploverz-search'; params.query = req.query.q || ''; }
+    else if (type === 'oploverz-episode') { endpoint = 'oploverz-episode'; params.url = req.query.url || ''; }
+    else if (type === 'oploverz-download') { endpoint = 'oploverz-download'; params.url = req.query.url || ''; }
+
+    // Komikindo
+    else if (type === 'komikindo-search') { endpoint = 'komikindo-search'; params.query = req.query.q || ''; }
+    else if (type === 'komikindo-detail') { endpoint = 'komikindo-detail'; params.url = req.query.url || ''; }
+    else if (type === 'komikindo-download') { endpoint = 'komikindo-download'; params.url = req.query.url || ''; }
+
+    else return res.status(400).json({ status: false, message: 'Endpoint tidak dikenal' });
+
+    var data = await animeFetch(endpoint, params);
+    res.json({ status: true, data: data });
+  } catch (e) {
+    console.error('[ANIME] Error:', e.message);
+    res.status(500).json({ status: false, message: e.message });
+  }
+});
+// === END ANIME PROXY ===
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));

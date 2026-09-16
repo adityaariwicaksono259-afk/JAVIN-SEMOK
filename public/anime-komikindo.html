@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Komikindo - Komik</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+html,body{overflow-y:auto!important;height:auto!important;min-height:100vh!important}
+.page{display:block!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;padding-bottom:40px!important}
+.page-header{display:flex!important;align-items:center!important;gap:12px!important;flex-direction:row!important}
+.ko-wrap{max-width:760px;margin:0 auto;padding:16px 14px 100px}
+.ko-card{background:rgba(20,25,40,0.72);backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:22px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.ko-title{margin:0 0 6px;font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#fff,#00ffaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ko-sub{color:rgba(255,255,255,0.6);font-size:0.86rem;margin:0 0 20px}
+.ko-tabs{display:flex;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px}
+.ko-tab{flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(0,0,0,0.35);border:1.5px solid rgba(255,255,255,0.10);color:rgba(255,255,255,0.7);font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.ko-tab.active{background:linear-gradient(135deg,#7c5cff,#9d7cff);border-color:#7c5cff;color:#fff;box-shadow:0 4px 12px rgba(124,92,255,0.35)}
+.ko-panel{display:none}
+.ko-panel.active{display:block}
+.ko-label{display:block;margin:14px 0 6px;font-weight:700;font-size:0.82rem;letter-spacing:0.3px;color:rgba(255,255,255,0.9);text-transform:uppercase}
+.ko-input{width:100%;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px 14px;font:inherit;font-size:0.95rem;background:rgba(0,0,0,0.35);color:#fff}
+.ko-input:focus{outline:none;border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,0.15)}
+.ko-btn{width:100%;margin-top:14px;border:0;border-radius:12px;padding:13px;font:inherit;font-size:0.95rem;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#7c5cff,#9d7cff);color:#fff;box-shadow:0 4px 12px rgba(124,92,255,0.3)}
+.ko-btn:disabled{opacity:0.5}
+.ko-result{margin-top:18px;font-size:0.88rem;color:#e8e8f0;line-height:1.6}
+.ko-empty{padding:20px;text-align:center;color:rgba(255,255,255,0.4);font-size:0.85rem;background:rgba(0,0,0,0.25);border-radius:12px}
+.ko-item{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin-bottom:10px}
+.ko-item img{width:70px;height:100px;object-fit:cover;border-radius:8px;float:left;margin-right:12px;background:rgba(255,255,255,0.05)}
+.ko-item h4{margin:0 0 4px;font-size:0.92rem;color:#fff;font-weight:700}
+.ko-item p{margin:0;font-size:0.78rem;color:rgba(255,255,255,0.6)}
+.ko-item a{color:#7c5cff;text-decoration:none;font-size:0.78rem;font-weight:700}
+.ko-clearfix::after{content:"";display:table;clear:both}
+.ko-error{background:rgba(255,77,109,0.12);border:1.5px solid #ff4d6d;color:#ff8fa3;padding:14px;border-radius:12px;font-size:0.85rem;margin-top:14px}
+.ko-spinner{width:26px;height:26px;border:3px solid rgba(255,255,255,0.15);border-top-color:#7c5cff;border-radius:50%;animation:koSpin 0.8s linear infinite;margin:0 auto}
+@keyframes koSpin{to{transform:rotate(360deg)}}
+.ko-loading{text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="page-header">
+<a href="/anime.html" class="header-btn">Kembali</a>
+<h1>Komikindo</h1>
+</header>
+<div class="ko-wrap">
+<div class="ko-card">
+<h2 class="ko-title">Komikindo</h2>
+<p class="ko-sub">Baca dan download komik subtitle Indonesia</p>
+<div class="ko-tabs">
+<button class="ko-tab active" data-tab="search">Cari</button>
+<button class="ko-tab" data-tab="detail">Detail</button>
+<button class="ko-tab" data-tab="download">Download</button>
+</div>
+
+<div class="ko-panel active" data-panel="search">
+<label class="ko-label">Judul Komik</label>
+<input id="koSearchInput" class="ko-input" type="text" placeholder="contoh: solo leveling">
+<button id="koSearchBtn" class="ko-btn">Cari Komik</button>
+<div id="koSearchResult" class="ko-result"></div>
+</div>
+
+<div class="ko-panel" data-panel="detail">
+<label class="ko-label">URL Komik</label>
+<input id="koDetailInput" class="ko-input" type="url" placeholder="https://komikindo.cz/komik/...">
+<button id="koDetailBtn" class="ko-btn">Lihat Detail</button>
+<div id="koDetailResult" class="ko-result"></div>
+</div>
+
+<div class="ko-panel" data-panel="download">
+<label class="ko-label">URL Chapter</label>
+<input id="koDlInput" class="ko-input" type="url" placeholder="https://komikindo.cz/solo-leveling-chapter-1/">
+<button id="koDlBtn" class="ko-btn">Ambil Link Download</button>
+<div id="koDlResult" class="ko-result"></div>
+</div>
+
+</div>
+</div>
+</div>
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return document.querySelectorAll(s)};
+
+$$('.ko-tab').forEach(function(t){
+t.addEventListener('click',function(){
+$$('.ko-tab').forEach(function(x){x.classList.remove('active')});
+$$('.ko-panel').forEach(function(x){x.classList.remove('active')});
+t.classList.add('active');
+document.querySelector('.ko-panel[data-panel="'+t.dataset.tab+'"]').classList.add('active');
+});
+});
+
+function render(data){
+if(!data||!data.status){return '<div class="ko-error">Gagal: '+((data&&data.message)||'Unknown error')+'</div>'}
+var d=data.data;
+var items=null;
+if(Array.isArray(d))items=d;
+else if(d&&Array.isArray(d.data))items=d.data;
+else if(d&&Array.isArray(d.result))items=d.result;
+else if(d&&d.data&&Array.isArray(d.data))items=d.data;
+else if(d&&d.result&&Array.isArray(d.result))items=d.result;
+
+if(!items){
+var s=JSON.stringify(d,null,2);
+return '<div class="ko-item"><pre style="white-space:pre-wrap;font-size:0.72rem;max-height:400px;overflow:auto">'+s.replace(/</g,'&lt;')+'</pre></div>';
+}
+if(!items.length)return '<div class="ko-empty">Tidak ada hasil</div>';
+
+var html='';
+items.forEach(function(it){
+var title=it.title||it.judul||it.name||'-';
+var img=it.thumb||it.image||it.poster||it.img||'';
+var link=it.link||it.url||it.href||'';
+var extra=it.chapter||it.ch||it.episode||'';
+html+='<div class="ko-item ko-clearfix">';
+if(img)html+='<img src="'+img+'" alt="" loading="lazy">';
+html+='<h4>'+title+'</h4>';
+if(extra)html+='<p>'+extra+'</p>';
+if(link)html+='<p><a href="'+link+'" target="_blank" rel="noopener">Buka sumber</a></p>';
+html+='</div>';
+});
+return html;
+}
+
+async function callAPI(type,q){
+var url='/api/anime-proxy/'+type;
+if(q)url+='?'+q.key+'='+encodeURIComponent(q.val);
+var r=await fetch(url);
+return await r.json();
+}
+
+function setLoading(el){el.innerHTML='<div class="ko-loading"><div class="ko-spinner"></div></div>'}
+function setError(el,msg){el.innerHTML='<div class="ko-error">'+msg+'</div>'}
+
+$('#koSearchBtn').addEventListener('click',async function(){
+var v=$('#koSearchInput').value.trim();if(!v)return;
+var el=$('#koSearchResult');setLoading(el);this.disabled=true;
+try{var d=await callAPI('komikindo-search',{key:'q',val:v});el.innerHTML=render(d)}
+catch(e){setError(el,'Gagal: '+e.message)}
+this.disabled=false;
+});
+
+$('#koDetailBtn').addEventListener('click',async function(){
+var v=$('#koDetailInput').value.trim();if(!v)return;
+var el=$('#koDetailResult');setLoading(el);this.disabled=true;
+try{var d=await callAPI('komikindo-detail',{key:'url',val:v});el.innerHTML=render(d)}
+catch(e){setError(el,'Gagal: '+e.message)}
+this.disabled=false;
+});
+
+$('#koDlBtn').addEventListener('click',async function(){
+var v=$('#koDlInput').value.trim();if(!v)return;
+var el=$('#koDlResult');setLoading(el);this.disabled=true;
+try{var d=await callAPI('komikindo-download',{key:'url',val:v});el.innerHTML=render(d)}
+catch(e){setError(el,'Gagal: '+e.message)}
+this.disabled=false;
+});
+})();
+</script>
+</body>
+</html>
