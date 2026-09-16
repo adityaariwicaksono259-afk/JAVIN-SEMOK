@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wink - Image Upscaler</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+.wk-wrap{max-width:620px;margin:0 auto;padding:20px}
+.wk-card{background:rgba(20,25,40,0.65);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px}
+.wk-card h2{margin:0 0 6px;color:#fff}
+.wk-sub{color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:20px}
+.wk-label{display:block;margin:16px 0 6px;font-weight:600;color:#fff}
+.wk-input{width:100%;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px;font:inherit;background:rgba(0,0,0,0.3);color:#fff}
+.wk-input:focus{outline:none;border-color:#7c5cff}
+.wk-btn{width:100%;margin-top:16px;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7c5cff,#9d7cff);color:#fff;transition:transform 0.1s}
+.wk-btn:active{transform:scale(0.97)}
+.wk-btn:disabled{opacity:0.6;cursor:not-allowed}
+.wk-result{margin-top:20px;padding:16px;border-radius:12px;text-align:center;display:none}
+.wk-result.show{display:block}
+.wk-result.ok{background:rgba(0,212,170,0.12);border:1.5px solid #00d4aa;color:#00d4aa}
+.wk-result.err{background:rgba(255,77,109,0.12);border:1.5px solid #ff4d6d;color:#ff8fa3}
+.wk-img{margin-top:16px;max-width:100%;border-radius:12px;display:none}
+.wk-img.show{display:block}
+.wk-loading{text-align:center;padding:20px;color:rgba(255,255,255,0.6);display:none}
+.wk-loading.show{display:block}
+.wk-spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,0.15);border-top-color:#7c5cff;border-radius:50%;animation:wk-spin 0.8s linear infinite;margin:0 auto 10px}
+@keyframes wk-spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="page-header">
+<a href="/tools.html" class="header-btn">← Tools</a>
+<h1>✨ Wink Upscaler</h1>
+</header>
+<div class="wk-wrap">
+<div class="wk-card">
+<h2>Wink Image Upscaler</h2>
+<p class="wk-sub">Perjelas gambar jadi HD berkualitas tinggi</p>
+<label class="wk-label">URL Gambar</label>
+<input id="wkUrl" class="wk-input" type="url" placeholder="https://example.com/image.jpg" autocomplete="off">
+<button id="wkBtn" class="wk-btn">🚀 Proses Sekarang</button>
+<div id="wkLoading" class="wk-loading"><div class="wk-spinner"></div>Memproses gambar...</div>
+<div id="wkResult" class="wk-result"></div>
+<img id="wkImg" class="wk-img" alt="Result">
+</div>
+</div>
+</div>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id)};
+var btn=$('wkBtn'),input=$('wkUrl'),result=$('wkResult'),loading=$('wkLoading'),img=$('wkImg');
+function showStatus(type,msg){result.className='wk-result show '+type;result.textContent=msg}
+function hide(){result.className='wk-result';loading.className='wk-loading';img.className='wk-img'}
+btn.onclick=async function(){
+var url=input.value.trim();
+if(!url){showStatus('err','❌ URL gambar tidak boleh kosong');return}
+hide();loading.className='wk-loading show';btn.disabled=true;btn.textContent='⏳ Memproses...';
+try{
+var r=await fetch('/api/wink-proxy?url='+encodeURIComponent(url));
+if(!r.ok)throw new Error('Gagal memproses gambar');
+var blob=await r.blob();
+var objUrl=URL.createObjectURL(blob);
+img.src=objUrl;img.className='wk-img show';
+showStatus('ok','✅ Berhasil! Gambar berhasil ditingkatkan');
+}catch(e){
+showStatus('err','❌ Gagal: '+e.message);
+}finally{
+btn.disabled=false;btn.textContent='🚀 Proses Sekarang';
+loading.className='wk-loading';
+}
+};
+})();
+</script>
+<script src="/theme-accent.js"></script>
+</body>
+</html>

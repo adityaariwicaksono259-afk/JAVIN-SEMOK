@@ -6123,4 +6123,97 @@ app.post('/api/admin/force-recovery', requireAdmin, function(req, res) {
 // === END AUTO-RECOVERY ===
 
 
+// ============================================
+// NEXA TOOLS PROXY
+// ============================================
+
+// Wink - Image Upscaler
+app.get('/api/wink-proxy', async function(req, res) {
+  try {
+    var url = req.query.url;
+    if (!url) return res.status(400).json({ status: false, message: 'URL wajib diisi' });
+    var target = 'https://api.nexadev.my.id/api/wink?url=' + encodeURIComponent(url);
+    var r = await fetch(target, { signal: AbortSignal.timeout(30000) });
+    if (!r.ok) return res.status(r.status).json({ status: false, message: 'Gagal memproses gambar' });
+    var buf = Buffer.from(await r.arrayBuffer());
+    var ct = r.headers.get('content-type') || 'image/jpeg';
+    res.set('Content-Type', ct);
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(buf);
+  } catch (e) {
+    console.error('[WINK] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal terhubung ke server' });
+  }
+});
+
+// Instagram Downloader
+app.get('/api/ig-proxy', async function(req, res) {
+  try {
+    var url = req.query.url;
+    if (!url) return res.status(400).json({ status: false, message: 'URL wajib diisi' });
+    var target = 'https://api.nexadev.my.id/api/ig?url=' + encodeURIComponent(url);
+    var r = await fetch(target, { signal: AbortSignal.timeout(30000) });
+    var data = await r.json();
+    if (!data.status || !data.data || !data.data.length) {
+      return res.status(400).json({ status: false, message: 'Gagal mendownload. Cek URL Instagram.' });
+    }
+    res.json({
+      status: true,
+      type: data.data[0].type || 'mp4',
+      url: data.data[0].url
+    });
+  } catch (e) {
+    console.error('[IG] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal terhubung ke server' });
+  }
+});
+
+// Fake Call
+app.get('/api/fakecall-proxy', async function(req, res) {
+  try {
+    var ppurl = req.query.ppurl;
+    var name = req.query.name || 'Unknown';
+    var duration = req.query.duration || '10';
+    if (!ppurl) return res.status(400).json({ status: false, message: 'PP URL wajib diisi' });
+    var target = 'https://apii.nexadev.my.id/fakecall?ppurl=' + encodeURIComponent(ppurl) + '&name=' + encodeURIComponent(name) + '&duration=' + encodeURIComponent(duration);
+    var r = await fetch(target, { signal: AbortSignal.timeout(45000) });
+    if (!r.ok) return res.status(r.status).json({ status: false, message: 'Gagal membuat fake call' });
+    var buf = Buffer.from(await r.arrayBuffer());
+    var ct = r.headers.get('content-type') || 'video/mp4';
+    res.set('Content-Type', ct);
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(buf);
+  } catch (e) {
+    console.error('[FAKECALL] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal terhubung ke server' });
+  }
+});
+
+// Nokia Text Generator
+app.get('/api/nokia-proxy', async function(req, res) {
+  try {
+    var text = req.query.text || '';
+    var from = req.query.from || 'Javin';
+    var date = req.query.date || '';
+    var time = req.query.time || '';
+    var title = req.query.title || 'Javin';
+    if (!text) return res.status(400).json({ status: false, message: 'Text wajib diisi' });
+    var target = 'https://apii.nexadev.my.id/nokia?text=' + encodeURIComponent(text) + '&from=' + encodeURIComponent(from) + '&date=' + encodeURIComponent(date) + '&time=' + encodeURIComponent(time) + '&title=' + encodeURIComponent(title);
+    var r = await fetch(target, { signal: AbortSignal.timeout(45000) });
+    if (!r.ok) return res.status(r.status).json({ status: false, message: 'Gagal membuat gambar' });
+    var buf = Buffer.from(await r.arrayBuffer());
+    var ct = r.headers.get('content-type') || 'image/jpeg';
+    res.set('Content-Type', ct);
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(buf);
+  } catch (e) {
+    console.error('[NOKIA] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal terhubung ke server' });
+  }
+});
+
+// === END NEXA TOOLS ===
+
+
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));

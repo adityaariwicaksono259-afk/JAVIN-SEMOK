@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IG Downloader</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+.ig-wrap{max-width:620px;margin:0 auto;padding:20px}
+.ig-card{background:rgba(20,25,40,0.65);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px}
+.ig-card h2{margin:0 0 6px;color:#fff}
+.ig-sub{color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:20px}
+.ig-label{display:block;margin:16px 0 6px;font-weight:600;color:#fff}
+.ig-input{width:100%;box-sizing:border-box;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px;font:inherit;background:rgba(0,0,0,0.3);color:#fff}
+.ig-input:focus{outline:none;border-color:#7c5cff}
+.ig-btn{width:100%;margin-top:16px;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7c5cff,#9d7cff);color:#fff}
+.ig-btn:disabled{opacity:0.6;cursor:not-allowed}
+.ig-result{margin-top:20px;padding:16px;border-radius:12px;text-align:center;display:none}
+.ig-result.show{display:block}
+.ig-result.ok{background:rgba(0,212,170,0.12);border:1.5px solid #00d4aa;color:#00d4aa}
+.ig-result.err{background:rgba(255,77,109,0.12);border:1.5px solid #ff4d6d;color:#ff8fa3}
+.ig-video{margin-top:16px;max-width:100%;border-radius:12px;display:none}
+.ig-video.show{display:block}
+.ig-dl{display:none;margin-top:14px;padding:12px;border-radius:10px;background:linear-gradient(135deg,#00d4aa,#00b894);color:#000;font-weight:700;text-decoration:none;text-align:center}
+.ig-dl.show{display:block}
+.ig-loading{text-align:center;padding:20px;color:rgba(255,255,255,0.6);display:none}
+.ig-loading.show{display:block}
+.ig-spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,0.15);border-top-color:#7c5cff;border-radius:50%;animation:ig-spin 0.8s linear infinite;margin:0 auto 10px}
+@keyframes ig-spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="page-header">
+<a href="/tools.html" class="header-btn">← Tools</a>
+<h1>📥 IG Downloader</h1>
+</header>
+<div class="ig-wrap">
+<div class="ig-card">
+<h2>Instagram Downloader</h2>
+<p class="ig-sub">Download Reel, Post, atau Video IG</p>
+<label class="ig-label">Link Instagram</label>
+<input id="igUrl" class="ig-input" type="url" placeholder="https://www.instagram.com/reel/..." autocomplete="off">
+<button id="igBtn" class="ig-btn">🚀 Download Sekarang</button>
+<div id="igLoading" class="ig-loading"><div class="ig-spinner"></div>Memproses...</div>
+<div id="igResult" class="ig-result"></div>
+<video id="igVideo" class="ig-video" controls playsinline></video>
+<a id="igDl" class="ig-dl" download="instagram.mp4" target="_blank">⬇️ Download Video</a>
+</div>
+</div>
+</div>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id)};
+var btn=$('igBtn'),input=$('igUrl'),result=$('igResult'),loading=$('igLoading'),video=$('igVideo'),dl=$('igDl');
+function showStatus(type,msg){result.className='ig-result show '+type;result.textContent=msg}
+function hide(){result.className='ig-result';loading.className='ig-loading';video.className='ig-video';dl.className='ig-dl'}
+btn.onclick=async function(){
+var url=input.value.trim();
+if(!url){showStatus('err','❌ Link Instagram tidak boleh kosong');return}
+hide();loading.className='ig-loading show';btn.disabled=true;btn.textContent='⏳ Memproses...';
+try{
+var r=await fetch('/api/ig-proxy?url='+encodeURIComponent(url));
+var d=await r.json();
+if(!d.status||!d.url)throw new Error(d.message||'Gagal mendownload');
+video.src=d.url;video.className='ig-video show';
+dl.href=d.url;dl.className='ig-dl show';
+showStatus('ok','✅ Berhasil! Video siap didownload');
+}catch(e){
+showStatus('err','❌ Gagal: '+e.message);
+}finally{
+btn.disabled=false;btn.textContent='🚀 Download Sekarang';
+loading.className='ig-loading';
+}
+};
+})();
+</script>
+</body>
+</html>

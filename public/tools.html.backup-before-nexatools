@@ -36,35 +36,6 @@
         <div class="tool-badge">NGL</div>
       </a>
 
-      <a href="/tools-wink.html" class="tool-card">
-        <div class="tool-icon">✨</div>
-        <div class="tool-name">Wink Upscaler</div>
-        <div class="tool-desc">Perjelas gambar jadi HD</div>
-        <div class="tool-badge">IMAGE</div>
-      </a>
-
-      <a href="/tools-ig.html" class="tool-card">
-        <div class="tool-icon">📥</div>
-        <div class="tool-name">IG Downloader</div>
-        <div class="tool-desc">Download Reel & Post Instagram</div>
-        <div class="tool-badge">DOWNLOAD</div>
-      </a>
-
-      <a href="/tools-fakecall.html" class="tool-card">
-        <div class="tool-icon">📞</div>
-        <div class="tool-name">Fake Call</div>
-        <div class="tool-desc">Buat screenshot panggilan palsu</div>
-        <div class="tool-badge">GENERATOR</div>
-      </a>
-
-      <a href="/tools-nokia.html" class="tool-card">
-        <div class="tool-icon">📱</div>
-        <div class="tool-name">Nokia Text</div>
-        <div class="tool-desc">SMS gaya Nokia jadul</div>
-        <div class="tool-badge">TEXT</div>
-      </a>
-
-
       <a href="/waifu.html" class="tool-card">
         <div class="tool-icon">🌸</div>
         <div class="tool-name">Random Waifu</div>
