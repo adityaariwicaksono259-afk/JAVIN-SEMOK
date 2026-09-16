@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Javin Cerdas</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+html,body{overflow-y:auto!important;height:auto!important;min-height:100vh!important}
+.page{display:block!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;padding-bottom:40px!important}
+.page-header{display:flex!important;align-items:center!important;gap:12px!important;flex-direction:row!important}
+.jc-wrap{max-width:720px;margin:0 auto;padding:16px 14px 100px}
+.jc-card{background:rgba(20,25,40,0.72);backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:22px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.jc-title{margin:0 0 6px;font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#fff,#00ffaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.jc-sub{color:rgba(255,255,255,0.6);font-size:0.86rem;margin:0 0 20px}
+.jc-chat{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;min-height:280px;max-height:55vh;overflow-y:auto;margin-bottom:16px}
+.jc-empty{text-align:center;padding:40px 10px;color:rgba(255,255,255,0.4);font-size:0.9rem;line-height:1.6}
+.jc-empty-icon{font-size:3rem;margin-bottom:12px;display:block}
+.jc-msg{display:flex;margin-bottom:12px}
+.jc-msg.user{justify-content:flex-end}
+.jc-msg.ai{justify-content:flex-start}
+.jc-bubble{max-width:82%;padding:12px 16px;border-radius:16px;font-size:0.92rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
+.jc-msg.user .jc-bubble{background:linear-gradient(135deg,#7c5cff,#9d7cff);color:#fff;border-bottom-right-radius:4px}
+.jc-msg.ai .jc-bubble{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#e8e8f0;border-bottom-left-radius:4px}
+.jc-msg.ai .jc-bubble.error{background:rgba(255,77,109,0.12);border-color:rgba(255,77,109,0.4);color:#ff8fa3}
+.jc-input-wrap{display:flex;gap:8px;align-items:flex-end;background:rgba(0,0,0,0.35);border:1.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:8px 8px 8px 14px}
+.jc-input{flex:1;background:transparent;border:none;color:#fff;font:inherit;font-size:0.95rem;padding:8px 0;resize:none;max-height:120px;min-height:24px;outline:none}
+.jc-input::placeholder{color:rgba(255,255,255,0.35)}
+.jc-send{background:linear-gradient(135deg,#7c5cff,#9d7cff);border:none;border-radius:12px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:1.1rem;flex-shrink:0}
+.jc-send:disabled{opacity:0.5}
+.jc-hint{font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:8px;text-align:center}
+.jc-clear{background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:6px 14px;border-radius:10px;font:inherit;font-size:0.78rem;cursor:pointer;margin-top:12px;width:100%}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="page-header">
+<a href="/ai.html" class="header-btn">← AI</a>
+<h1>🧠 Javin Cerdas</h1>
+</header>
+<div class="jc-wrap">
+<div class="jc-card">
+<h2 class="jc-title">🧠 Javin Cerdas</h2>
+<p class="jc-sub">AI cerdas yang siap bantu jawab apapun</p>
+<div id="jcChat" class="jc-chat"><div class="jc-empty"><span class="jc-empty-icon">💡</span>Mulai percakapan dengan Javin Cerdas</div></div>
+<div class="jc-input-wrap">
+<textarea id="jcInput" class="jc-input" placeholder="Tulis pesan..." rows="1"></textarea>
+<button id="jcSend" class="jc-send" type="button"><span id="jcSendIcon">➤</span></button>
+</div>
+<div class="jc-hint">Enter = kirim • Shift+Enter = baris baru</div>
+<button id="jcClear" class="jc-clear" type="button">🗑️ Bersihkan Chat</button>
+</div>
+</div>
+</div>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id)};
+var chatEl=$('jcChat'),inputEl=$('jcInput'),sendBtn=$('jcSend'),sendIcon=$('jcSendIcon'),clearBtn=$('jcClear');
+var isSending=false;
+inputEl.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'});
+function clearEmpty(){var e=chatEl.querySelector('.jc-empty');if(e)e.remove()}
+function scrollBottom(){chatEl.scrollTop=chatEl.scrollHeight}
+function addMessage(role,text){clearEmpty();var m=document.createElement('div');m.className='jc-msg '+role;var b=document.createElement('div');b.className='jc-bubble'+(role==='ai'&&text.indexOf('❌')===0?' error':'');b.textContent=text;m.appendChild(b);chatEl.appendChild(m);scrollBottom()}
+function addTyping(){clearEmpty();var m=document.createElement('div');m.className='jc-msg ai';m.id='jcTypingMsg';var b=document.createElement('div');b.className='jc-bubble';b.textContent='⏳ Mengetik...';m.appendChild(b);chatEl.appendChild(m);scrollBottom()}
+function removeTyping(){var t=document.getElementById('jcTypingMsg');if(t)t.remove()}
+function setSending(s){isSending=s;sendBtn.disabled=s;sendIcon.textContent=s?'⏳':'➤'}
+async function send(){
+if(isSending)return;
+var text=inputEl.value.trim();
+if(!text)return;
+addMessage('user',text);
+inputEl.value='';inputEl.style.height='auto';
+setSending(true);addTyping();
+try{
+var r=await fetch('/api/javin-cerdas-proxy?prompt='+encodeURIComponent(text));
+var d=await r.json();
+removeTyping();
+if(!d.status||!d.reply){addMessage('ai','❌ '+(d.message||'AI tidak merespon'));return}
+addMessage('ai',d.reply);
+}catch(e){
+removeTyping();
+addMessage('ai','❌ Gagal: '+e.message);
+}finally{setSending(false);inputEl.focus()}
+}
+sendBtn.addEventListener('click',send);
+inputEl.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+clearBtn.addEventListener('click',function(){if(!confirm('Hapus chat?'))return;chatEl.innerHTML='<div class="jc-empty"><span class="jc-empty-icon">💡</span>Mulai percakapan</div>'});
+inputEl.focus();
+})();
+</script>
+</body>
+</html>
