@@ -5933,4 +5933,194 @@ app.use(function(req, res, next) {
 
 // === END LAYER 18 ===
 
+
+// ============================================
+// AUTO-RECOVERY SYSTEM
+// ============================================
+
+// 1. Smart fetch dengan auto-retry + exponential backoff
+async function smartFetch(url, options, maxRetries) {
+  var opts = options || {};
+  var retries = maxRetries || 3;
+  var lastError = null;
+
+  for (var i = 0; i < retries; i++) {
+    try {
+      var fetchOpts = Object.assign({}, opts);
+      fetchOpts.signal = AbortSignal.timeout(fetchOpts.timeout || 15000);
+      var res = await fetch(url, fetchOpts);
+
+      // Kalau 5xx atau 429, coba lagi
+      if (res.status >= 500 || res.status === 429) {
+        lastError = new Error('HTTP ' + res.status);
+        if (i < retries - 1) {
+          var delay = Math.min(1000 * Math.pow(2, i), 8000);
+          await new Promise(function(r) { setTimeout(r, delay); });
+          continue;
+        }
+      }
+      return res;
+    } catch (e) {
+      lastError = e;
+      if (i < retries - 1) {
+        var delay = Math.min(1000 * Math.pow(2, i), 8000);
+        await new Promise(function(r) { setTimeout(r, delay); });
+        continue;
+      }
+    }
+  }
+  throw lastError || new Error('Max retries exceeded');
+}
+
+// 2. Auto-track error rate per provider
+var providerErrorTracker = {
+  anita: { errors: 0, ok: 0, lastError: 0, disabledUntil: 0 },
+  nexa: { errors: 0, ok: 0, lastError: 0, disabledUntil: 0 },
+  waifu: { errors: 0, ok: 0, lastError: 0, disabledUntil: 0 }
+};
+
+function trackProvider(name, success) {
+  var p = providerErrorTracker[name];
+  if (!p) return;
+  if (success) {
+    p.ok++;
+    p.errors = Math.max(0, p.errors - 1); // Recovers slowly
+  } else {
+    p.errors++;
+    p.lastError = Date.now();
+    // >5 error dalam 5 menit → disable 5 menit
+    if (p.errors >= 5 && (Date.now() - p.lastError) < 5 * 60 * 1000) {
+      p.disabledUntil = Date.now() + 5 * 60 * 1000;
+      console.warn('[AUTO-RECOVER] Provider ' + name + ' disabled until ' + new Date(p.disabledUntil).toLocaleTimeString());
+    }
+  }
+}
+
+function isProviderDisabled(name) {
+  var p = providerErrorTracker[name];
+  if (!p) return false;
+  if (Date.now() < p.disabledUntil) return true;
+  return false;
+}
+
+// 3. Wrap anitaPost dengan auto-retry + tracker
+var _origAnitaPost = anitaPost;
+anitaPost = async function(action, data) {
+  if (isProviderDisabled('anita')) {
+    throw new Error('Provider sementara tidak tersedia. Coba lagi dalam beberapa menit.');
+  }
+  try {
+    var result = await _origAnitaPost(action, data);
+    trackProvider('anita', true);
+    return result;
+  } catch (e) {
+    trackProvider('anita', false);
+    throw e;
+  }
+};
+
+// 4. Auto-retry untuk NGL
+var _origNglRequest = typeof nglRequest !== 'undefined' ? nglRequest : null;
+// NGL pakai route langsung, jadi track di route handler
+var origNglRoute = null;
+
+// 5. Server startup recovery — cek state setelah restart
+function recoverOnStartup() {
+  console.log('[AUTO-RECOVER] Checking state...');
+
+  // Clear blacklist yang udah expired
+  var cleared = 0;
+  for (var entry of ipBlacklist.entries()) {
+    if (Date.now() > entry[1].until) {
+      ipBlacklist.delete(entry[0]);
+      cleared++;
+    }
+  }
+  if (cleared > 0) console.log('[AUTO-RECOVER] Cleared ' + cleared + ' expired bans');
+
+  // Reset circuit breaker
+  if (typeof cbState !== 'undefined') {
+    cbState.failures = 0;
+    cbState.openUntil = 0;
+    console.log('[AUTO-RECOVER] Circuit breaker reset');
+  }
+
+  // Reset slow mode
+  if (typeof respTime !== 'undefined') {
+    respTime.slowUntil = 0;
+    console.log('[AUTO-RECOVER] Slow mode reset');
+  }
+
+  // Disable lockdown kalau ada
+  if (typeof lockdownMode !== 'undefined' && lockdownMode.active) {
+    lockdownMode.active = false;
+    console.log('[AUTO-RECOVER] Lockdown disabled on restart');
+  }
+}
+
+// Jalankan recovery 5 detik setelah start
+setTimeout(recoverOnStartup, 5000);
+
+// 6. Health self-check tiap 2 menit
+setInterval(function() {
+  var mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  var uptime = Math.floor(process.uptime());
+
+  // Kalau memory > 480MB (deket limit Render), restart paksa
+  if (mem > 480) {
+    console.error('[AUTO-RECOVER] Memory critical (' + mem + 'MB), restarting...');
+    process.exit(1); // Render auto-restart
+  }
+
+  // Kalau uptime < 60 detik, kemungkinan baru restart — skip cek
+  if (uptime < 60) return;
+
+  // Cek provider health
+  Object.keys(providerErrorTracker).forEach(function(name) {
+    var p = providerErrorTracker[name];
+    if (p.errors > 10 && (Date.now() - p.lastError) < 10 * 60 * 1000) {
+      console.warn('[AUTO-RECOVER] Provider ' + name + ' error rate tinggi: ' + p.errors);
+    }
+  });
+}, 2 * 60 * 1000);
+
+// 7. Auto-retry wrapper untuk request ke provider
+async function safeProviderFetch(url, opts, providerName) {
+  if (isProviderDisabled(providerName)) {
+    throw new Error('Provider sedang tidak tersedia');
+  }
+  try {
+    var r = await smartFetch(url, opts, 3);
+    trackProvider(providerName, true);
+    return r;
+  } catch (e) {
+    trackProvider(providerName, false);
+    throw e;
+  }
+}
+
+// 8. Endpoint status auto-recovery
+app.get('/api/admin/recovery-status', requireAdmin, function(req, res) {
+  res.json({
+    status: true,
+    providers: providerErrorTracker,
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+    uptime: Math.floor(process.uptime()) + 's',
+    circuitBreaker: typeof cbState !== 'undefined' ? {
+      failures: cbState.failures,
+      open: cbState.openUntil > Date.now()
+    } : null,
+    lockdown: typeof lockdownMode !== 'undefined' ? lockdownMode.active : false
+  });
+});
+
+// 9. Manual trigger recovery
+app.post('/api/admin/force-recovery', requireAdmin, function(req, res) {
+  recoverOnStartup();
+  res.json({ status: true, message: 'Recovery triggered' });
+});
+
+// === END AUTO-RECOVERY ===
+
+
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
