@@ -5543,7 +5543,7 @@ app.get('/api/admin/http-hardening', requireAdmin, function(req, res) {
 // SYSTEM STATUS MONITOR
 // ============================================
 
-var systemStatusCache = { data: null, cachedAt: 0, ttl: 30000 };
+var systemStatusCache = { data: null, cachedAt: 0, ttl: 5000 };
 
 
 
@@ -5575,214 +5575,157 @@ function checkFileExists(relPath) {
   } catch (e) { return false; }
 }
 
+function scanPublicFeatures() {
+  var fs = require('fs');
+  var pathMod = require('path');
+  var pubDir = pathMod.join(__dirname, 'public');
+
+  var exclude = [
+    'index.html', 'index_backup.html', 'index_backup_v2.html',
+    'admin.html', 'admin-login.html', 'dashboard.html',
+    'banned.html', 'maintenance.html', 'test.html',
+    'log.html', 'status.html', 'chat.html', 'game.html',
+    'ibadah.html', 'sholat.html', 'harian.html', 'event.html',
+    'profile.html', 'leaderboard.html', 'achievement.html',
+    'api-tool.html', 'javin-guna.html'
+  ];
+
+  var labelMap = {
+    'javin-ngl.html': 'NGL Sender',
+    'javin-analog.html': 'Javin Analog',
+    'javin-anonim.html': 'Javin Anonim',
+    'javin-douyin.html': 'Douyin',
+    'waifu.html': 'Random Waifu',
+    'tools-wink.html': 'Wink Upscaler',
+    'tools-ig.html': 'IG Downloader',
+    'tools-fakecall.html': 'Fake Call',
+    'tools-nokia.html': 'Nokia Text',
+    'tools.html': 'Tools Hub',
+    'qr.html': 'QR Generator',
+    'brat.html': 'Brat Video',
+    'llama.html': 'Llama AI',
+    'sosial.html': 'Sosial',
+    'kartu.html': 'Kartu User',
+    'blackjack.html': 'Blackjack',
+    'slot.html': 'Slot Machine',
+    'dadu.html': 'Dadu',
+    'dice.html': 'Dice',
+    'chess.html': 'Chess',
+    'mahjong.html': 'Mahjong',
+    'roulette.html': 'Roulette',
+    'lottery.html': 'Lottery',
+    'tebak.html': 'Tebak',
+    'workout.html': 'Workout',
+    'exercise.html': 'Exercise',
+    'ai.html': 'AI Hub',
+    'ai-neo.html': 'AI Neo',
+    'javin-cerdas.html': 'Javin Cerdas',
+    'anime.html': 'Anime Hub',
+    'anime-otakudesu.html': 'Otakudesu',
+    'anime-oploverz.html': 'Oploverz',
+    'anime-komikindo.html': 'Komikindo',
+    'berita.html': 'Berita'
+  };
+
+  var files;
+  try { files = fs.readdirSync(pubDir); }
+  catch (e) { return { groups: {} }; }
+
+  // Group mapping
+  var groups = {
+    chat: { label: 'Chat System', icon: '💬', items: [] },
+    ai: { label: 'AI', icon: '🤖', items: [] },
+    anime: { label: 'Anime & Komik', icon: '📺', items: [] },
+    berita: { label: 'Berita', icon: '📰', items: [] },
+    games: { label: 'Games', icon: '🎮', items: [] },
+    tools: { label: 'Tools & Utility', icon: '🛠️', items: [] },
+    account: { label: 'Account & Profile', icon: '👤', items: [] },
+    islamic: { label: 'Islamic & Daily', icon: '📅', items: [] }
+  };
+
+  // Routing file → kategori
+  function categorize(f) {
+    if (f === 'chat.html' || f === 'chat_v8.js' || f === 'chat_v7.js' || f === 'auth-socket.js') return 'chat';
+    if (f.indexOf('ai-') === 0 || f === 'llama.html' || f === 'javin-cerdas.html') return 'ai';
+    if (f.indexOf('anime') === 0) return 'anime';
+    if (f === 'berita.html') return 'berita';
+    if (['slot.html','blackjack.html','dadu.html','dice.html','chess.html','mahjong.html','roulette.html','lottery.html','tebak.html','kartu.html'].indexOf(f) !== -1) return 'games';
+    if (['sholat.html','ibadah.html','harian.html','event.html'].indexOf(f) !== -1) return 'islamic';
+    if (['profile.html','leaderboard.html','achievement.html','dashboard.html'].indexOf(f) !== -1) return 'account';
+    if (f.indexOf('tools-') === 0 || ['tools.html','qr.html','brat.html','javin-ngl.html','javin-analog.html','javin-anonim.html','javin-douyin.html','waifu.html','sosial.html'].indexOf(f) !== -1) return 'tools';
+    return 'tools'; // default
+  }
+
+  var seen = {};
+  for (var i = 0; i < files.length; i++) {
+    var f = files[i];
+    if (f.indexOf('.html') === -1) continue;
+    if (f.indexOf('.backup') !== -1) continue;
+    if (f.indexOf('.before') !== -1) continue;
+    if (exclude.indexOf(f) !== -1) continue;
+    if (seen[f]) continue;
+    seen[f] = true;
+
+    var label = labelMap[f];
+    if (!label) {
+      label = f.replace('.html', '')
+               .replace(/[-_]/g, ' ')
+               .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+    }
+
+    var cat = categorize(f);
+    groups[cat].items.push({ name: label, file: f, ok: true });
+  }
+
+  // Build final result
+  var result = {};
+  Object.keys(groups).forEach(function(k) {
+    var g = groups[k];
+    if (g.items.length === 0) return;
+    var okCount = g.items.filter(function(i) { return i.ok; }).length;
+    result[k] = {
+      label: g.label,
+      icon: g.icon,
+      status: okCount === g.items.length ? 'ready' : (okCount > 0 ? 'warning' : 'error'),
+      detail: okCount + '/' + g.items.length + ' aktif',
+      items: g.items
+    };
+  });
+
+  return result;
+}
+
 function checkGroupedStatus() {
   var now = Date.now();
-  var groups = {};
+  var groups = scanPublicFeatures();
 
-  // === CHAT ===
-  var socketActive = typeof io !== 'undefined';
+  // === CHAT: online + pesan ===
   var onlineCount = (typeof onlineUsers !== 'undefined') ? onlineUsers.size : 0;
   var msgCount = (data && data.messages) ? data.messages.length : 0;
-  var chatItems = [
-    { name: 'Real-time Chat', ok: socketActive },
-    { name: 'Chat History', ok: checkFileExists('public/chat.html') },
-    { name: 'Auth Socket', ok: checkFileExists('public/auth-socket.js') },
-    { name: 'Private DM', ok: !!(data && data.dms) }
-  ];
-  var chatOkCount = chatItems.filter(function(i) { return i.ok; }).length;
-  groups.chat = {
-    label: 'Chat System',
-    icon: '💬',
-    status: chatOkCount === chatItems.length ? 'ready' : (chatOkCount > 2 ? 'warning' : 'error'),
-    detail: onlineCount + ' online • ' + msgCount + ' pesan',
-    items: chatItems
-  };
+  if (groups.chat) {
+    groups.chat.detail = onlineCount + ' online · ' + msgCount + ' pesan';
+  }
 
-  // === GAMES ===
-  var gameList = [
-    { name: 'Slot', f: 'public/slot.html' },
-    { name: 'Blackjack', f: 'public/blackjack.html' },
-    { name: 'Dadu', f: 'public/dadu.html' },
-    { name: 'Dice', f: 'public/dice.html' },
-    { name: 'Chess', f: 'public/chess.html' },
-    { name: 'Mahjong', f: 'public/mahjong.html' },
-    { name: 'Roulette', f: 'public/roulette.html' },
-    { name: 'Lottery', f: 'public/lottery.html' },
-    { name: 'Tebak', f: 'public/tebak.html' },
-    { name: 'Kartu', f: 'public/kartu.html' }
-  ];
-  var gameItems = gameList.map(function(g) { return { name: g.name, ok: checkFileExists(g.f) }; });
-  var gameOk = gameItems.filter(function(i) { return i.ok; }).length;
-  groups.games = {
-    label: 'Games',
-    icon: '🎮',
-    status: gameOk === gameItems.length ? 'ready' : (gameOk > 5 ? 'warning' : 'error'),
-    detail: gameOk + '/' + gameItems.length + ' game aktif',
-    items: gameItems
-  };
-
-  // === TOOLS ===
-  // === AUTO-SCAN public/*.html ===
-  var scanPublicFeatures = function() {
-    var fs = require('fs');
-    var pathMod = require('path');
-    var pubDir = pathMod.join(__dirname, 'public');
-
-    // File yang DIKECUALIKAN dari scan
-    var exclude = [
-      'index.html', 'index_backup.html', 'index_backup_v2.html',
-      'admin.html', 'admin-login.html', 'dashboard.html',
-      'banned.html', 'maintenance.html', 'test.html',
-      'log.html', 'status.html', 'chat.html', 'game.html',
-      'ibadah.html', 'sholat.html', 'harian.html', 'event.html',
-      'profile.html', 'leaderboard.html', 'achievement.html'
-    ];
-
-    // Custom label (nama file → label cantik)
-    var labelMap = {
-      'javin-ngl.html': 'NGL Sender',
-      'javin-analog.html': 'Javin Analog',
-      'javin-anonim.html': 'Javin Anonim',
-      'javin-douyin.html': 'Douyin',
-      'javin-guna.html': 'Javin Guna',
-      'waifu.html': 'Random Waifu',
-      'tools-wink.html': 'Wink Upscaler',
-      'tools-ig.html': 'IG Downloader',
-      'tools-fakecall.html': 'Fake Call',
-      'tools-nokia.html': 'Nokia Text',
-      'tools.html': 'Tools Hub',
-      'qr.html': 'QR Generator',
-      'brat.html': 'Brat Video',
-      'llama.html': 'Asisten AI',
-      'sosial.html': 'Sosial',
-      'api-tool.html': 'API Tool',
-      'kartu.html': 'Kartu User',
-      'blackjack.html': 'Blackjack',
-      'slot.html': 'Slot',
-      'dadu.html': 'Dadu',
-      'dice.html': 'Dice',
-      'chess.html': 'Chess',
-      'mahjong.html': 'Mahjong',
-      'roulette.html': 'Roulette',
-      'lottery.html': 'Lottery',
-      'tebak.html': 'Tebak',
-      'workout.html': 'Workout',
-      'exercise.html': 'Exercise'
-    };
-
-    var files;
-    try {
-      files = fs.readdirSync(pubDir);
-    } catch (e) {
-      return [];
-    }
-
-    var result = [];
-    var seen = {};
-
-    for (var i = 0; i < files.length; i++) {
-      var f = files[i];
-      if (f.indexOf('.html') === -1) continue;
-      if (f.indexOf('.backup') !== -1) continue;
-      if (f.indexOf('.before') !== -1) continue;
-      if (exclude.indexOf(f) !== -1) continue;
-      if (seen[f]) continue;
-      seen[f] = true;
-
-      var label = labelMap[f];
-      if (!label) {
-        // Auto-generate label dari nama file
-        label = f.replace('.html', '')
-                 .replace(/[-_]/g, ' ')
-                 .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
-      }
-
-      result.push({
-        name: label,
-        file: f,
-        path: pubDir + '/' + f
-      });
-    }
-
-    // Sort by label
-    result.sort(function(a, b) { return a.name.localeCompare(b.name); });
-
-    return result;
-  };
-
-  var scannedFeatures = scanPublicFeatures();
-  var toolList = scannedFeatures.map(function(item) {
-    return {
-      name: item.name,
-      f: 'public/' + item.file,
-      check: function() { return checkFileExists('public/' + item.file); }
-    };
-  });
-  // === END AUTO-SCAN ===
-  var toolItems = toolList.map(function(t) {
-    return { name: t.name, ok: checkFileExists(t.f) && t.check() };
-  });
-  var toolOk = toolItems.filter(function(i) { return i.ok; }).length;
-  groups.tools = {
-    label: 'Tools & Utility',
-    icon: '🛠️',
-    status: toolOk === toolItems.length ? 'ready' : (toolOk > toolItems.length * 0.6 ? 'warning' : 'error'),
-    detail: toolOk + '/' + toolItems.length + ' tool aktif',
-    items: toolItems
-  };
-
-  // === ACCOUNT ===
+  // === ACCOUNT: total user ===
   var totalUsers = (data && data.users) ? Object.keys(data.users).length : 0;
-  var accList = [
-    { name: 'Profile', f: 'public/profile.html' },
-    { name: 'Leaderboard', f: 'public/leaderboard.html' },
-    { name: 'Achievement', f: 'public/achievement.html' },
-    { name: 'Dashboard', f: 'public/dashboard.html' },
-    { name: 'Kartu User', f: 'public/kartu.html' }
-  ];
-  var accItems = accList.map(function(t) { return { name: t.name, ok: checkFileExists(t.f) }; });
-  var accOk = accItems.filter(function(i) { return i.ok; }).length;
-  groups.account = {
-    label: 'Account & Profile',
-    icon: '👤',
-    status: accOk === accItems.length ? 'ready' : 'warning',
-    detail: totalUsers + ' user terdaftar',
-    items: accItems
-  };
-
-  // === ISLAMIC ===
-  var islamList = [
-    { name: 'Sholat', f: 'public/sholat.html' },
-    { name: 'Ibadah', f: 'public/ibadah.html' },
-    { name: 'Harian', f: 'public/harian.html' },
-    { name: 'Doa', f: 'public/doa-data.js' }
-  ];
-  var islamItems = islamList.map(function(t) { return { name: t.name, ok: checkFileExists(t.f) }; });
-  var islamOk = islamItems.filter(function(i) { return i.ok; }).length;
-  groups.islamic = {
-    label: 'Islamic & Daily',
-    icon: '📅',
-    status: islamOk === islamItems.length ? 'ready' : 'warning',
-    detail: islamOk + '/' + islamItems.length + ' aktif',
-    items: islamItems
-  };
+  if (groups.account) {
+    groups.account.detail = totalUsers + ' user terdaftar';
+  }
 
   // === INFRASTRUCTURE ===
   var mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
   var uptime = Math.floor(process.uptime() / 60);
-  var infraItems = [
-    { name: 'Server', ok: true },
-    { name: 'Database', ok: !!(data && data.users) },
-    { name: 'Memory (' + mem + 'MB)', ok: mem < 400 },
-    { name: 'MongoDB', ok: !!(data && data.users && Object.keys(data.users).length > 0) }
-  ];
-  var infraOk = infraItems.filter(function(i) { return i.ok; }).length;
   groups.infra = {
     label: 'Infrastructure',
     icon: '🖥️',
     status: mem > 450 ? 'error' : (mem > 400 ? 'warning' : 'ready'),
     detail: 'Uptime ' + uptime + ' menit',
-    items: infraItems
+    items: [
+      { name: 'Server', ok: true },
+      { name: 'Database', ok: !!(data && data.users) },
+      { name: 'Memory (' + mem + 'MB)', ok: mem < 400 },
+      { name: 'MongoDB', ok: !!(data && data.users && Object.keys(data.users).length > 0) }
+    ]
   };
 
   // === SECURITY ===
@@ -5821,17 +5764,13 @@ function checkGroupedStatus() {
     timestamp: now,
     time: new Date().toLocaleString('id-ID'),
     overall: overall,
-    summary: {
-      groups: Object.keys(groups).length,
-      totalItems: totalItems,
-      ok: okItems,
-      errors: errItems
-    },
+    summary: { groups: Object.keys(groups).length, totalItems: totalItems, ok: okItems, errors: errItems },
     groups: groups
   };
 }
 
-app.get('/api/system-status', function(req, res) {
+app.get('/api/system-status'
+, function(req, res) {
   var now = Date.now();
   if (systemStatusCache.data && (now - systemStatusCache.cachedAt) < systemStatusCache.ttl) {
     return res.json(systemStatusCache.data);
