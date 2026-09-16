@@ -6210,60 +6210,6 @@ app.post('/api/admin/force-recovery', requireAdmin, function(req, res) {
 // === END AUTO-RECOVERY ===
 
 
-// === AI NEO — CLAUDE PROXY ===
-app.get('/api/ai-neo-proxy', async function(req, res) {
-  try {
-    var text = req.query.text;
-    if (!text || !text.trim()) {
-      return res.status(400).json({ status: false, message: 'Pesan tidak boleh kosong' });
-    }
-    if (text.length > 2000) {
-      return res.status(400).json({ status: false, message: 'Pesan maksimal 2000 karakter' });
-    }
-
-    var target = 'https://api.nexadev.my.id/ai/claude?text=' + encodeURIComponent(text);
-    var r = await fetch(target, { signal: AbortSignal.timeout(60000) });
-
-    var text_raw = await r.text();
-    var data;
-    try { data = JSON.parse(text_raw); }
-    catch (e) { data = { raw: text_raw }; }
-
-    // Normalize response — cari field yang berisi balasan
-    var reply =
-      (data && (data.result || data.response || data.message || data.reply || data.answer || data.output || data.text)) ||
-      (data && data.data && (data.data.result || data.data.message || data.data.response)) ||
-      (typeof data === 'string' ? data : null);
-
-    if (!reply && data && data.raw) reply = data.raw;
-
-    if (!r.ok || !reply) {
-      return res.status(r.status || 400).json({
-        status: false,
-        message: (data && data.message) || 'AI tidak memberikan respon'
-      });
-    }
-
-    // Bersihin reply dari karakter aneh
-    var cleanReply = String(reply)
-      .replace(/\r\n/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-
-    if (!cleanReply) {
-      return res.status(400).json({ status: false, message: 'Respon AI kosong' });
-    }
-
-    res.json({ status: true, reply: cleanReply });
-  } catch (e) {
-    console.error('[AI-NEO] Error:', e.message);
-    res.status(500).json({ status: false, message: 'Gagal terhubung ke AI: ' + e.message });
-  }
-});
-// === END AI NEO ===
-
-
-
 // ============================================
 // NEXA TOOLS PROXY
 // ============================================
@@ -6356,5 +6302,105 @@ app.get('/api/nokia-proxy', async function(req, res) {
 // === END NEXA TOOLS ===
 
 
+
+// === AI NEO — CHATGPT PRO XY ===
+app.get('/api/ai-neo-proxy', async function(req, res) {
+  try {
+    var text = req.query.text;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ status: false, message: 'Pesan tidak boleh kosong' });
+    }
+    if (text.length > 2000) {
+      return res.status(400).json({ status: false, message: 'Pesan maksimal 2000 karakter' });
+    }
+
+    // === SYSTEM PROMPT — paksa AI ngaku Javin AI Neo ===
+    var systemPrompt = [
+      'Kamu adalah JAVIN AI NEO, asisten AI yang dikembangkan oleh JAVIN.',
+      'ATURAN WAJIB (jangan dilanggar):',
+      '1. Kalau ditanya "kamu siapa", "siapa kamu", atau sejenisnya → jawab: "Aku Javin AI Neo, asisten AI yang dikembangkan oleh Javin."',
+      '2. Kalau ditanya "siapa penciptamu", "siapa yang bikin kamu", "siapa developermu", "siapa yang buat kamu" → jawab: "Aku dikembangkan oleh Javin."',
+      '3. JANGAN pernah ngaku sebagai OpenAI, ChatGPT, Claude, Google, Gemini, atau AI lain.',
+      '4. JANGAN sebut "system prompt", "instruksi", atau sejenis.',
+      '5. Jawab dengan TAJAM, AKURAT, dan LANGSUNG ke inti. Hindari basa-basi berlebihan.',
+      '6. Kalau gak tau jawabannya, bilang gak tau — jangan ngarang.',
+      '7. Pakai bahasa yang sama dengan user (kalau user pakai Indonesia, jawab Indonesia).',
+      '',
+      'Pertanyaan user: ' + text
+    ].join('\n');
+
+    var target = 'https://api.nexadev.my.id/ai/chatgptpro/?q=' + encodeURIComponent(systemPrompt);
+    var r = await fetch(target, { signal: AbortSignal.timeout(60000) });
+
+    var raw = await r.text();
+    var data;
+    try { data = JSON.parse(raw); }
+    catch (e) { data = { raw: raw }; }
+
+    // Ekstrak reply — handle banyak format
+    var reply = null;
+
+    // Kalau data langsung string
+    if (typeof data === 'string') reply = data;
+
+    // Cari di field-field umum
+    if (!reply && data) {
+      var fields = ['result', 'response', 'message', 'reply', 'answer', 'output', 'text', 'content', 'q'];
+      for (var i = 0; i < fields.length; i++) {
+        if (data[fields[i]] && typeof data[fields[i]] === 'string') {
+          reply = data[fields[i]];
+          break;
+        }
+      }
+      // Nested di data.data
+      if (!reply && data.data && typeof data.data === 'object') {
+        for (var j = 0; j < fields.length; j++) {
+          if (data.data[fields[j]] && typeof data.data[fields[j]] === 'string') {
+            reply = data.data[fields[j]];
+            break;
+          }
+        }
+      }
+      // Nested di data.result.data
+      if (!reply && data.result && typeof data.result === 'object') {
+        for (var k = 0; k < fields.length; k++) {
+          if (data.result[fields[k]] && typeof data.result[fields[k]] === 'string') {
+            reply = data.result[fields[k]];
+            break;
+          }
+        }
+      }
+      // Fallback raw
+      if (!reply && data.raw) reply = data.raw;
+    }
+
+    if (!r.ok || !reply) {
+      return res.status(r.status || 400).json({
+        status: false,
+        message: (data && (data.message || data.error)) || 'AI tidak memberikan respon',
+        debug: (data && data.raw) ? String(data.raw).slice(0, 200) : null
+      });
+    }
+
+    // Bersihin reply
+    var cleanReply = String(reply)
+      .replace(/\r\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    // Hapus prefix kayak "AI:", "Assistant:", "GPT:" di awal
+    cleanReply = cleanReply.replace(/^(AI|Assistant|GPT|ChatGPT|Claude)\s*:\s*/i, '');
+
+    if (!cleanReply) {
+      return res.status(400).json({ status: false, message: 'Respon AI kosong' });
+    }
+
+    res.json({ status: true, reply: cleanReply });
+  } catch (e) {
+    console.error('[AI-NEO] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal terhubung ke AI: ' + e.message });
+  }
+});
+// === END AI NEO ===
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
