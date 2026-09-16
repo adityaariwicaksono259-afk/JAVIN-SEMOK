@@ -6504,8 +6504,8 @@ app.get('/api/berita-proxy/:source', async function(req, res) {
 var CANVAS_BASE = 'https://api.siputzx.my.id/api/canvas/';
 
 // GANTI 2 PATH INI DENGAN ENDPOINT ASLI LU
-var CANVAS_FBK1_PATH = process.env.CANVAS_FBK1_PATH || 'fake-book-keep';
-var CANVAS_FBK2_PATH = process.env.CANVAS_FBK2_PATH || 'fake-book-v2';
+var CANVAS_FBK1_PATH = process.env.CANVAS_FBK1_PATH || 'https://api.siputzx.my.id/api/canvas/xnxx?title';
+var CANVAS_FBK2_PATH = process.env.CANVAS_FBK2_PATH || 'https://api.siputzx.my.id/api/canvas/fake-xnxx?name';
 
 app.get('/api/canvas-proxy/:type', async function(req, res) {
   try {
