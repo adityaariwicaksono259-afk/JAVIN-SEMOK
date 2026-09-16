@@ -4,6 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const multer = require('multer');
 const crypto = require('crypto');
@@ -13,8 +14,98 @@ const amprem = require('./api/amprem.cjs');
 
 const app = express();
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '500kb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// ============================================
+// SECURITY MIDDLEWARE
+// ============================================
+
+// 1. Global rate limit — 200 req / 15 menit per IP
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: false, message: 'Terlalu banyak request. Coba lagi nanti.' }
+});
+app.use('/api', globalLimiter);
+
+// 2. Rate limit mahal (NGL, Javin Analog) — 10 req / menit per IP
+const heavyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: false, message: 'Terlalu banyak request ke endpoint ini. Tunggu sebentar.' }
+});
+
+// 3. Rate limit auth — 5 req / menit
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: false, message: 'Terlalu banyak percobaan. Tunggu 1 menit.' }
+});
+
+// 4. Block suspicious methods
+app.use((req, res, next) => {
+  const method = req.method.toUpperCase();
+  if (['TRACE', 'TRACK', 'DEBUG'].includes(method)) {
+    return res.status(405).json({ status: false, message: 'Method tidak diizinkan' });
+  }
+  next();
+});
+
+// 5. Block suspicious paths (scanner detection)
+app.use((req, res, next) => {
+  const path = req.path.toLowerCase();
+  const blocked = [
+    '/.env', '/.git', '/wp-admin', '/wp-login', '/phpmyadmin',
+    '/admin.php', '/.htaccess', '/config', '/backup', '/sql',
+    '/.ssh', '/.aws', '/.vscode', '/vendor/phpunit'
+  ];
+  if (blocked.some(b => path.includes(b))) {
+    console.warn('[SECURITY] Blocked scan:', req.ip, req.path);
+    return res.status(404).send('Not Found');
+  }
+  next();
+});
+
+// 6. Input sanitize — block NoSQL injection patterns
+function sanitizeInput(obj, depth) {
+  if (depth > 5) return obj;
+  if (typeof obj === 'string') {
+    // Strip null bytes + limit length
+    return obj.replace(/\0/g, '').slice(0, 10000);
+  }
+  if (Array.isArray(obj)) {
+    return obj.slice(0, 100).map(v => sanitizeInput(v, depth + 1));
+  }
+  if (obj && typeof obj === 'object') {
+    const clean = {};
+    for (const k in obj) {
+      // Block keys dengan karakter berbahaya ($, .)
+      if (k.startsWith('$') || k.includes('..') || k.includes('/')) continue;
+      clean[k] = sanitizeInput(obj[k], depth + 1);
+    }
+    return clean;
+  }
+  return obj;
+}
+
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    req.body = sanitizeInput(req.body, 0);
+  }
+  next();
+});
+
+// ============================================
+// END SECURITY MIDDLEWARE
+// ============================================
+
 
 /* JAVIN-DOUYIN-API-V1 */
 const { DouyinSearchPage } = require('./api/douyin.cjs');
@@ -118,7 +209,17 @@ async function javinAnalogRequest(req, res, action) {
 app.disable('x-powered-by');
 app.set('trust proxy', true);
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: ['https://javin-semok.onrender.com','https://javin-semok-*.onrender.com','http://localhost:3000','http://127.0.0.1:3000'], methods: ['GET','POST'], credentials: true } });
+const io = new Server(server, { cors: { origin: function(origin, cb) {
+    if (!origin) return cb(null, true);
+    const allowed = [
+      /^https:\/\/javin-semok(-[a-z0-9]+)?\.onrender\.com$/,
+      /^https:\/\/javincakep(-[a-z0-9]+)?\.onrender\.com$/,
+      /^https:\/\/javin-ai.*\.onrender\.com$/,
+      /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+    ];
+    const ok = allowed.some(r => r.test(origin));
+    cb(ok ? null : new Error('CORS: origin tidak diizinkan'), ok);
+  }, methods: ['GET','POST'], credentials: true } });
 const PORT = process.env.PORT || 3000;
 
 const RENAME_FREE = 1;
@@ -214,7 +315,7 @@ app.use((req, res, next) => {
 });
 
 // ===== AI PROXY (Groq) =====
-app.post('/api/ai/chat', express.json({ limit: '100kb' }), async (req, res) => {
+app.post('/api/ai/chat', heavyLimiter, express.json({ limit: '100kb' }), async (req, res) => {
   const messages = req.body && req.body.messages;
   if (!Array.isArray(messages) || !messages.length) {
     return res.status(400).json({ error: 'Messages kosong' });
@@ -2278,7 +2379,7 @@ async function anitaPost(action, data) {
 }
 
 // POST /api/javin-analog/send  → send-magiclink
-app.post('/api/javin-analog/send', express.json({ limit: '10kb' }), async (req, res) => {
+app.post('/api/javin-analog/send', heavyLimiter, express.json({ limit: '10kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     if (!email) return res.status(400).json({ status: false, message: 'Email wajib diisi' });
@@ -2291,7 +2392,7 @@ app.post('/api/javin-analog/send', express.json({ limit: '10kb' }), async (req, 
 });
 
 // POST /api/javin-analog/verify → verify-account + AUTO apply-premium
-app.post('/api/javin-analog/verify', express.json({ limit: '50kb' }), async (req, res) => {
+app.post('/api/javin-analog/verify', heavyLimiter, express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     const rawLink = (req.body && (req.body.rawLink || req.body.link || req.body.oob_link)) || req.query.link;
@@ -2359,7 +2460,7 @@ app.post('/api/javin-analog/verify', express.json({ limit: '50kb' }), async (req
   }
 });
 // POST /api/javin-analog/magic-link  → alias verify-account
-app.post('/api/javin-analog/magic-link', express.json({ limit: '50kb' }), async (req, res) => {
+app.post('/api/javin-analog/magic-link', heavyLimiter, express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     const rawLink = (req.body && (req.body.rawLink || req.body.link || req.body.magic_link)) || req.query.link;
@@ -2373,7 +2474,7 @@ app.post('/api/javin-analog/magic-link', express.json({ limit: '50kb' }), async 
 });
 
 // POST /api/javin-analog/premium  → apply-premium
-app.post('/api/javin-analog/premium', express.json({ limit: '50kb' }), async (req, res) => {
+app.post('/api/javin-analog/premium', heavyLimiter, express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     const idToken = (req.body && (req.body.idToken || req.body.token)) || req.query.token;
@@ -2444,7 +2545,7 @@ app.get('/api/ngl/balance' , (req, res) => {
 });
 
 // Kirim NGL + potong coin
-app.get('/api/ngl', async (req, res) => {
+app.get('/api/ngl', heavyLimiter, async (req, res) => {
   var token = req.headers['x-auth-token'] || req.query.token;
   var auth = nglGetUserByToken(token);
   if (!auth) {
