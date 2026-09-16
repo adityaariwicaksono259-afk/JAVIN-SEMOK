@@ -4740,6 +4740,315 @@ app.get('/api/admin/clear-violation', requireAdmin, function(req, res) {
 // === END LAYER 13 ===
 
 
+// ============================================
+// PROTECTION LAYER 14 — FINAL FORTRESS
+// ============================================
+// Layer terakhir: HMAC signing, anomaly detection,
+// dynamic honeypot, session revocation, emergency lockdown
+
+// 14.1 — Dynamic honeypot (nama random, gak bisa ditebak)
+var DYNAMIC_HONEYPOT = '/_' + crypto.randomBytes(8).toString('hex');
+var DYNAMIC_ADMIN_TRAP = '/_' + crypto.randomBytes(8).toString('hex');
+
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+  var p = req.path.toLowerCase();
+  if (p === DYNAMIC_HONEYPOT.toLowerCase() || p === DYNAMIC_ADMIN_TRAP.toLowerCase()) {
+    logSecurity('DYNAMIC-HONEYPOT', { ip: req.ip, path: req.path, detail: 'trap' });
+    addStrike(req.ip, 'honeypot');
+    updateReputation(req.ip, 'honeypot', 'dynamic');
+    // Ban langsung 1 jam
+    banIP(req.ip, 60 * 60 * 1000, 'dynamic-honeypot');
+    return res.status(404).send('Not Found');
+  }
+  next();
+});
+
+// 14.2 — HMAC request signing (untuk endpoint kritis)
+var HMAC_SECRET = process.env.HMAC_SECRET || process.env.SESSION_SECRET || 'fallback-hmac';
+
+function verifyHMAC(req) {
+  var sig = req.headers['x-signature'];
+  var ts = req.headers['x-timestamp'];
+  var nonce = req.headers['x-nonce'];
+
+  // Kalau gak ada signature, skip (client lama)
+  if (!sig) return { ok: true, skipped: true };
+
+  if (!ts || !nonce) return { ok: false, reason: 'incomplete' };
+
+  var tsNum = parseInt(ts, 10);
+  if (isNaN(tsNum) || Math.abs(Date.now() - tsNum) > 5 * 60 * 1000) {
+    return { ok: false, reason: 'timestamp-drift' };
+  }
+
+  var bodyStr = req.body ? JSON.stringify(req.body) : '';
+  var payload = req.method + '\n' + req.path + '\n' + ts + '\n' + nonce + '\n' + bodyStr;
+  var expectSig = crypto.createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');
+
+  if (expectSig !== sig) {
+    return { ok: false, reason: 'signature-mismatch' };
+  }
+
+  // Cek nonce unik
+  var usedNonces = global._usedHMACNonces = global._usedHMACNonces || new Map();
+  if (usedNonces.has(nonce)) {
+    return { ok: false, reason: 'nonce-replay' };
+  }
+  usedNonces.set(nonce, Date.now());
+  if (usedNonces.size > 10000) {
+    var cutoff = Date.now() - 10 * 60 * 1000;
+    for (var e of usedNonces.entries()) {
+      if (e[1] < cutoff) usedNonces.delete(e[0]);
+    }
+  }
+
+  return { ok: true };
+}
+
+app.use('/api', function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+  if (req.method !== 'POST') return next();
+  // Skip endpoint publik
+  var skip = ['/api/verify-global', '/api/admin/login', '/api/javin-analog/send'];
+  if (skip.indexOf(req.path) !== -1) return next();
+
+  var r = verifyHMAC(req);
+  if (!r.ok && !r.skipped) {
+    logSecurity('HMAC-FAIL', { ip: req.ip, path: req.path, detail: r.reason });
+    updateReputation(req.ip, 'malformed', 'hmac-fail');
+    return res.status(400).json({ status: false, message: 'Request signature tidak valid' });
+  }
+  next();
+});
+
+// 14.3 — Anomaly detection per IP (baseline adaptif)
+var anomalyBaselines = new Map(); // ip -> { avgRPM, avgPayloadSize, samples, lastUpdate }
+
+function updateAnomalyBaseline(ip, data) {
+  var b = anomalyBaselines.get(ip);
+  var now = Date.now();
+  if (!b) {
+    b = { avgRPM: data.rpm, avgPayloadSize: data.payloadSize, samples: 1, lastUpdate: now, rpmHistory: [data.rpm] };
+  } else {
+    b.rpmHistory.push(data.rpm);
+    if (b.rpmHistory.length > 20) b.rpmHistory.shift();
+    b.avgRPM = b.rpmHistory.reduce(function(a, v) { return a + v; }, 0) / b.rpmHistory.length;
+    b.avgPayloadSize = (b.avgPayloadSize * 0.7) + (data.payloadSize * 0.3);
+    b.samples++;
+    b.lastUpdate = now;
+  }
+  anomalyBaselines.set(ip, b);
+  return b;
+}
+
+var rpmTracker = new Map(); // ip -> { count, resetAt }
+setInterval(function() {
+  var now = Date.now();
+  for (var e of rpmTracker.entries()) {
+    if (now > e[1].resetAt) rpmTracker.delete(e[0]);
+  }
+}, 60 * 1000);
+
+app.use('/api', function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+
+  var ip = req.ip;
+  var now = Date.now();
+
+  // Hitung RPM
+  var t = rpmTracker.get(ip) || { count: 0, resetAt: now + 60000 };
+  if (now > t.resetAt) { t.count = 0; t.resetAt = now + 60000; }
+  t.count++;
+  rpmTracker.set(ip, t);
+
+  var payloadSize = 0;
+  if (req.body) payloadSize = JSON.stringify(req.body).length;
+
+  var b = anomalyBaselines.get(ip);
+
+  // Butuh minimal 10 sample untuk deteksi
+  if (b && b.samples >= 10) {
+    // Cek RPM spike (3x rata-rata)
+    if (t.count > b.avgRPM * 3 && t.count > 20) {
+      logSecurity('ANOMALY-RPM', { ip: ip, path: req.path, detail: 'now=' + t.count + ' avg=' + Math.round(b.avgRPM) });
+      addStrike(ip, 'malformed');
+    }
+    // Cek payload spike (10x rata-rata)
+    if (payloadSize > b.avgPayloadSize * 10 && payloadSize > 5000) {
+      logSecurity('ANOMALY-PAYLOAD', { ip: ip, path: req.path, detail: 'now=' + payloadSize + ' avg=' + Math.round(b.avgPayloadSize) });
+      addStrike(ip, 'malformed');
+    }
+  }
+
+  updateAnomalyBaseline(ip, { rpm: t.count, payloadSize: payloadSize });
+  next();
+});
+
+setInterval(function() {
+  var now = Date.now();
+  for (var e of anomalyBaselines.entries()) {
+    if (now - e[1].lastUpdate > 60 * 60 * 1000) anomalyBaselines.delete(e[0]);
+  }
+}, 15 * 60 * 1000);
+
+// 14.4 — Session revocation (logout paksa semua session)
+var revokedTokens = new Set();
+var revokedBefore = 0; // timestamp — semua token sebelum ini di-revoke
+
+app.post('/api/admin/revoke-all', requireAdmin, function(req, res) {
+  revokedBefore = Date.now();
+  logSecurity('REVOKE-ALL', { ip: req.ip, path: req.path, detail: 'all sessions revoked' });
+  res.json({ status: true, message: 'Semua sesi dicabut. User harus verify ulang.' });
+});
+
+// Cek revocation di Layer 9 verify
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+  var verifyToken = gvGetCookie(req, 'jav_verified');
+  if (verifyToken && revokedBefore > 0) {
+    // Kalau token dibuat sebelum revoke → hapus
+    var parts = verifyToken.split('.');
+    if (parts.length === 3) {
+      var ts = parseInt(parts[0], 10);
+      if (ts < revokedBefore) {
+        gvSetCookie(res, 'jav_verified', '', 0);
+        return res.status(401).json({ status: false, message: 'Sesi dicabut. Verify ulang.', need_verification: true });
+      }
+    }
+  }
+  next();
+});
+
+// 14.5 — Emergency lockdown mode
+var lockdownMode = { active: false, until: 0, reason: '' };
+
+function triggerLockdown(reason, durationMs) {
+  lockdownMode.active = true;
+  lockdownMode.until = Date.now() + durationMs;
+  lockdownMode.reason = reason;
+  logSecurity('LOCKDOWN', { ip: '-', path: '-', detail: reason + ' durasi=' + Math.round(durationMs/60000) + 'min' });
+  console.warn('[LOCKDOWN] Aktif:', reason);
+}
+
+app.use(function(req, res, next) {
+  if (!lockdownMode.active) return next();
+  if (Date.now() > lockdownMode.until) {
+    lockdownMode.active = false;
+    return next();
+  }
+  if (req._isAdmin || isAdminIP(req)) return next();
+
+  // Cuma izinin GET ke halaman utama dan health
+  if (req.path === '/health') return next();
+  if (req.method === 'GET' && req.headers.accept && req.headers.accept.indexOf('text/html') !== -1) {
+    return res.status(503).send('<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0a0a0f;color:#e8e8f0;padding:40px;text-align:center;"><h1>🛡️ Maintenance Keamanan</h1><p>Server sedang dalam mode proteksi. Coba lagi nanti.</p></body></html>');
+  }
+  return res.status(503).json({ status: false, message: 'Server dalam mode lockdown keamanan.' });
+});
+
+app.post('/api/admin/lockdown', requireAdmin, function(req, res) {
+  var on = req.query.on === '1';
+  var min = parseInt(req.query.min, 10) || 30;
+  if (on) {
+    triggerLockdown('Manual admin trigger', min * 60 * 1000);
+    res.json({ status: true, message: 'Lockdown aktif ' + min + ' menit' });
+  } else {
+    lockdownMode.active = false;
+    res.json({ status: true, message: 'Lockdown dimatikan' });
+  }
+});
+
+// 14.6 — Auto-lockdown saat serangan besar
+var attackMetrics = { bannedLastMin: 0, resetAt: Date.now() + 60000 };
+setInterval(function() {
+  if (Date.now() > attackMetrics.resetAt) {
+    attackMetrics.bannedLastMin = 0;
+    attackMetrics.resetAt = Date.now() + 60000;
+  }
+}, 15000);
+
+// Patch banIP untuk track metrics
+var _origBanIP = banIP;
+banIP = function(ip, dur, reason) {
+  attackMetrics.bannedLastMin++;
+  _origBanIP(ip, dur, reason);
+  // Auto-lockdown kalau >50 IP di-ban dalam 1 menit
+  if (attackMetrics.bannedLastMin > 50 && !lockdownMode.active) {
+    triggerLockdown('Mass attack detected', 15 * 60 * 1000);
+  }
+};
+
+// 14.7 — Config integrity check
+var EXPECTED_CONFIG = {
+  hasHelmet: true,
+  hasCSP: true,
+  hasTurnstile: true,
+  hasRateLimit: true
+};
+
+app.get('/api/admin/integrity', requireAdmin, function(req, res) {
+  var checks = {
+    hasHelmet: typeof helmet === 'function',
+    hasTurnstile: typeof verifyTurnstile === 'function',
+    hasRateLimit: typeof globalLimiter === 'object',
+    hasBanSystem: typeof banIP === 'function',
+    hasHMAC: typeof verifyHMAC === 'function',
+    hasAdminAuth: typeof requireAdmin === 'function',
+    layers: 0
+  };
+
+  // Hitung layer
+  var layerMatches = (require('fs').readFileSync(__filename, 'utf8').match(/PROTECTION LAYER/g) || []);
+  checks.layers = layerMatches.length;
+
+  res.json({
+    status: true,
+    checks: checks,
+    lockdown: lockdownMode,
+    uptime: Math.floor(process.uptime()),
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+    ips: {
+      blacklisted: ipBlacklist.size,
+      tracked: ipReputation.size,
+      violations: violationRecords ? violationRecords.size : 0
+    }
+  });
+});
+
+// 14.8 — Final catch-all middleware (log 404 attack)
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+  if (res.headersSent) return next();
+
+  // Kalau 404 ke path aneh, track
+  if (req.path.indexOf('.') !== -1 && req.path.indexOf('/.') === -1) {
+    // Biasa aja
+  } else if (req.path.indexOf('/.') === 0 || req.path.indexOf('/_') === 0) {
+    addStrike(req.ip, 'honeypot');
+  }
+  next();
+});
+
+// 14.9 — Health endpoint upgrade
+var originalHealthHandler = function(req, res) {
+  res.json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+    blacklist: ipBlacklist.size,
+    rateMap: userRateMap ? userRateMap.size : 0,
+    concurrent: globalConcurrent,
+    rpm: globalRPM,
+    lockdown: lockdownMode.active,
+    layers: 14
+  });
+};
+
+// === END FINAL FORTRESS ===
+
+
+
 
 
 
