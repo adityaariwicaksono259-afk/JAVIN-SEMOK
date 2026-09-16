@@ -29,7 +29,7 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
   message: { status: false, message: 'Terlalu banyak request. Coba lagi nanti.' }
 });
-app.use('/api', globalLimiter);
+app.use('/api', function(req, res, next) { if (isAdminIP(req)) return next(); globalLimiter(req, res, next); });
 
 // 2. Rate limit mahal (NGL, Javin Analog) — 10 req / menit per IP
 const heavyLimiter = rateLimit({
@@ -3399,7 +3399,7 @@ async function anitaPost(action, data) {
 }
 
 // POST /api/javin-analog/send  → send-magiclink
-app.post('/api/javin-analog/send', heavyLimiter, userRateLimit(3), express.json({ limit: '10kb' }), async (req, res) => {
+app.post('/api/javin-analog/send', function(req,res,next){ if(isAdminIP(req)) return next(); heavyLimiter(req,res,next); }, userRateLimit(3), express.json({ limit: '10kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     if (!email) return res.status(400).json({ status: false, message: 'Email wajib diisi' });
@@ -3412,7 +3412,7 @@ app.post('/api/javin-analog/send', heavyLimiter, userRateLimit(3), express.json(
 });
 
 // POST /api/javin-analog/verify → verify-account + AUTO apply-premium
-app.post('/api/javin-analog/verify', heavyLimiter, userRateLimit(3), express.json({ limit: '50kb' }), async (req, res) => {
+app.post('/api/javin-analog/verify', function(req,res,next){ if(isAdminIP(req)) return next(); heavyLimiter(req,res,next); }, userRateLimit(3), express.json({ limit: '50kb' }), async (req, res) => {
   try {
     const email = (req.body && req.body.email) || req.query.email;
     const rawLink = (req.body && (req.body.rawLink || req.body.link || req.body.oob_link)) || req.query.link;
@@ -3565,7 +3565,7 @@ app.get('/api/ngl/balance' , (req, res) => {
 });
 
 // Kirim NGL + potong coin
-app.get('/api/ngl', heavyLimiter, userRateLimit(5), async (req, res) => {
+app.get('/api/ngl', function(req,res,next){ if(isAdminIP(req)) return next(); heavyLimiter(req,res,next); }, userRateLimit(5), async (req, res) => {
   var token = req.headers['x-auth-token'] || req.query.token;
   var auth = nglGetUserByToken(token);
   if (!auth) {
@@ -4126,6 +4126,205 @@ app.get('/api/admin/bot-stats', requireAdmin, function(req, res) {
 });
 
 // === END LAYER 11 ===
+
+
+// ============================================
+// PROTECTION LAYER 12 — ADMIN WHITELIST + THREAT INTEL
+// ============================================
+
+// 12.1 — Admin IP whitelist (bypass semua proteksi)
+var ADMIN_IPS = (process.env.ADMIN_IPS || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+
+function isAdminIP(req) {
+  if (!ADMIN_IPS.length) return false;
+  var ip = req.ip || '';
+  // Normalize IPv6-mapped IPv4
+  if (ip.indexOf('::ffff:') === 0) ip = ip.slice(7);
+  return ADMIN_IPS.indexOf(ip) !== -1;
+}
+
+// Pasang SANGAT AWAL — sebelum semua proteksi lain
+app.use(function(req, res, next) {
+  if (isAdminIP(req)) {
+    req._isAdmin = true;
+    // Skip semua rate limit, reputation, ban, dll
+    return next();
+  }
+  next();
+});
+
+// 12.2 — Bypass middleware untuk admin IP
+// Patch limiter — kalau admin, skip
+function adminBypass(mw) {
+  return function(req, res, next) {
+    if (req._isAdmin || isAdminIP(req)) return next();
+    return mw(req, res, next);
+  };
+}
+
+// 12.3 — Threat intelligence: known bad patterns dari log publik
+var knownBadPatterns = [
+  // Port scanner common paths
+  /\.(php|asp|aspx|jsp|cgi)$/i,
+  /\/(shell|cmd|exec|system|passwd|shadow)(\.|$|\/)/i,
+  /\/(id_rsa|authorized_keys|\.pem|\.key)$/i,
+  /\/actuator\//i,
+  /\/jenkins\//i,
+  /\/solr\//i,
+  /\/elasticsearch\//i,
+  /\/druid\//i,
+  /\/struts\//i,
+  /\/weblogic\//i,
+  // CVE probes
+  /\/cgi-bin\//i,
+  /\/\$\{jndi:/i,
+  /log4j/i,
+  /\/v2\/_catalog/i,
+  /\/api\/v1\/pods/i
+];
+
+app.use(function(req, res, next) {
+  if (req._isAdmin) return next();
+  var p = req.path.toLowerCase();
+  for (var i = 0; i < knownBadPatterns.length; i++) {
+    if (knownBadPatterns[i].test(p)) {
+      logSecurity('THREAT-INTEL', { ip: req.ip, path: req.path, detail: 'known-bad' });
+      updateReputation(req.ip, 'scan-attempt', 'threat-intel');
+      addStrike(req.ip, 'threat-intel');
+      return res.status(404).send('Not Found');
+    }
+  }
+  next();
+});
+
+// 12.4 — User-Agent entropy check
+function uaEntropy(ua) {
+  if (!ua) return 0;
+  var chars = {};
+  for (var i = 0; i < ua.length; i++) {
+    var c = ua[i];
+    chars[c] = (chars[c] || 0) + 1;
+  }
+  var entropy = 0;
+  var len = ua.length;
+  for (var k in chars) {
+    var p = chars[k] / len;
+    entropy -= p * Math.log2(p);
+  }
+  return entropy;
+}
+
+app.use(function(req, res, next) {
+  if (req._isAdmin) return next();
+  var ua = req.headers['user-agent'] || '';
+  // UA manusia normal: entropy > 3.5 dan < 6
+  if (ua && ua.length > 10) {
+    var e = uaEntropy(ua);
+    if (e < 3.5) {
+      // UA random generator (bot)
+      logSecurity('UA-LOW-ENTROPY', { ip: req.ip, path: req.path, detail: 'entropy=' + e.toFixed(2) });
+      addStrike(req.ip, 'ua-entropy');
+    }
+  }
+  next();
+});
+
+// 12.5 — Request body entropy (bot kirim random payload)
+function bodyLooksRandom(str) {
+  if (!str || str.length < 20) return false;
+  var digits = (str.match(/[0-9]/g) || []).length;
+  var letters = (str.match(/[a-z]/gi) || []).length;
+  var symbols = str.length - digits - letters;
+  var ratio = symbols / str.length;
+  // >30% simbol non-alphanumeric = suspek
+  return ratio > 0.3;
+}
+
+app.use('/api', function(req, res, next) {
+  if (req._isAdmin) return next();
+  if (req.body && typeof req.body === 'object') {
+    var s = JSON.stringify(req.body);
+    if (bodyLooksRandom(s)) {
+      logSecurity('BODY-RANDOM', { ip: req.ip, path: req.path, detail: 'len=' + s.length });
+      addStrike(req.ip, 'body-random');
+    }
+  }
+  next();
+});
+
+// 12.6 — Referer required untuk POST (kecuali API publik)
+app.use('/api', function(req, res, next) {
+  if (req._isAdmin) return next();
+  if (req.method !== 'POST') return next();
+  // Skip endpoint publik
+  var skip = ['/api/verify-global', '/api/turnstile/status', '/api/admin/login'];
+  if (skip.indexOf(req.path) !== -1) return next();
+  var ref = req.headers['referer'] || req.headers['origin'] || '';
+  if (!ref) {
+    // Beberapa client gak kirim referer, izinin tapi track
+    updateReputation(req.ip, 'malformed', 'no-referer');
+  }
+  next();
+});
+
+// 12.7 — Rapid endpoint switching (bot nyoba banyak endpoint)
+var endpointSwitch = new Map();
+app.use('/api', function(req, res, next) {
+  if (req._isAdmin) return next();
+  var ip = req.ip;
+  var now = Date.now();
+  var e = endpointSwitch.get(ip);
+  if (!e) { e = { paths: [], lastAt: now }; }
+  // Bersihin kalau >5 detik gak aktif
+  if (now - e.lastAt > 5000) e.paths = [];
+  e.paths.push(req.path);
+  e.lastAt = now;
+  // >8 endpoint berbeda dalam 5 detik = bot
+  var unique = {};
+  e.paths.forEach(function(p) { unique[p] = 1; });
+  if (Object.keys(unique).length > 8) {
+    logSecurity('EP-SWITCH', { ip: ip, path: req.path, detail: 'unique=' + Object.keys(unique).length });
+    addStrike(ip, 'ep-switch');
+    updateReputation(ip, 'scan-attempt', 'ep-switch');
+    endpointSwitch.delete(ip);
+    return res.status(429).json({ status: false, message: 'Terlalu banyak endpoint dalam waktu singkat.' });
+  }
+  endpointSwitch.set(ip, e);
+  next();
+});
+
+setInterval(function() { endpointSwitch.clear(); }, 10 * 60 * 1000);
+
+// 12.8 — Endpoint admin whitelist stats
+app.get('/api/admin/whitelist', requireAdmin, function(req, res) {
+  res.json({
+    status: true,
+    admin_ips: ADMIN_IPS,
+    current_ip: req.ip,
+    is_admin_now: isAdminIP(req),
+    howto: 'Set env ADMIN_IPS di Render (comma-separated)'
+  });
+});
+
+// 12.9 — Force logout semua session (panic button)
+var panicMode = false;
+app.post('/api/admin/panic', requireAdmin, function(req, res) {
+  panicMode = !panicMode;
+  logSecurity('PANIC', { ip: req.ip, path: req.path, detail: 'mode=' + panicMode });
+  res.json({ status: true, panic: panicMode, message: panicMode ? 'Panic mode ON' : 'Panic mode OFF' });
+});
+
+app.use(function(req, res, next) {
+  if (panicMode && !req._isAdmin && !isAdminIP(req)) {
+    if (req.path === '/api/admin/panic') return next();
+    if (req.path.indexOf('/api/admin/') === 0) return next();
+    return res.status(503).json({ status: false, message: 'Server dalam mode maintenance.' });
+  }
+  next();
+});
+
+// === END LAYER 12 ===
+
 
 
 
