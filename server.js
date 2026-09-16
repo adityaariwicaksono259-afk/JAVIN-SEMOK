@@ -5622,6 +5622,7 @@ function scanPublicFeatures() {
     'anime-oploverz.html': 'Oploverz',
     'anime-komikindo.html': 'Komikindo',
     'berita.html': 'Berita',
+    'canvas.html': 'Canvas',
     'chat.html': 'Chat Room',
     'profile.html': 'Profile',
     'leaderboard.html': 'Leaderboard',
@@ -5642,6 +5643,7 @@ function scanPublicFeatures() {
     ai: { label: 'AI', icon: '🤖', items: [] },
     anime: { label: 'Anime & Komik', icon: '📺', items: [] },
     berita: { label: 'Berita', icon: '📰', items: [] },
+    canvas: { label: 'Canvas', icon: '🎨', items: [] },
     games: { label: 'Games', icon: '🎮', items: [] },
     tools: { label: 'Tools & Utility', icon: '🛠️', items: [] },
     account: { label: 'Account & Profile', icon: '👤', items: [] },
@@ -5661,6 +5663,7 @@ function scanPublicFeatures() {
 
     // Berita
     if (f === 'berita.html') return 'berita';
+    if (f === 'canvas.html') return 'canvas';
 
     // Games
     if (['slot.html','blackjack.html','dadu.html','dice.html','chess.html','mahjong.html','roulette.html','lottery.html','tebak.html','kartu.html','game.html'].indexOf(f) !== -1) return 'games';
@@ -6495,6 +6498,94 @@ app.get('/api/berita-proxy/:source', async function(req, res) {
   }
 });
 // === END BERITA ===
+
+
+// === CANVAS PROXY (siputzx) ===
+var CANVAS_BASE = 'https://api.siputzx.my.id/api/canvas/';
+
+// GANTI 2 PATH INI DENGAN ENDPOINT ASLI LU
+var CANVAS_FBK1_PATH = process.env.CANVAS_FBK1_PATH || 'fake-book-keep';
+var CANVAS_FBK2_PATH = process.env.CANVAS_FBK2_PATH || 'fake-book-v2';
+
+app.get('/api/canvas-proxy/:type', async function(req, res) {
+  try {
+    var type = req.params.type;
+    var endpoint = '';
+    var params = {};
+    var q = req.query;
+
+    // 1. Fake Book Keep V1
+    if (type === 'fbk1') {
+      endpoint = CANVAS_FBK1_PATH;
+      params.name = q.name || 'Unknown';
+      params.quote = q.quote || '';
+      params.likes = q.likes || '0';
+      params.dislikes = q.dislikes || '0';
+    }
+    // 2. Spotify Card
+    else if (type === 'spotify') {
+      endpoint = 'spotify';
+      params.title = q.title || '';
+      params.artist = q.artist || '';
+      params.start = q.start || '0';
+      params.end = q.end || '0';
+      params.image = q.image || '';
+      params.border = q.border || '#1DB954';
+    }
+    // 3. Goodbye
+    else if (type === 'goodbye') {
+      endpoint = 'goodbyev3';
+      params.username = q.username || '';
+      params.avatar = q.avatar || '';
+    }
+    // 4. eKTP
+    else if (type === 'ektp') {
+      endpoint = 'ektp';
+      ['provinsi','kota','nik','nama','ttl','jenis_kelamin','golongan_darah',
+       'alamat','rt/rw','kel/desa','kecamatan','agama','status','pekerjaan',
+       'kewarganegaraan','masa_berlaku','terbuat','pas_photo'].forEach(function(k) {
+        if (q[k]) params[k] = q[k];
+      });
+    }
+    // 5. Fake Book Keep V2
+    else if (type === 'fbk2') {
+      endpoint = CANVAS_FBK2_PATH;
+      params.title = q.title || '';
+      params.image = q.image || '';
+    }
+    // 6. Beautiful
+    else if (type === 'beautiful') {
+      endpoint = 'beautiful';
+      params.image = q.image || '';
+    }
+    else {
+      return res.status(400).json({ status: false, message: 'Tipe canvas tidak dikenal' });
+    }
+
+    var url = CANVAS_BASE + endpoint + '?' + new URLSearchParams(params).toString();
+    console.log('[CANVAS]', type, '→', endpoint);
+
+    var r = await fetch(url, {
+      headers: { 'accept': 'image/*,*/*', 'user-agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(45000)
+    });
+
+    if (!r.ok) {
+      return res.status(r.status).json({ status: false, message: 'HTTP ' + r.status });
+    }
+
+    var ct = r.headers.get('content-type') || 'image/png';
+    var buf = Buffer.from(await r.arrayBuffer());
+    res.set('Content-Type', ct);
+    res.set('Cache-Control', 'public, max-age=1800');
+    res.send(buf);
+  } catch (e) {
+    console.error('[CANVAS] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal: ' + e.message });
+  }
+});
+// === END CANVAS PROXY ===
+
 
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));

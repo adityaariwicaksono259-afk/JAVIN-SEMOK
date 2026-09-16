@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas - JAVIN SEMOK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+html,body{overflow-y:auto!important;height:auto!important;min-height:100vh!important;font-family:'Inter',system-ui,sans-serif}
+.page{display:block!important;height:auto!important;min-height:100vh!important;overflow-y:auto!important;padding-bottom:60px!important;background:linear-gradient(180deg,#faf6eb 0%,#f5efe0 100%)!important}
+.page-header{display:flex!important;align-items:center!important;gap:12px!important;flex-direction:row!important;background:linear-gradient(135deg,#1f6f5c 0%,#2a8a73 100%)!important;border-bottom:none!important}
+.page-header h1{font-family:'Sora',sans-serif!important;font-weight:800!important;font-size:1.15rem!important;color:#fff!important}
+.header-btn{background:rgba(255,255,255,0.15)!important;color:#fff!important;font-weight:600!important}
+
+.cv-wrap{max-width:780px;margin:0 auto;padding:20px 16px 120px}
+.cv-card{background:#fff;border-radius:22px;padding:28px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 8px 32px rgba(31,111,92,0.08);border:1px solid rgba(31,111,92,0.06)}
+.cv-title{margin:0 0 4px;font-family:'Sora',sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.5px;color:#0f2a24;background:linear-gradient(135deg,#0f2a24 0%,#1f6f5c 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cv-sub{color:#6b7c78;font-size:0.9rem;margin:0 0 24px;font-weight:500}
+
+.cv-tabs{display:flex;gap:6px;margin-bottom:24px;overflow-x:auto;padding:4px;background:#f5f2e8;border-radius:14px;scrollbar-width:none}
+.cv-tabs::-webkit-scrollbar{display:none}
+.cv-tab{flex-shrink:0;padding:10px 16px;border-radius:10px;background:transparent;border:none;color:#6b7c78;font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.25s;white-space:nowrap}
+.cv-tab:hover{color:#1f6f5c;background:rgba(31,111,92,0.06)}
+.cv-tab.active{background:linear-gradient(135deg,#1f6f5c,#2a8a73);color:#fff;box-shadow:0 4px 12px rgba(31,111,92,0.28)}
+
+.cv-panel{display:none;animation:fadeUp 0.35s ease}
+.cv-panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.cv-label{display:block;margin:14px 0 8px;font-family:'Sora',sans-serif;font-weight:700;font-size:0.78rem;letter-spacing:0.5px;color:#0f2a24;text-transform:uppercase}
+.cv-label:first-child{margin-top:0}
+.cv-input,.cv-textarea{width:100%;box-sizing:border-box;border:2px solid #e8e2d0;border-radius:12px;padding:13px 16px;font-family:'Inter',sans-serif;font-size:0.92rem;font-weight:500;background:#fbfaf5;color:#0f2a24;transition:all 0.2s}
+.cv-input:focus,.cv-textarea:focus{outline:none;border-color:#1f6f5c;background:#fff;box-shadow:0 0 0 4px rgba(31,111,92,0.1)}
+.cv-input::placeholder{color:#a8b3af}
+.cv-textarea{min-height:90px;resize:vertical;font-family:inherit}
+.cv-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.cv-row{grid-template-columns:1fr}}
+
+.cv-btn{width:100%;margin-top:18px;border:0;border-radius:14px;padding:16px;font-family:'Sora',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1f6f5c 0%,#2a8a73 100%);color:#fff;box-shadow:0 6px 20px rgba(31,111,92,0.3);transition:all 0.25s}
+.cv-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(31,111,92,0.4)}
+.cv-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+.cv-result{margin-top:22px;padding:16px;border-radius:14px;text-align:center;font-weight:600;font-size:0.88rem;display:none}
+.cv-result.show{display:block}
+.cv-result.ok{background:#e8f5ee;border:1.5px solid #1f6f5c;color:#0f5c47}
+.cv-result.err{background:#fef0f0;border:1.5px solid #ffb3b3;color:#c0392b}
+
+.cv-img{margin-top:18px;max-width:100%;border-radius:14px;display:none;border:1px solid #ede7d5;box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+.cv-img.show{display:block}
+
+.cv-loading{text-align:center;padding:30px;display:none}
+.cv-loading.show{display:block}
+.cv-spinner{width:32px;height:32px;border:3px solid #e8e2d0;border-top-color:#1f6f5c;border-radius:50%;animation:sp 0.7s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.cv-dl{display:none;margin-top:14px;padding:14px;border-radius:12px;background:linear-gradient(135deg,#1f6f5c,#2a8a73);color:#fff;font-weight:700;text-decoration:none;text-align:center;font-size:0.9rem;box-shadow:0 6px 20px rgba(31,111,92,0.3)}
+.cv-dl.show{display:block}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="page-header">
+<a href="/" class="header-btn">Kembali</a>
+<h1>Canvas</h1>
+</header>
+<div class="cv-wrap">
+<div class="cv-card">
+<h2 class="cv-title">Canvas Generator</h2>
+<p class="cv-sub">Bikin gambar keren dari template canvas</p>
+
+<div class="cv-tabs">
+<button class="cv-tab active" data-tab="fbk1">Fake Book Keep</button>
+<button class="cv-tab" data-tab="spotify">Spotify</button>
+<button class="cv-tab" data-tab="goodbye">Goodbye</button>
+<button class="cv-tab" data-tab="ektp">eKTP</button>
+<button class="cv-tab" data-tab="fbk2">Fake Book V2</button>
+<button class="cv-tab" data-tab="beautiful">Beautiful</button>
+</div>
+
+<!-- FK1 -->
+<div class="cv-panel active" data-panel="fbk1">
+<label class="cv-label">Nama</label>
+<input id="f1Name" class="cv-input" placeholder="Nelson Mandela">
+<label class="cv-label">Quote</label>
+<textarea id="f1Quote" class="cv-textarea" placeholder="Keberanian bukanlah tidak adanya ketakutan."></textarea>
+<div class="cv-row">
+<div><label class="cv-label">Likes</label><input id="f1Likes" class="cv-input" type="number" value="2"></div>
+<div><label class="cv-label">Dislikes</label><input id="f1Dislikes" class="cv-input" type="number" value="0"></div>
+</div>
+<button id="f1Btn" class="cv-btn" data-type="fbk1">Generate Fake Book Keep</button>
+<div id="f1Load" class="cv-loading"><div class="cv-spinner"></div></div>
+<div id="f1Res" class="cv-result"></div>
+<img id="f1Img" class="cv-img" alt="">
+<a id="f1Dl" class="cv-dl" download="fbk1.png">Download Gambar</a>
+</div>
+
+<!-- Spotify -->
+<div class="cv-panel" data-panel="spotify">
+<label class="cv-label">Judul Lagu</label>
+<input id="spTitle" class="cv-input" placeholder="Blinding Lights">
+<label class="cv-label">Artist</label>
+<input id="spArtist" class="cv-input" placeholder="The Weeknd">
+<div class="cv-row">
+<div><label class="cv-label">Start (ms)</label><input id="spStart" class="cv-input" type="number" value="100000"></div>
+<div><label class="cv-label">End (ms)</label><input id="spEnd" class="cv-input" type="number" value="200000"></div>
+</div>
+<label class="cv-label">Cover Image URL</label>
+<input id="spImage" class="cv-input" placeholder="https://...">
+<label class="cv-label">Border Color</label>
+<input id="spBorder" class="cv-input" value="#1DB954" placeholder="#1DB954">
+<button id="spBtn" class="cv-btn" data-type="spotify">Generate Spotify Card</button>
+<div id="spLoad" class="cv-loading"><div class="cv-spinner"></div></div>
+<div id="spRes" class="cv-result"></div>
+<img id="spImg" class="cv-img" alt="">
+<a id="spDl" class="cv-dl" download="spotify.png">Download Gambar</a>
+</div>
+
+<!-- Goodbye -->
+<div class="cv-panel" data-panel="goodbye">
+<label class="cv-label">Username</label>
+<input id="gbUser" class="cv-input" placeholder="John">
+<label class="cv-label">Avatar URL</label>
+<input id="gbAvatar" class="cv-input" placeholder="https://...">
+<button id="gbBtn" class="cv-btn" data-type="goodbye">Generate Goodbye</button>
+<div id="gbLoad" class="cv-loading"><div class="cv-spinner"></div></div>
+<div id="gbRes" class="cv-result"></div>
+<img id="gbImg" class="cv-img" alt="">
+<a id="gbDl" class="cv-dl" download="goodbye.png">Download Gambar</a>
+</div>
+
+<!-- eKTP -->
+<div class="cv-panel" data-panel="ektp">
+<label class="cv-label">Nama Lengkap</label>
+<input id="ekNama" class="cv-input" placeholder="John Doe">
+<div class="cv-row">
+<div><label class="cv-label">NIK</label><input id="ekNik" class="cv-input" placeholder="1234567890123456"></div>
+<div><label class="cv-label">TTL</label><input id="ekTtl" class="cv-input" placeholder="Bandung, 01-01-1990"></div>
+</div>
+<div class="cv-row">
+<div><label class="cv-label">Provinsi</label><input id="ekProv" class="cv-input" placeholder="JAWA BARAT"></div>
+<div><label class="cv-label">Kota</label><input id="ekKota" class="cv-input" placeholder="BANDUNG"></div>
+</div>
+<div class="cv-row">
+<div><label class="cv-label">Jenis Kelamin</label><input id="ekJk" class="cv-input" placeholder="Laki-laki"></div>
+<div><label class="cv-label">Gol. Darah</label><input id="ekGol" class="cv-input" placeholder="O"></div>
+</div>
+<label class="cv-label">Alamat</label>
+<input id="ekAlamat" class="cv-input" placeholder="Jl. Contoh No. 123">
+<div class="cv-row">
+<div><label class="cv-label">RT/RW</label><input id="ekRt" class="cv-input" placeholder="001/002"></div>
+<div><label class="cv-label">Kel/Desa</label><input id="ekKel" class="cv-input" placeholder="Sukajadi"></div>
+</div>
+<div class="cv-row">
+<div><label class="cv-label">Kecamatan</label><input id="ekKec" class="cv-input" placeholder="Sukajadi"></div>
+<div><label class="cv-label">Agama</label><input id="ekAgama" class="cv-input" placeholder="Islam"></div>
+</div>
+<div class="cv-row">
+<div><label class="cv-label">Status</label><input id="ekStatus" class="cv-input" placeholder="Belum Kawin"></div>
+<div><label class="cv-label">Pekerjaan</label><input id="ekKerja" class="cv-input" placeholder="Pegawai Swasta"></div>
+</div>
+<div class="cv-row">
+<div><label class="cv-label">Kewarganegaraan</label><input id="ekWni" class="cv-input" value="WNI"></div>
+<div><label class="cv-label">Masa Berlaku</label><input id="ekMasa" class="cv-input" value="Seumur Hidup"></div>
+</div>
+<label class="cv-label">Terbuat</label>
+<input id="ekTerbuat" class="cv-input" value="01-01-2023">
+<label class="cv-label">Pas Photo URL</label>
+<input id="ekFoto" class="cv-input" placeholder="https://...">
+<button id="ekBtn" class="cv-btn" data-type="ektp">Generate eKTP</button>
+<div id="ekLoad" class="cv-loading"><div class="cv-spinner"></div></div>
+<div id="ekRes" class="cv-result"></div>
+<img id="ekImg" class="cv-img" alt="">
+<a id="ekDl" class="cv-dl" download="ektp.png">Download Gambar</a>
+</div>
+
+<!-- FK2 -->
+<div class="cv-panel" data-panel="fbk2">
+<label class="cv-label">Judul</label>
+<input id="f2Title" class="cv-input" placeholder="Lari ada wibu">
+<label class="cv-label">Image URL</label>
+<input id="f2Image" class="cv-input" placeholder="https://...">
+<button id="f2Btn" class="cv-btn" data-type="fbk2">Generate Fake Book V2</button>
+<div id="f2Load" class="cv-loading"><div class="cv-spinner"></div></div>
+<div id="f2Res" class="cv-result"></div>
+<img id="f2Img" class="cv-img" alt="">
+<a id="f2Dl" class="cv-dl" download="fbk2.png">Download Gambar</a>
+</div>
+
+<!-- Beautiful -->
+<div class="cv-panel" data-panel="beautiful">
+<label class="cv-label">Image URL</label>
+<input id="btImage" class="cv-input" placeholder="https://...">
+<button id="btBtn" class="cv-btn" data-type="beautiful">Generate Beautiful</button>
+<div id="btLoad" class="cv-loading"><div class="cv-spinner"></div></div>
+<div id="btRes" class="cv-result"></div>
+<img id="btImg" class="cv-img" alt="">
+<a id="btDl" class="cv-dl" download="beautiful.png">Download Gambar</a>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+var $$=function(s){return document.querySelectorAll(s)};
+var $=function(s){return document.querySelector(s)};
+
+$$('.cv-tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    $$('.cv-tab').forEach(function(x){x.classList.remove('active')});
+    $$('.cv-panel').forEach(function(x){x.classList.remove('active')});
+    t.classList.add('active');
+    document.querySelector('.cv-panel[data-panel="'+t.dataset.tab+'"]').classList.add('active');
+  });
+});
+
+function setLoading(id,on){var el=$(id);if(el)el.className='cv-loading'+(on?' show':'');}
+function setStatus(id,type,msg){
+  var el=$(id);
+  if(!el)return;
+  el.className='cv-result show '+(type==='ok'?'ok':'err');
+  el.textContent=(type==='ok'?'': '')+msg;
+}
+
+async function generate(type){
+  var url='/api/canvas-proxy/'+type;
+  var params={};
+  var prefix='';
+  var loadId='', resId='', imgId='', dlId='';
+
+  if(type==='fbk1'){
+    prefix='f1';loadId='f1Load';resId='f1Res';imgId='f1Img';dlId='f1Dl';
+    params.name=$('#f1Name').value.trim()||'Unknown';
+    params.quote=$('#f1Quote').value.trim()||'';
+    params.likes=$('#f1Likes').value||'0';
+    params.dislikes=$('#f1Dislikes').value||'0';
+  }
+  else if(type==='spotify'){
+    prefix='sp';loadId='spLoad';resId='spRes';imgId='spImg';dlId='spDl';
+    params.title=$('#spTitle').value.trim();
+    params.artist=$('#spArtist').value.trim();
+    params.start=$('#spStart').value||'0';
+    params.end=$('#spEnd').value||'0';
+    params.image=$('#spImage').value.trim();
+    params.border=$('#spBorder').value.trim()||'#1DB954';
+    if(!params.title||!params.artist||!params.image){setStatus(resId,'err','Judul, artist, dan cover wajib diisi');return}
+  }
+  else if(type==='goodbye'){
+    prefix='gb';loadId='gbLoad';resId='gbRes';imgId='gbImg';dlId='gbDl';
+    params.username=$('#gbUser').value.trim();
+    params.avatar=$('#gbAvatar').value.trim();
+    if(!params.username||!params.avatar){setStatus(resId,'err','Username dan avatar wajib diisi');return}
+  }
+  else if(type==='ektp'){
+    prefix='ek';loadId='ekLoad';resId='ekRes';imgId='ekImg';dlId='ekDl';
+    params.nama=$('#ekNama').value.trim()||'John Doe';
+    params.nik=$('#ekNik').value.trim()||'1234567890123456';
+    params.ttl=$('#ekTtl').value.trim()||'Bandung, 01-01-1990';
+    params.provinsi=$('#ekProv').value.trim()||'JAWA BARAT';
+    params.kota=$('#ekKota').value.trim()||'BANDUNG';
+    params['jenis_kelamin']=$('#ekJk').value.trim()||'Laki-laki';
+    params['golongan_darah']=$('#ekGol').value.trim()||'O';
+    params.alamat=$('#ekAlamat').value.trim()||'Jl. Contoh No. 123';
+    params['rt/rw']=$('#ekRt').value.trim()||'001/002';
+    params['kel/desa']=$('#ekKel').value.trim()||'Sukajadi';
+    params.kecamatan=$('#ekKec').value.trim()||'Sukajadi';
+    params.agama=$('#ekAgama').value.trim()||'Islam';
+    params.status=$('#ekStatus').value.trim()||'Belum Kawin';
+    params.pekerjaan=$('#ekKerja').value.trim()||'Pegawai Swasta';
+    params.kewarganegaraan=$('#ekWni').value.trim()||'WNI';
+    params['masa_berlaku']=$('#ekMasa').value.trim()||'Seumur Hidup';
+    params.terbuat=$('#ekTerbuat').value.trim()||'01-01-2023';
+    params['pas_photo']=$('#ekFoto').value.trim();
+  }
+  else if(type==='fbk2'){
+    prefix='f2';loadId='f2Load';resId='f2Res';imgId='f2Img';dlId='f2Dl';
+    params.title=$('#f2Title').value.trim();
+    params.image=$('#f2Image').value.trim();
+    if(!params.title||!params.image){setStatus(resId,'err','Judul dan image wajib diisi');return}
+  }
+  else if(type==='beautiful'){
+    prefix='bt';loadId='btLoad';resId='btRes';imgId='btImg';dlId='btDl';
+    params.image=$('#btImage').value.trim();
+    if(!params.image){setStatus(resId,'err','Image URL wajib diisi');return}
+  }
+
+  var btn=$('#'+prefix+'Btn');
+  var img=$('#'+imgId);
+  var dl=$('#'+dlId);
+  var res=$('#'+resId);
+
+  btn.disabled=true;
+  var orig=btn.textContent;
+  btn.textContent='Memproses...';
+  img.className='cv-img';dl.className='cv-dl';res.className='cv-result';
+  setLoading(loadId,true);
+
+  try{
+    var qs=new URLSearchParams(params).toString();
+    var r=await fetch(url+'?'+qs);
+    if(!r.ok){
+      var t=await r.text();
+      throw new Error('HTTP '+r.status);
+    }
+    var blob=await r.blob();
+    var objUrl=URL.createObjectURL(blob);
+    img.src=objUrl;img.className='cv-img show';
+    dl.href=objUrl;dl.className='cv-dl show';
+    setStatus(resId,'ok','Berhasil! Gambar siap di-download');
+  }catch(e){
+    setStatus(resId,'err','Gagal: '+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent=orig;
+    setLoading(loadId,false);
+  }
+}
+
+$$('.cv-btn').forEach(function(b){
+  b.addEventListener('click',function(){generate(b.dataset.type)});
+});
+})();
+</script>
+</body>
+</html>
