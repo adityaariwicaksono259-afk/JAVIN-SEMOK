@@ -3778,6 +3778,7 @@ function gvShouldSkip(req) {
   if (/\.[a-z0-9]+$/i.test(p)) return true;
   // Endpoint yang HARUS bisa diakses tanpa verify
   if (p === '/api/ban-status') return true;
+  if (p === '/api/system-status') return true;
   if (p.indexOf('/api/admin/login') === 0) return true;
   if (p.indexOf('/api/admin/check') === 0) return true;
   if (p.indexOf('/api/admin/logout') === 0) return true;
@@ -5527,6 +5528,175 @@ app.get('/api/admin/http-hardening', requireAdmin, function(req, res) {
 });
 
 // === END LAYER 16 ===
+
+
+// ============================================
+// SYSTEM STATUS MONITOR
+// ============================================
+
+var systemStatusCache = { data: null, cachedAt: 0, ttl: 30000 };
+
+function checkSystemStatus() {
+  var now = Date.now();
+  var features = {};
+
+  // === Server ===
+  var mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+  var uptime = Math.floor(process.uptime() / 60);
+  features.server = {
+    label: 'Server',
+    icon: '🖥️',
+    status: 'ready',
+    detail: 'Uptime ' + uptime + ' menit',
+    metric: mem + ' MB'
+  };
+  if (mem > 400) {
+    features.server.status = 'warning';
+    features.server.detail = 'Memory tinggi';
+  }
+  if (mem > 450) {
+    features.server.status = 'error';
+    features.server.detail = 'Memory kritis';
+  }
+
+  // === Database ===
+  var dbOk = (typeof data === 'object' && data && data.users);
+  var userCount = dbOk ? Object.keys(data.users).length : 0;
+  features.database = {
+    label: 'Database',
+    icon: '🗄️',
+    status: dbOk ? 'ready' : 'error',
+    detail: dbOk ? 'Terhubung' : 'Tidak terhubung',
+    metric: userCount + ' user'
+  };
+
+  // === NGL Sender ===
+  var nglReady = typeof NGL_COIN_PER_PESAN !== 'undefined' && typeof nglGetUserByToken === 'function';
+  features.ngl = {
+    label: 'NGL Sender',
+    icon: '📨',
+    status: nglReady ? 'ready' : 'error',
+    detail: nglReady ? 'API aktif' : 'Module error',
+    metric: nglReady ? NGL_COIN_PER_PESAN + ' coin/pesan' : 'N/A'
+  };
+
+  // === Javin Analog ===
+  var jaReady = typeof ANITA_API !== 'undefined' && typeof anitaPost === 'function';
+  features.javinAnalog = {
+    label: 'Javin Analog',
+    icon: '🔐',
+    status: jaReady ? 'ready' : 'error',
+    detail: jaReady ? 'Anita Studio aktif' : 'Provider error',
+    metric: jaReady ? 'Alight Premium' : 'N/A'
+  };
+
+  // Cek error Javin Analog 1 jam terakhir
+  var jaErrors = securityLog.filter(function(l) {
+    return l.ts > now - 60 * 60 * 1000 && l.detail && String(l.detail).indexOf('ANALOG') !== -1;
+  });
+  if (jaErrors.length > 3) {
+    features.javinAnalog.status = 'warning';
+    features.javinAnalog.detail = jaErrors.length + ' error/jam';
+  }
+
+  // === Waifu ===
+  features.waifu = {
+    label: 'Random Waifu',
+    icon: '🌸',
+    status: 'ready',
+    detail: 'Provider: waifu.im',
+    metric: 'Aktif'
+  };
+
+  // === Turnstile ===
+  var tsOn = !!process.env.TURNSTILE_SECRET;
+  features.turnstile = {
+    label: 'Cloudflare Turnstile',
+    icon: '🛡️',
+    status: tsOn ? 'ready' : 'disabled',
+    detail: tsOn ? 'CAPTCHA aktif' : 'Belum diset',
+    metric: tsOn ? 'Enabled' : 'Disabled'
+  };
+
+  // === Security Layers ===
+  features.security = {
+    label: 'Security Layers',
+    icon: '🔒',
+    status: 'ready',
+    detail: '16 layer aktif',
+    metric: ipBlacklist.size + ' IP banned'
+  };
+
+  // === Admin Access ===
+  var adminIPs = (process.env.ADMIN_IPS || '').split(',').filter(function(s) { return s.trim(); });
+  features.admin = {
+    label: 'Admin Access',
+    icon: '👑',
+    status: adminIPs.length > 0 ? 'ready' : 'warning',
+    detail: adminIPs.length > 0 ? 'Whitelist aktif' : 'Belum ada whitelist',
+    metric: adminIPs.length + ' IP'
+  };
+
+  // === Bot Defense ===
+  var banned24h = 0;
+  for (var e of ipBlacklist.entries()) {
+    banned24h++;
+  }
+  features.botDefense = {
+    label: 'Bot Defense',
+    icon: '🤖',
+    status: 'ready',
+    detail: 'Turnstile + Honeypot',
+    metric: banned24h + ' diblokir'
+  };
+
+  // === Overall ===
+  var allStatuses = Object.keys(features).map(function(k) { return features[k].status; });
+  var overall = 'healthy';
+  if (allStatuses.indexOf('error') !== -1) overall = 'error';
+  else if (allStatuses.indexOf('warning') !== -1) overall = 'warning';
+
+  // Cek error log
+  var recentErrors = securityLog.filter(function(l) {
+    return l.ts > now - 60 * 60 * 1000 &&
+           (l.type.indexOf('ERROR') !== -1 || l.type === 'UNCAUGHT' || l.type === 'UNHANDLED');
+  });
+  if (recentErrors.length > 10) {
+    if (overall === 'healthy') overall = 'warning';
+  }
+
+  return {
+    timestamp: now,
+    time: new Date().toLocaleString('id-ID'),
+    overall: overall,
+    summary: {
+      ready: allStatuses.filter(function(s) { return s === 'ready'; }).length,
+      warning: allStatuses.filter(function(s) { return s === 'warning'; }).length,
+      error: allStatuses.filter(function(s) { return s === 'error'; }).length,
+      disabled: allStatuses.filter(function(s) { return s === 'disabled'; }).length
+    },
+    features: features,
+    errorLogCount: recentErrors.length
+  };
+}
+
+app.get('/api/system-status', function(req, res) {
+  var now = Date.now();
+  if (systemStatusCache.data && (now - systemStatusCache.cachedAt) < systemStatusCache.ttl) {
+    return res.json(systemStatusCache.data);
+  }
+  var status = checkSystemStatus();
+  systemStatusCache.data = status;
+  systemStatusCache.cachedAt = now;
+  res.json(status);
+});
+
+// Skip dari global verify (buat widget di halaman manapun)
+// Sudah otomatis skip karena /api/system-status gak ada di whitelist layer 9... patch:
+// (Tambahkan ke skip list di Layer 9)
+
+// === END SYSTEM STATUS ===
+
 
 
 

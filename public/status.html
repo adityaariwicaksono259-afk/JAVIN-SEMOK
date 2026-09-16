@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Status Sistem - JAVIN SEMOK</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; background:#0a0a0f; color:#e8e8f0; min-height:100vh; padding:16px; }
+.page { max-width: 640px; margin: 0 auto; }
+
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 { font-size: 1.4rem; background: linear-gradient(135deg, #7c5cff, #00d4aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.header p { color: #8888a0; font-size: 0.82rem; margin-top: 4px; }
+
+/* Overall banner */
+.overall {
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+  border: 2px solid;
+  transition: all 0.3s;
+}
+.overall.healthy { background: rgba(0,212,170,0.08); border-color: #00d4aa; }
+.overall.warning { background: rgba(255,176,32,0.08); border-color: #ffb020; }
+.overall.error { background: rgba(255,77,109,0.08); border-color: #ff4d6d; }
+.overall-icon { font-size: 2.8rem; margin-bottom: 8px; }
+.overall-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+.overall.healthy .overall-title { color: #00d4aa; }
+.overall.warning .overall-title { color: #ffb020; }
+.overall.error .overall-title { color: #ff4d6d; }
+.overall-sub { font-size: 0.82rem; color: #8888a0; }
+
+/* Summary row */
+.summary { display: flex; gap: 8px; margin-bottom: 16px; }
+.summary-item { flex: 1; background: #12121a; border: 1px solid #2a2a3a; border-radius: 10px; padding: 10px; text-align: center; }
+.summary-num { font-size: 1.3rem; font-weight: 700; }
+.summary-lbl { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: #8888a0; margin-top: 2px; }
+.summary-item.ready .summary-num { color: #00d4aa; }
+.summary-item.warning .summary-num { color: #ffb020; }
+.summary-item.error .summary-num { color: #ff4d6d; }
+.summary-item.disabled .summary-num { color: #8888a0; }
+
+/* Feature cards */
+.section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #8888a0; margin: 16px 0 10px; font-weight: 600; }
+
+.feature {
+  background: #12121a;
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s;
+}
+.feature-icon { font-size: 1.6rem; flex-shrink: 0; }
+.feature-body { flex: 1; min-width: 0; }
+.feature-label { font-size: 0.92rem; font-weight: 600; margin-bottom: 2px; }
+.feature-detail { font-size: 0.75rem; color: #8888a0; }
+.feature-metric { font-size: 0.72rem; color: #555; margin-top: 2px; }
+
+.feature-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.feature.ready .feature-status { background: rgba(0,212,170,0.15); color: #00d4aa; }
+.feature.warning .feature-status { background: rgba(255,176,32,0.15); color: #ffb020; }
+.feature.error .feature-status { background: rgba(255,77,109,0.15); color: #ff4d6d; }
+.feature.disabled .feature-status { background: rgba(128,128,128,0.15); color: #8888a0; }
+.feature.error { border-color: rgba(255,77,109,0.4); }
+.feature.warning { border-color: rgba(255,176,32,0.4); }
+
+/* Footer */
+.footer { text-align: center; margin-top: 20px; padding: 16px; border-top: 1px solid #2a2a3a; }
+.footer-info { font-size: 0.75rem; color: #555; line-height: 1.6; }
+.refresh-btn {
+  background: linear-gradient(135deg, #7c5cff, #9d7cff);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  font-family: inherit;
+}
+.refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.loading { text-align: center; padding: 40px 0; color: #8888a0; }
+.spinner { width: 30px; height: 30px; border: 3px solid #2a2a3a; border-top-color: #7c5cff; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>📊 Status Sistem</h1>
+    <p>Monitoring real-time semua fitur JAVIN SEMOK</p>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <div>Memuat status...</div>
+  </div>
+
+  <div id="content" style="display:none">
+    <div id="overall" class="overall healthy">
+      <div class="overall-icon" id="overallIcon">✅</div>
+      <div class="overall-title" id="overallTitle">Semua Sistem Normal</div>
+      <div class="overall-sub" id="overallSub">Terakhir update: -</div>
+    </div>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="section-title">Fitur</div>
+    <div id="features"></div>
+
+    <div class="footer">
+      <div class="footer-info" id="footerInfo">-</div>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadStatus()">🔄 Refresh Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var autoRefreshTimer = null;
+
+function statusLabel(s) {
+  if (s === 'ready') return 'READY';
+  if (s === 'warning') return 'WARN';
+  if (s === 'error') return 'ERROR';
+  if (s === 'disabled') return 'OFF';
+  return 'UNKNOWN';
+}
+
+async function loadStatus() {
+  var btn = document.getElementById('refreshBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Memuat...'; }
+
+  try {
+    var r = await fetch('/api/system-status?t=' + Date.now());
+    var d = await r.json();
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+
+    // Overall
+    var overallEl = document.getElementById('overall');
+    overallEl.className = 'overall ' + d.overall;
+    var iconMap = { healthy: '✅', warning: '⚠️', error: '❌' };
+    var titleMap = { healthy: 'Semua Sistem Normal', warning: 'Ada Peringatan', error: 'Ada Masalah Terdeteksi' };
+    document.getElementById('overallIcon').textContent = iconMap[d.overall] || '❓';
+    document.getElementById('overallTitle').textContent = titleMap[d.overall] || 'Status Tidak Diketahui';
+    document.getElementById('overallSub').textContent = 'Terakhir update: ' + d.time;
+
+    // Summary
+    var sm = document.getElementById('summary');
+    sm.innerHTML = '';
+    var s = d.summary;
+    [
+      { key: 'ready', label: 'Ready', num: s.ready },
+      { key: 'warning', label: 'Warning', num: s.warning },
+      { key: 'error', label: 'Error', num: s.error },
+      { key: 'disabled', label: 'Disabled', num: s.disabled }
+    ].forEach(function(x) {
+      var el = document.createElement('div');
+      el.className = 'summary-item ' + x.key;
+      el.innerHTML = '<div class="summary-num">' + x.num + '</div><div class="summary-lbl">' + x.label + '</div>';
+      sm.appendChild(el);
+    });
+
+    // Features
+    var fEl = document.getElementById('features');
+    fEl.innerHTML = '';
+    Object.keys(d.features).forEach(function(k) {
+      var f = d.features[k];
+      var card = document.createElement('div');
+      card.className = 'feature ' + f.status;
+      card.innerHTML =
+        '<div class="feature-icon">' + f.icon + '</div>' +
+        '<div class="feature-body">' +
+          '<div class="feature-label">' + f.label + '</div>' +
+          '<div class="feature-detail">' + f.detail + '</div>' +
+          (f.metric ? '<div class="feature-metric">' + f.metric + '</div>' : '') +
+        '</div>' +
+        '<div class="feature-status">' + statusLabel(f.status) + '</div>';
+      fEl.appendChild(card);
+    });
+
+    // Footer
+    document.getElementById('footerInfo').innerHTML =
+      'Auto-refresh tiap 60 detik<br>' +
+      'Error log 1 jam terakhir: ' + d.errorLogCount;
+  } catch (e) {
+    document.getElementById('loading').innerHTML =
+      '<div style="color:#ff4d6d">❌ Gagal memuat status: ' + e.message + '</div>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh Sekarang'; }
+  }
+}
+
+// Auto refresh 60 detik
+function startAutoRefresh() {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(loadStatus, 60000);
+}
+
+loadStatus();
+startAutoRefresh();
+</script>
+</body>
+</html>
