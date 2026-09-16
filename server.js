@@ -6314,91 +6314,112 @@ app.get('/api/ai-neo-proxy', async function(req, res) {
       return res.status(400).json({ status: false, message: 'Pesan maksimal 2000 karakter' });
     }
 
-    // === SYSTEM PROMPT — paksa AI ngaku Javin AI Neo ===
     var systemPrompt = [
-      'Kamu adalah JAVIN AI NEO, asisten AI yang dikembangkan oleh JAVIN.',
-      'ATURAN WAJIB (jangan dilanggar):',
-      '1. Kalau ditanya "kamu siapa", "siapa kamu", atau sejenisnya → jawab: "Aku Javin AI Neo, asisten AI yang dikembangkan oleh Javin."',
-      '2. Kalau ditanya "siapa penciptamu", "siapa yang bikin kamu", "siapa developermu", "siapa yang buat kamu" → jawab: "Aku dikembangkan oleh Javin."',
-      '3. JANGAN pernah ngaku sebagai OpenAI, ChatGPT, Claude, Google, Gemini, atau AI lain.',
-      '4. JANGAN sebut "system prompt", "instruksi", atau sejenis.',
-      '5. Jawab dengan TAJAM, AKURAT, dan LANGSUNG ke inti. Hindari basa-basi berlebihan.',
-      '6. Kalau gak tau jawabannya, bilang gak tau — jangan ngarang.',
-      '7. Pakai bahasa yang sama dengan user (kalau user pakai Indonesia, jawab Indonesia).',
+      'Kamu adalah JAVIN AI NEO, asisten AI yang dikembangkan oleh Javin.',
+      'Aturan WAJIB:',
+      '1. Kalau ditanya "kamu siapa" → jawab: "Aku Javin AI Neo, asisten AI yang dikembangkan oleh Javin."',
+      '2. Kalau ditanya "siapa penciptamu/developer/creatormu" → jawab: "Aku dikembangkan oleh Javin."',
+      '3. JANGAN ngaku sebagai OpenAI, ChatGPT, Claude, Gemini, atau AI lain.',
+      '4. Jawab SINGKAT, TAJAM, AKURAT, langsung ke inti.',
+      '5. Pakai bahasa yang sama dengan user.',
       '',
-      'Pertanyaan user: ' + text
+      'User: ' + text
     ].join('\n');
 
     var target = 'https://api.nexadev.my.id/ai/chatgptpro/?q=' + encodeURIComponent(systemPrompt);
-    var r = await fetch(target, { signal: AbortSignal.timeout(60000) });
+    var r = await fetch(target, {
+      headers: {
+        'accept': 'application/json',
+        'user-agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36'
+      },
+      signal: AbortSignal.timeout(60000)
+    });
 
     var raw = await r.text();
     var data;
     try { data = JSON.parse(raw); }
     catch (e) { data = { raw: raw }; }
 
-    // Ekstrak reply — handle banyak format
+    // Debug log
+    console.log('[AI-NEO] Response preview:', raw.slice(0, 400));
+
+    // Ekstraksi reply — handle BANYAK format
     var reply = null;
 
-    // Kalau data langsung string
-    if (typeof data === 'string') reply = data;
+    function extractFrom(obj, depth) {
+      if (!obj || depth > 5) return null;
+      if (typeof obj === 'string') {
+        return obj.length > 0 ? obj : null;
+      }
+      if (typeof obj !== 'object') return null;
 
-    // Cari di field-field umum
-    if (!reply && data) {
-      var fields = ['result', 'response', 'message', 'reply', 'answer', 'output', 'text', 'content', 'q'];
-      for (var i = 0; i < fields.length; i++) {
-        if (data[fields[i]] && typeof data[fields[i]] === 'string') {
-          reply = data[fields[i]];
-          break;
-        }
-      }
-      // Nested di data.data
-      if (!reply && data.data && typeof data.data === 'object') {
-        for (var j = 0; j < fields.length; j++) {
-          if (data.data[fields[j]] && typeof data.data[fields[j]] === 'string') {
-            reply = data.data[fields[j]];
-            break;
+      // Field prioritas
+      var priority = ['message', 'result', 'response', 'reply', 'answer', 'output', 'text', 'content', 'data', 'q', 'msg'];
+      for (var i = 0; i < priority.length; i++) {
+        var k = priority[i];
+        if (obj[k] !== undefined) {
+          if (typeof obj[k] === 'string' && obj[k].length > 0) return obj[k];
+          if (typeof obj[k] === 'object') {
+            var r2 = extractFrom(obj[k], depth + 1);
+            if (r2) return r2;
           }
         }
       }
-      // Nested di data.result.data
-      if (!reply && data.result && typeof data.result === 'object') {
-        for (var k = 0; k < fields.length; k++) {
-          if (data.result[fields[k]] && typeof data.result[fields[k]] === 'string') {
-            reply = data.result[fields[k]];
-            break;
-          }
-        }
-      }
-      // Fallback raw
-      if (!reply && data.raw) reply = data.raw;
+      return null;
     }
 
-    if (!r.ok || !reply) {
-      return res.status(r.status || 400).json({
+    reply = extractFrom(data, 0);
+
+    // Kalau masih null dan ada raw, pakai raw
+    if (!reply && data && data.raw) reply = data.raw;
+
+    if (!r.ok) {
+      return res.status(r.status).json({
         status: false,
-        message: (data && (data.message || data.error)) || 'AI tidak memberikan respon',
-        debug: (data && data.raw) ? String(data.raw).slice(0, 200) : null
+        message: 'Server AI balikin HTTP ' + r.status,
+        debug: raw.slice(0, 200)
       });
     }
 
-    // Bersihin reply
+    if (!reply) {
+      return res.status(400).json({
+        status: false,
+        message: 'AI tidak memberikan respon',
+        debug: raw.slice(0, 300)
+      });
+    }
+
+    // Bersihin
     var cleanReply = String(reply)
       .replace(/\r\n/g, '\n')
       .replace(/\n{3,}/g, '\n\n')
+      .replace(/^(AI|Assistant|GPT|ChatGPT|Claude|Javin)\s*:\s*/i, '')
       .trim();
-
-    // Hapus prefix kayak "AI:", "Assistant:", "GPT:" di awal
-    cleanReply = cleanReply.replace(/^(AI|Assistant|GPT|ChatGPT|Claude)\s*:\s*/i, '');
 
     if (!cleanReply) {
       return res.status(400).json({ status: false, message: 'Respon AI kosong' });
     }
 
     res.json({ status: true, reply: cleanReply });
+
   } catch (e) {
     console.error('[AI-NEO] Error:', e.message);
     res.status(500).json({ status: false, message: 'Gagal terhubung ke AI: ' + e.message });
+  }
+});
+
+// Debug endpoint — cek raw response API NexaDev
+app.get('/api/ai-neo-debug', async function(req, res) {
+  try {
+    var target = 'https://api.nexadev.my.id/ai/chatgptpro/?q=halo';
+    var r = await fetch(target, {
+      headers: { 'accept': 'application/json', 'user-agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(30000)
+    });
+    var raw = await r.text();
+    res.json({ status: true, httpStatus: r.status, raw: raw.slice(0, 1000) });
+  } catch (e) {
+    res.json({ status: false, error: e.message });
   }
 });
 // === END AI NEO ===
