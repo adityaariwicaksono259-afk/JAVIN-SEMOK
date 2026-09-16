@@ -4326,6 +4326,415 @@ app.use(function(req, res, next) {
 // === END LAYER 12 ===
 
 
+// ============================================
+// PROTECTION LAYER 13 — AUTO-BAN BERTINGKAT
+// ============================================
+
+// Level ban (seperti WhatsApp)
+var VIOLATION_LEVELS = {
+  WARNING:    { level: 0, durasi: 0,             label: 'Peringatan' },
+  SOFT:       { level: 1, durasi: 5 * 60 * 1000, label: 'Cooling Down' },
+  MEDIUM:     { level: 2, durasi: 60 * 60 * 1000, label: 'Banned 1 Jam' },
+  HARD:       { level: 3, durasi: 24 * 60 * 60 * 1000, label: 'Banned 24 Jam' },
+  PERMANENT:  { level: 4, durasi: 7 * 24 * 60 * 60 * 1000, label: 'Banned 7 Hari' }
+};
+
+// Map tingkatan pelanggaran
+var VIOLATION_MAP = {
+  // RINGAN → WARNING → SOFT
+  'rate-limit-hit':        { sev: 1, type: 'WARNING' },
+  'bad-ua':                { sev: 1, type: 'WARNING' },
+  'bad-content-type':      { sev: 1, type: 'WARNING' },
+  'ua-entropy':            { sev: 1, type: 'WARNING' },
+  'no-referer':            { sev: 1, type: 'WARNING' },
+  'many-params':           { sev: 1, type: 'WARNING' },
+
+  // SEDANG → MEDIUM
+  'honeypot':              { sev: 2, type: 'MEDIUM' },
+  'honeypot-form':         { sev: 2, type: 'MEDIUM' },
+  'dangerous-payload':     { sev: 2, type: 'MEDIUM' },
+  'malformed':             { sev: 2, type: 'MEDIUM' },
+  'threat-high':           { sev: 2, type: 'MEDIUM' },
+  'threat-medium':         { sev: 2, type: 'MEDIUM' },
+  'too-many-concurrent':   { sev: 2, type: 'MEDIUM' },
+  'timing-bot':            { sev: 2, type: 'MEDIUM' },
+  'body-random':           { sev: 2, type: 'MEDIUM' },
+  'ua-rotate':             { sev: 2, type: 'MEDIUM' },
+  'headless':              { sev: 2, type: 'MEDIUM' },
+  'ep-switch':             { sev: 2, type: 'MEDIUM' },
+
+  // BERAT → HARD
+  'scan-attempt':          { sev: 3, type: 'HARD' },
+  'threat-intel':          { sev: 3, type: 'HARD' },
+  'proto-pollution':       { sev: 3, type: 'HARD' },
+  'path-traversal':        { sev: 3, type: 'HARD' },
+  'spoofed-length':        { sev: 3, type: 'HARD' },
+  'compression-bomb':      { sev: 3, type: 'HARD' },
+  'invalid-length':        { sev: 3, type: 'HARD' },
+  'bad-method':            { sev: 3, type: 'HARD' },
+  'token-hijack':          { sev: 3, type: 'HARD' },
+  'ip-rotation':           { sev: 3, type: 'HARD' }
+};
+
+// Track pelanggaran per IP
+var violationRecords = new Map(); // ip -> { violations: [{type, at, sev}], banLevel, banUntil, banReason }
+
+function getViolationRecord(ip) {
+  var r = violationRecords.get(ip);
+  if (!r) {
+    r = { violations: [], banLevel: null, banUntil: 0, banReason: '', totalStrikes: 0 };
+    violationRecords.set(ip, r);
+  }
+  return r;
+}
+
+// Hitung berat pelanggaran total dalam window
+function calculateThreatScore(record, windowMs) {
+  var now = Date.now();
+  var cutoff = now - (windowMs || 60 * 60 * 1000);
+  var recent = record.violations.filter(function(v) { return v.at > cutoff; });
+  var score = 0;
+  recent.forEach(function(v) { score += v.sev; });
+  return { score: score, count: recent.length };
+}
+
+// Putuskan level ban berdasarkan record
+function decideBanLevel(record) {
+  var now = Date.now();
+
+  // Cek dalam 1 jam terakhir
+  var last1h = calculateThreatScore(record, 60 * 60 * 1000);
+  var last24h = calculateThreatScore(record, 24 * 60 * 60 * 1000);
+  var last7d = calculateThreatScore(record, 7 * 24 * 60 * 60 * 1000);
+
+  // Cek pelanggaran berat individual (sev 3)
+  var hasCritical = record.violations.some(function(v) {
+    return v.sev >= 3 && (now - v.at) < 24 * 60 * 60 * 1000;
+  });
+
+  // Logika bertingkat (seperti WhatsApp)
+  // PERMANENT (7 hari): sangat parah / berulang
+  if (last7d.count >= 20 || last24h.score >= 30) {
+    return 'PERMANENT';
+  }
+  // HARD (24 jam): pelanggaran berat, atau banyak
+  if (hasCritical || last24h.score >= 15 || last1h.count >= 10) {
+    return 'HARD';
+  }
+  // MEDIUM (1 jam): beberapa pelanggaran sedang
+  if (last1h.score >= 6 || last24h.score >= 8 || last1h.count >= 5) {
+    return 'MEDIUM';
+  }
+  // SOFT (5 menit): pelanggaran ringan berulang
+  if (last1h.score >= 3 || last1h.count >= 3) {
+    return 'SOFT';
+  }
+  // WARNING: baru mulai
+  if (last1h.count >= 1) {
+    return 'WARNING';
+  }
+  return null;
+}
+
+// Fungsi utama: catat pelanggaran + auto ban
+function recordViolation(ip, type, detail) {
+  var now = Date.now();
+  var record = getViolationRecord(ip);
+
+  var info = VIOLATION_MAP[type] || { sev: 1, type: 'WARNING' };
+
+  record.violations.push({
+    type: type,
+    at: now,
+    sev: info.sev,
+    detail: detail || ''
+  });
+
+  // Simpan hanya 100 pelanggaran terakhir
+  if (record.violations.length > 100) {
+    record.violations = record.violations.slice(-100);
+  }
+  record.totalStrikes++;
+
+  // Putuskan level ban
+  var banLevel = decideBanLevel(record);
+
+  if (banLevel && VIOLATION_LEVELS[banLevel]) {
+    var vl = VIOLATION_LEVELS[banLevel];
+
+    // Cuma apply kalau level lebih tinggi dari sebelumnya, atau sudah expired
+    var currentLevel = record.banLevel ? VIOLATION_LEVELS[record.banLevel].level : -1;
+    var newLevel = vl.level;
+
+    if (newLevel > currentLevel || now > record.banUntil) {
+      record.banLevel = banLevel;
+      record.banUntil = now + vl.durasi;
+      record.banReason = type;
+
+      // Apply ke blacklist global
+      if (vl.durasi > 0) {
+        ipBlacklist.set(ip, {
+          reason: vl.label + ' (' + type + ')',
+          until: record.banUntil,
+          level: banLevel
+        });
+      }
+
+      logSecurity('AUTO-BAN-' + banLevel, {
+        ip: ip,
+        path: '-',
+        detail: 'type=' + type + ' durasi=' + Math.round(vl.durasi/60000) + 'min'
+      });
+    }
+  } else {
+    logSecurity('WARN-' + type, {
+      ip: ip,
+      path: '-',
+      detail: detail || ''
+    });
+  }
+
+  return { level: banLevel || 'NONE', totalStrikes: record.totalStrikes };
+}
+
+// Auto-unban — cek setiap 30 detik
+setInterval(function() {
+  var now = Date.now();
+  var unbannedCount = 0;
+
+  for (var entry of violationRecords.entries()) {
+    var ip = entry[0];
+    var record = entry[1];
+
+    // Kalau ban expired → auto-unban
+    if (record.banUntil > 0 && now > record.banUntil) {
+      ipBlacklist.delete(ip);
+      record.banLevel = null;
+      record.banUntil = 0;
+      record.banReason = '';
+      unbannedCount++;
+
+      logSecurity('AUTO-UNBAN', { ip: ip, path: '-', detail: 'expired' });
+
+      // Restore reputasi sedikit
+      var rep = ipReputation.get(ip);
+      if (rep && rep.score < 30) {
+        rep.score = 30;
+      }
+    }
+
+    // Bersihin violation lama (>7 hari)
+    record.violations = record.violations.filter(function(v) {
+      return (now - v.at) < 7 * 24 * 60 * 60 * 1000;
+    });
+
+    // Hapus record kalau kosong dan gak ban
+    if (record.violations.length === 0 && !record.banLevel && now - (record.banUntil || 0) > 60 * 60 * 1000) {
+      violationRecords.delete(ip);
+    }
+  }
+
+  if (unbannedCount > 0) {
+    console.log('[AUTO-UNBAN] ' + unbannedCount + ' IP di-unban');
+  }
+}, 30 * 1000);
+
+// Halaman ban — tampilkan level + countdown + pelanggaran
+function renderBanDetailPage(ip) {
+  var record = violationRecords.get(ip);
+  var banInfo = ipBlacklist.get(ip);
+  if (!record || !banInfo) return gvRenderVerifyPage('/');
+
+  var vl = VIOLATION_LEVELS[record.banLevel] || VIOLATION_LEVELS.MEDIUM;
+  var sisa = Math.max(0, Math.ceil((record.banUntil - Date.now()) / 1000));
+  var hari = Math.floor(sisa / 86400);
+  var jam = Math.floor((sisa % 86400) / 3600);
+  var menit = Math.floor((sisa % 3600) / 60);
+  var detik = sisa % 60;
+
+  var timeStr = '';
+  if (hari > 0) timeStr = hari + ' hari ' + jam + ' jam';
+  else if (jam > 0) timeStr = jam + ' jam ' + menit + ' menit';
+  else if (menit > 0) timeStr = menit + ' menit ' + detik + ' detik';
+  else timeStr = detik + ' detik';
+
+  // Warnain level
+  var color = '#ff4d6d';
+  var emoji = '🚫';
+  if (record.banLevel === 'SOFT') { color = '#ffb020'; emoji = '⏸️'; }
+  else if (record.banLevel === 'MEDIUM') { color = '#ff6b35'; emoji = '⚠️'; }
+  else if (record.banLevel === 'HARD') { color = '#ff4d6d'; emoji = '🚫'; }
+  else if (record.banLevel === 'PERMANENT') { color = '#8b0000'; emoji = '⛔'; }
+
+  // Pelanggaran terakhir (maks 5)
+  var recent = record.violations.slice(-5).reverse();
+  var listHtml = '';
+  recent.forEach(function(v) {
+    var tgl = new Date(v.at).toLocaleString('id-ID');
+    listHtml += '<div class="violation-item"><strong>' + v.type + '</strong><span>' + tgl + '</span></div>';
+  });
+
+  var h = '';
+  h += '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8" />';
+  h += '<meta name="viewport" content="width=device-width, initial-scale=1.0" />';
+  h += '<title>Akun Diblokir - JAVIN SEMOK</title>';
+  h += '<style>';
+  h += '* { margin:0; padding:0; box-sizing:border-box; }';
+  h += 'body { font-family: system-ui, sans-serif; background:#0a0a0f; color:#e8e8f0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }';
+  h += '.box { background:#12121a; border:2px solid ' + color + '; border-radius:16px; padding:32px 24px; max-width:460px; width:100%; box-shadow: 0 4px 32px rgba(0,0,0,0.6); }';
+  h += '.icon { font-size:4rem; text-align:center; margin-bottom:12px; }';
+  h += 'h1 { font-size:1.4rem; margin-bottom:8px; color:' + color + '; text-align:center; }';
+  h += '.sub { color:#8888a0; font-size:0.88rem; text-align:center; margin-bottom:20px; }';
+  h += '.timer { background:#1a1a26; border:1px solid ' + color + '; border-radius:10px; padding:16px; text-align:center; margin-bottom:16px; }';
+  h += '.timer-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:1px; color:#8888a0; margin-bottom:6px; }';
+  h += '.timer-value { font-size:1.6rem; font-weight:700; color:' + color + '; font-family: monospace; }';
+  h += '.info { background:#1a1a26; border:1px solid #2a2a3a; border-radius:10px; padding:14px; margin-bottom:12px; font-size:0.85rem; }';
+  h += '.info-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #2a2a3a; }';
+  h += '.info-row:last-child { border:none; }';
+  h += '.info-row span:first-child { color:#8888a0; }';
+  h += '.info-row span:last-child { color:#e8e8f0; font-weight:600; }';
+  h += 'h2 { font-size:0.9rem; text-transform:uppercase; letter-spacing:0.5px; color:#8888a0; margin:16px 0 10px; }';
+  h += '.violation-item { background:#1a1a26; border-left:3px solid ' + color + '; padding:10px 12px; margin-bottom:6px; border-radius:6px; font-size:0.82rem; display:flex; justify-content:space-between; }';
+  h += '.violation-item strong { color:#e8e8f0; }';
+  h += '.violation-item span { color:#8888a0; font-size:0.72rem; }';
+  h += '.note { margin-top:16px; padding:12px; background:rgba(124,92,255,0.1); border:1px solid #7c5cff; border-radius:8px; font-size:0.78rem; color:#c9b8ff; line-height:1.5; }';
+  h += '.footer { text-align:center; margin-top:16px; font-size:0.72rem; color:#555; }';
+  h += '</style></head><body>';
+  h += '<div class="box">';
+  h += '<div class="icon">' + emoji + '</div>';
+  h += '<h1>' + vl.label + '</h1>';
+  h += '<p class="sub">Akses kamu diblokir sementara oleh sistem keamanan otomatis</p>';
+
+  h += '<div class="timer">';
+  h += '<div class="timer-label">Dibuka kembali dalam</div>';
+  h += '<div class="timer-value" id="cd">' + timeStr + '</div>';
+  h += '</div>';
+
+  h += '<div class="info">';
+  h += '<div class="info-row"><span>Level</span><span>' + vl.label + '</span></div>';
+  h += '<div class="info-row"><span>Alasan</span><span>' + record.banReason + '</span></div>';
+  h += '<div class="info-row"><span>Total Pelanggaran</span><span>' + record.totalStrikes + 'x</span></div>';
+  h += '</div>';
+
+  if (recent.length > 0) {
+    h += '<h2>Pelanggaran Terakhir</h2>';
+    h += listHtml;
+  }
+
+  h += '<div class="note">💡 Ban ini bersifat otomatis dan akan terbuka sendiri setelah waktu habis. Kalau kamu merasa ini kesalahan, hubungi admin.</div>';
+  h += '<div class="footer">JAVIN SEMOK Security System</div>';
+  h += '</div>';
+
+  // Countdown live
+  h += '<script>';
+  h += 'var end = ' + record.banUntil + ';';
+  h += 'setInterval(function() {';
+  h += '  var s = Math.max(0, Math.ceil((end - Date.now()) / 1000));';
+  h += '  var d = Math.floor(s / 86400);';
+  h += '  var hh = Math.floor((s % 86400) / 3600);';
+  h += '  var m = Math.floor((s % 3600) / 60);';
+  h += '  var ss = s % 60;';
+  h += '  var t = "";';
+  h += '  if (d > 0) t = d + " hari " + hh + " jam";';
+  h += '  else if (hh > 0) t = hh + " jam " + m + " menit";';
+  h += '  else if (m > 0) t = m + " menit " + ss + " detik";';
+  h += '  else t = ss + " detik";';
+  h += '  var el = document.getElementById("cd");';
+  h += '  if (el) el.textContent = t;';
+  h += '  if (s <= 0) location.reload();';
+  h += '}, 1000);';
+  h += '</script>';
+
+  h += '</body></html>';
+  return h;
+}
+
+// Override banned page render — pakai versi detail
+app.use(function(req, res, next) {
+  var ip = req.ip;
+  var banInfo = ipBlacklist.get(ip);
+  if (banInfo && Date.now() < banInfo.until) {
+    if (req._isAdmin || isAdminIP(req)) return next();
+
+    var isAPI = req.path.indexOf('/api/') === 0 || req.xhr;
+    if (isAPI) {
+      var sisaSec = Math.ceil((banInfo.until - Date.now()) / 1000);
+      return res.status(403).json({
+        status: false,
+        banned: true,
+        level: banInfo.level || 'MEDIUM',
+        reason: banInfo.reason,
+        wait_seconds: sisaSec,
+        wait_formatted: sisaSec > 3600 ? Math.ceil(sisaSec/3600) + ' jam' : Math.ceil(sisaSec/60) + ' menit'
+      });
+    }
+
+    res.status(403).set('Content-Type', 'text/html').send(renderBanDetailPage(ip));
+    return;
+  }
+  next();
+});
+
+// Endpoint cek status ban sendiri
+app.get('/api/ban-status', function(req, res) {
+  var ip = req.ip;
+  var record = violationRecords.get(ip);
+  var banInfo = ipBlacklist.get(ip);
+  if (!record && !banInfo) {
+    return res.json({ status: true, banned: false, total_strikes: 0 });
+  }
+  res.json({
+    status: true,
+    banned: banInfo ? (Date.now() < banInfo.until) : false,
+    level: record && record.banLevel ? record.banLevel : null,
+    reason: record ? record.banReason : '',
+    total_strikes: record ? record.totalStrikes : 0,
+    wait_seconds: banInfo ? Math.max(0, Math.ceil((banInfo.until - Date.now()) / 1000)) : 0
+  });
+});
+
+// Endpoint admin — lihat semua violation
+app.get('/api/admin/violations', requireAdmin, function(req, res) {
+  var list = [];
+  for (var entry of violationRecords.entries()) {
+    var ip = entry[0];
+    var r = entry[1];
+    list.push({
+      ip: ip,
+      totalStrikes: r.totalStrikes,
+      banLevel: r.banLevel,
+      banUntil: r.banUntil,
+      banReason: r.banReason,
+      recentCount: r.violations.length,
+      lastViolation: r.violations.length > 0 ? r.violations[r.violations.length - 1] : null
+    });
+  }
+  list.sort(function(a, b) { return b.totalStrikes - a.totalStrikes; });
+  res.json({ status: true, total: list.length, list: list.slice(0, 50) });
+});
+
+// Endpoint admin — manual unban + clear record
+app.get('/api/admin/clear-violation', requireAdmin, function(req, res) {
+  var ip = req.query.ip;
+  if (!ip) return res.status(400).json({ status: false, message: 'IP wajib' });
+  if (ip === 'all') {
+    var count = violationRecords.size;
+    violationRecords.clear();
+    ipBlacklist.clear();
+    ipStrikes.clear();
+    res.json({ status: true, message: 'Semua record dibersihin', count: count });
+  } else {
+    violationRecords.delete(ip);
+    ipBlacklist.delete(ip);
+    ipStrikes.delete(ip);
+    res.json({ status: true, message: 'IP ' + ip + ' dibersihin' });
+  }
+});
+
+// === END LAYER 13 ===
+
+
+
 
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
