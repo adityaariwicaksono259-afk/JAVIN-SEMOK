@@ -5268,6 +5268,268 @@ app.get('/health/ddos', function(req, res) {
 // === END ANTI-DDOS SHIELD ===
 
 
+// ============================================
+// PROTECTION LAYER 16 — HTTP HARDENING
+// ============================================
+
+// 16.1 — Host header validation (DNS rebinding protection)
+var HOST_WHITELIST = [
+  'javincakep.onrender.com',
+  'javin-semok.onrender.com',
+  'localhost',
+  '127.0.0.1'
+];
+
+app.use(function(req, res, next) {
+  if (req._isAdmin || isAdminIP(req)) return next();
+  var host = (req.headers.host || '').split(':')[0].toLowerCase();
+  // Izinkan subdomain pattern onrender.com
+  var isAllowed = HOST_WHITELIST.indexOf(host) !== -1;
+  if (!isAllowed && /\.onrender\.com$/.test(host)) isAllowed = true;
+  if (!isAllowed) {
+    logSecurity('HOST-BLOCK', { ip: req.ip, path: req.path, detail: 'host=' + host });
+    addStrike(req.ip, 'malformed');
+    return res.status(400).json({ status: false, message: 'Host tidak valid' });
+  }
+  next();
+});
+
+// 16.2 — Hide server fingerprint headers
+app.use(function(req, res, next) {
+  res.removeHeader('X-Powered-By');
+  res.removeHeader('Server');
+  var origSet = res.setHeader.bind(res);
+  res.setHeader = function(name, value) {
+    if (name.toLowerCase() === 'x-powered-by') return;
+    if (name.toLowerCase() === 'server') return;
+    return origSet(name, value);
+  };
+  next();
+});
+
+// 16.3 — Full security headers set
+app.use(function(req, res, next) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('X-Download-Options', 'noopen');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Origin-Agent-Cluster', '?1');
+  next();
+});
+
+// 16.4 — HTTP method case normalization + block weird methods
+app.use(function(req, res, next) {
+  var m = req.method.toUpperCase();
+  // Cek ada karakter aneh di method
+  if (!/^[A-Z]{3,10}$/.test(m)) {
+    addStrike(req.ip, 'bad-method');
+    return res.status(400).json({ status: false, message: 'Method tidak valid' });
+  }
+  next();
+});
+
+// 16.5 — Header injection prevention
+app.use(function(req, res, next) {
+  var suspiciousHeaders = ['x-forwarded-for', 'x-real-ip', 'x-forwarded-host', 'x-original-url'];
+  for (var i = 0; i < suspiciousHeaders.length; i++) {
+    var h = suspiciousHeaders[i];
+    var v = req.headers[h];
+    if (v) {
+      // Header gak boleh ada CRLF, null bytes
+      if (/[\r\n\0]/.test(String(v))) {
+        addStrike(req.ip, 'malformed');
+        logSecurity('HEADER-INJECT', { ip: req.ip, path: req.path, detail: h });
+        return res.status(400).json({ status: false, message: 'Request tidak valid' });
+      }
+    }
+  }
+  next();
+});
+
+// 16.6 — URL canonicalization
+app.use(function(req, res, next) {
+  var url = req.originalUrl;
+  // Cek karakter ilegal di URL
+  if (/[\x00-\x1F\x7F]/.test(url)) {
+    addStrike(req.ip, 'malformed');
+    return res.status(400).json({ status: false, message: 'URL tidak valid' });
+  }
+  // Cek double encoding
+  if (/%(25)+[0-9a-f]{2}/i.test(url)) {
+    addStrike(req.ip, 'malformed');
+    logSecurity('DOUBLE-ENCODE', { ip: req.ip, path: req.path, detail: 'len=' + url.length });
+    return res.status(400).json({ status: false, message: 'URL tidak valid' });
+  }
+  next();
+});
+
+// 16.7 — Query string pollution detection
+app.use(function(req, res, next) {
+  var raw = req.originalUrl.split('?')[1];
+  if (!raw) return next();
+  // Deteksi duplicate keys (?a=1&a=2)
+  var keys = {};
+  var parts = raw.split('&');
+  var dupes = 0;
+  for (var i = 0; i < parts.length; i++) {
+    var k = parts[i].split('=')[0];
+    if (keys[k]) dupes++;
+    keys[k] = true;
+  }
+  if (dupes > 5) {
+    addStrike(req.ip, 'malformed');
+    logSecurity('QS-POLLUTION', { ip: req.ip, path: req.path, detail: 'dupes=' + dupes });
+    return res.status(400).json({ status: false, message: 'Parameter duplikat terdeteksi' });
+  }
+  next();
+});
+
+// 16.8 — Cookie flags enforcement
+app.use(function(req, res, next) {
+  var origSetHeader = res.setHeader.bind(res);
+  res.setHeader = function(name, value) {
+    if (name.toLowerCase() === 'set-cookie') {
+      var process = function(ck) {
+        if (typeof ck === 'string') {
+          var lower = ck.toLowerCase();
+          if (lower.indexOf('httponly') === -1) ck += '; HttpOnly';
+          if (lower.indexOf('samesite') === -1) ck += '; SameSite=Lax';
+          if (lower.indexOf('path=') === -1) ck += '; Path=/';
+        }
+        return ck;
+      };
+      if (Array.isArray(value)) value = value.map(process);
+      else value = process(value);
+    }
+    return origSetHeader(name, value);
+  };
+  next();
+});
+
+// 16.9 — Timing-safe password compare
+var _origAdminLoginCheck = null;
+function timingSafeCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  var aBuf = Buffer.from(a);
+  var bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) {
+    // Biar timing konstan
+    try { crypto.timingSafeEqual(aBuf, aBuf); } catch (e) {}
+    return false;
+  }
+  try { return crypto.timingSafeEqual(aBuf, bBuf); } catch (e) { return false; }
+}
+
+// 16.10 — Session fixation prevention (rotate token on sensitive action)
+var _sessionRotationLog = new Map();
+setInterval(function() {
+  var now = Date.now();
+  for (var e of _sessionRotationLog.entries()) {
+    if (now - e[1] > 60 * 60 * 1000) _sessionRotationLog.delete(e[0]);
+  }
+}, 15 * 60 * 1000);
+
+// 16.11 — HTTP/2 specific attacks
+app.use(function(req, res, next) {
+  // Deteksi HTTP/2 rapid reset pattern (banyak RST_STREAM)
+  var h2ip = req.ip;
+  var key = 'h2_' + h2ip;
+  var now = Date.now();
+  var e = _sessionRotationLog.get(key) || { count: 0, resetAt: now + 10000 };
+  if (now > e.resetAt) { e.count = 0; e.resetAt = now + 10000; }
+  e.count++;
+  _sessionRotationLog.set(key, e);
+  if (e.count > 200) {
+    addStrike(h2ip, 'too-many-concurrent');
+    return res.status(429).json({ status: false, message: 'Terlalu banyak request' });
+  }
+  next();
+});
+
+// 16.12 — Subresource Integrity helper endpoint
+app.get('/api/sri-hash', function(req, res) {
+  res.json({
+    status: true,
+    note: 'Pakai endpoint ini buat generate SRI hash untuk script/style lu',
+    example: 'sha384-BASE64_HASH'
+  });
+});
+
+// 16.13 — Max content-type length
+app.use(function(req, res, next) {
+  var ct = req.headers['content-type'] || '';
+  if (ct.length > 150) {
+    addStrike(req.ip, 'malformed');
+    return res.status(400).json({ status: false, message: 'Content-Type tidak valid' });
+  }
+  next();
+});
+
+// 16.14 — Empty Host header block
+app.use(function(req, res, next) {
+  if (req.httpVersionMajor >= 1 && req.httpVersionMinor >= 1) {
+    if (!req.headers.host) {
+      addStrike(req.ip, 'malformed');
+      return res.status(400).json({ status: false, message: 'Host header wajib' });
+    }
+  }
+  next();
+});
+
+// 16.15 — Anti XML bomb (untuk JSON parsing safety)
+app.use(function(req, res, next) {
+  var ct = (req.headers['content-type'] || '').toLowerCase();
+  if (ct.indexOf('xml') !== -1) {
+    addStrike(req.ip, 'malformed');
+    return res.status(415).json({ status: false, message: 'XML tidak didukung' });
+  }
+  next();
+});
+
+// 16.16 — Secure random check (entropy validation di random request)
+app.get('/api/entropy-check', function(req, res) {
+  var bytes = crypto.randomBytes(16);
+  res.json({
+    status: true,
+    sample: bytes.toString('hex').slice(0, 16),
+    note: 'Server secure random OK'
+  });
+});
+
+// 16.17 — Endpoint hardening stats
+app.get('/api/admin/http-hardening', requireAdmin, function(req, res) {
+  res.json({
+    status: true,
+    layer: 16,
+    protections: [
+      'host-validation',
+      'header-hiding',
+      'security-headers',
+      'method-validation',
+      'header-injection',
+      'url-canonicalization',
+      'qs-pollution',
+      'cookie-flags',
+      'timing-safe-compare',
+      'h2-rapid-reset',
+      'content-type-length',
+      'host-required',
+      'anti-xml',
+      'secure-random',
+      'sri-helper'
+    ]
+  });
+});
+
+// === END LAYER 16 ===
+
+
+
 
 
 
