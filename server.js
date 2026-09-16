@@ -5584,10 +5584,7 @@ function scanPublicFeatures() {
     'index.html', 'index_backup.html', 'index_backup_v2.html',
     'admin.html', 'admin-login.html', 'dashboard.html',
     'banned.html', 'maintenance.html', 'test.html',
-    'log.html', 'status.html', 'chat.html', 'game.html',
-    'ibadah.html', 'sholat.html', 'harian.html', 'event.html',
-    'profile.html', 'leaderboard.html', 'achievement.html',
-    'api-tool.html', 'javin-guna.html'
+    'log.html', 'status.html', 'api-tool.html'
   ];
 
   var labelMap = {
@@ -5645,8 +5642,8 @@ function scanPublicFeatures() {
 
   // Routing file → kategori
   function categorize(f) {
-    if (f === 'chat.html' || f === 'chat_v8.js' || f === 'chat_v7.js' || f === 'auth-socket.js') return 'chat';
-    if (f.indexOf('ai-') === 0 || f === 'llama.html' || f === 'javin-cerdas.html') return 'ai';
+    if (f === 'chat.html' || f.indexOf('chat_v') === 0 || f === 'auth-socket.js') return 'chat';
+    if (f === 'ai.html' || f.indexOf('ai-') === 0 || f === 'llama.html' || f === 'javin-cerdas.html') return 'ai';
     if (f.indexOf('anime') === 0) return 'anime';
     if (f === 'berita.html') return 'berita';
     if (['slot.html','blackjack.html','dadu.html','dice.html','chess.html','mahjong.html','roulette.html','lottery.html','tebak.html','kartu.html'].indexOf(f) !== -1) return 'games';
@@ -5768,6 +5765,21 @@ function checkGroupedStatus() {
     groups: groups
   };
 }
+
+
+app.get('/api/system-status-debug', function(req, res) {
+  var fs = require('fs');
+  var pathMod = require('path');
+  var pubDir = pathMod.join(__dirname, 'public');
+  var files = fs.readdirSync(pubDir).filter(function(f) {
+    return f.indexOf('.html') !== -1 && f.indexOf('.backup') === -1 && f.indexOf('.before') === -1;
+  });
+  res.json({
+    totalFiles: files.length,
+    files: files,
+    excluded: ['index.html','index_backup.html','index_backup_v2.html','admin.html','admin-login.html','dashboard.html','banned.html','maintenance.html','test.html','log.html','status.html','api-tool.html']
+  });
+});
 
 app.get('/api/system-status'
 , function(req, res) {
