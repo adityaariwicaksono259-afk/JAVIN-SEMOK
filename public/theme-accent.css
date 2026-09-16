@@ -1,0 +1,40 @@
+/* ============================================
+   theme-accent.css
+   CUMA border kiri cycling warna.
+   GAK sentuh text, background, atau layout.
+   ============================================ */
+
+@keyframes javinAccentCycle {
+  0%,   24.99% { border-left-color: #ff3366 !important; }
+  25%,  49.99% { border-left-color: #00ffaa !important; }
+  50%,  74.99% { border-left-color: #3399ff !important; }
+  75%,  100%   { border-left-color: #ffbb00 !important; }
+}
+
+/* Border cycling ke card */
+.feature-card,
+.tool-card,
+.game-btn,
+.stat,
+.landing-stats {
+  border-left: 8px solid #ff3366 !important;
+  animation: javinAccentCycle 4s infinite !important;
+  transition: transform 0.25s ease !important;
+}
+
+/* Offset biar warna beda antar card */
+.feature-card:nth-child(4n+1),
+.tool-card:nth-child(4n+1) { animation-delay: 0s !important; }
+.feature-card:nth-child(4n+2),
+.tool-card:nth-child(4n+2) { animation-delay: -1s !important; }
+.feature-card:nth-child(4n+3),
+.tool-card:nth-child(4n+3) { animation-delay: -2s !important; }
+.feature-card:nth-child(4n+4),
+.tool-card:nth-child(4n+4) { animation-delay: -3s !important; }
+
+/* Hover halus */
+.feature-card:hover,
+.tool-card:hover,
+.game-btn:hover {
+  transform: translateY(-3px) !important;
+}
