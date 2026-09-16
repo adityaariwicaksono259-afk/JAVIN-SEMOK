@@ -5840,7 +5840,7 @@ app.use(function(req, res, next) {
 });
 
 // 18.2 — Ganti endpoint name di live stats dengan label
-var _origGetEndpointStatus = getEndpointStatus;
+var _origGetEndpointStatus = (typeof getEndpointStatus === 'function') ? getEndpointStatus : function() { return {}; };
 getEndpointStatus = function() {
   var raw = _origGetEndpointStatus();
   var masked = {};
@@ -5852,7 +5852,7 @@ getEndpointStatus = function() {
 
 // 18.3 — Ganti provider name di health map
 // Patch checkProviderHealth biar key-nya masked
-var _origCheckProviderHealth = checkProviderHealth;
+var _origCheckProviderHealth = (typeof checkProviderHealth === 'function') ? checkProviderHealth : async function() {};
 checkProviderHealth = async function() {
   await _origCheckProviderHealth();
   // Rename keys di providerHealth
@@ -5865,7 +5865,7 @@ checkProviderHealth = async function() {
 };
 
 // 18.4 — Patch checkGroupedStatus biar gak bocorin path
-var _origCheckGrouped2 = checkGroupedStatus;
+var _origCheckGrouped2 = (typeof checkGroupedStatus === 'function') ? checkGroupedStatus : function() { return { groups: {}, summary: {} }; };
 checkGroupedStatus = function() {
   var g = _origCheckGrouped2();
 
@@ -5889,7 +5889,7 @@ checkGroupedStatus = function() {
 
 // 18.5 — Ganti title biar gak bocorin "Anita Studio" dll
 // Patch detail Javin Analog (yang tadi kasih tau "Anita Studio aktif")
-var _origCheckGrouped3 = checkGroupedStatus;
+var _origCheckGrouped3 = (typeof checkGroupedStatus === 'function') ? checkGroupedStatus : function() { return { groups: {}, summary: {} }; };
 checkGroupedStatus = function() {
   var g = _origCheckGrouped3();
   // Sanitize group details
