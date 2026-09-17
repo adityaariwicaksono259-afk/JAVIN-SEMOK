@@ -27,7 +27,8 @@ const globalLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { status: false, message: 'Terlalu banyak request. Coba lagi nanti.' }
+  message: { status: false, message: 'Terlalu banyak request. Coba lagi nanti.' },
+  validate: { trustProxy: false, xForwardedForHeader: false }
 });
 app.use('/api', function(req, res, next) { if (isAdminIP(req)) return next(); globalLimiter(req, res, next); });
 
@@ -37,7 +38,8 @@ const heavyLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { status: false, message: 'Terlalu banyak request ke endpoint ini. Tunggu sebentar.' }
+  message: { status: false, message: 'Terlalu banyak request ke endpoint ini. Tunggu sebentar.' },
+  validate: { trustProxy: false, xForwardedForHeader: false }
 });
 
 // 3. Rate limit auth — 5 req / menit
@@ -46,7 +48,8 @@ const authLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { status: false, message: 'Terlalu banyak percobaan. Tunggu 1 menit.' }
+  message: { status: false, message: 'Terlalu banyak percobaan. Tunggu 1 menit.' },
+  validate: { trustProxy: false, xForwardedForHeader: false }
 });
 
 // 4. Block suspicious methods
@@ -1226,7 +1229,7 @@ async function javinAnalogRequest(req, res, action) {
 /* /JAVIN-ANALOG-API-V3 */
 
 app.disable('x-powered-by');
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: function(origin, cb) {
     if (!origin) return cb(null, true);
