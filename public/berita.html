@@ -72,6 +72,7 @@ html,body{overflow-y:auto!important;height:auto!important;min-height:100vh!impor
 <button class="brt-tab" data-src="tribunnews">Tribunnews</button>
 <button class="brt-tab" data-src="liputan6">Liputan6</button>
 <button class="brt-tab" data-src="cnbcindonesia">CNBC Indonesia</button>
+<button class="brt-tab" data-src="gempa">Info Gempa</button>
 </div>
 
 <div class="brt-panel active" data-panel="kompas">
@@ -94,6 +95,28 @@ html,body{overflow-y:auto!important;height:auto!important;min-height:100vh!impor
 <button class="brt-btn" data-load="cnbcindonesia">Muat Berita CNBC Indonesia</button>
 <div class="brt-list" data-list="cnbcindonesia"></div>
 </div>
+
+<div class="brt-panel" data-panel="gempa">
+<div class="brt-gempa-wrap">
+<button id="brtGempaBtn" class="brt-btn">Muat Info Gempa BMKG</button>
+<div id="brtGempaList" class="brt-list"></div>
+</div>
+</div>
+
+<style>
+.brt-gempa-item{background:#fbfaf5;border:1.5px solid #ede7d5;border-radius:14px;padding:16px;margin-bottom:12px;transition:all 0.25s}
+.brt-gempa-item:hover{border-color:#1f6f5c;background:#fff;box-shadow:0 6px 20px rgba(31,111,92,0.1)}
+.brt-gempa-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.brt-gempa-mag{background:linear-gradient(135deg,#e63946,#c0392b);color:#fff;font-family:'Sora',sans-serif;font-weight:800;font-size:0.95rem;padding:6px 14px;border-radius:10px;white-space:nowrap}
+.brt-gempa-mag.medium{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.brt-gempa-mag.low{background:linear-gradient(135deg,#10b981,#059669)}
+.brt-gempa-time{font-size:0.75rem;color:#6b7c78;font-weight:600}
+.brt-gempa-loc{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:#0f2a24;margin-bottom:8px;line-height:1.3}
+.brt-gempa-detail{font-size:0.82rem;color:#6b7c78;line-height:1.6}
+.brt-gempa-detail strong{color:#0f2a24;font-weight:700}
+.brt-gempa-depth{background:#f5f2e8;color:#1f6f5c;font-size:0.75rem;font-weight:700;padding:4px 10px;border-radius:8px;display:inline-block;margin-top:8px}
+.brt-gempa-tsunami{background:#fef0f0;border:1.5px solid #ffb3b3;color:#c0392b;font-size:0.78rem;font-weight:700;padding:8px 12px;border-radius:10px;margin-top:10px}
+</style>
 
 </div>
 </div>
@@ -214,6 +237,67 @@ $$('.brt-btn').forEach(function(b){
   b.dataset.orig=b.textContent;
   b.addEventListener('click',function(){load(b.dataset.load,b)});
 });
+
+// === GEMPA BMKG ===
+var gempaLoaded = false;
+async function loadGempa(){
+  var list=document.getElementById('brtGempaList');
+  var btn=document.getElementById('brtGempaBtn');
+  if(!list||!btn)return;
+  if(gempaLoaded)return;
+  btn.disabled=true;btn.textContent='Memuat...';
+  list.innerHTML='<div class="brt-loading"><div class="brt-spinner"></div></div>';
+  try{
+    var r=await fetch('/api/gempa-proxy');
+    var d=await r.json();
+    var items = null;
+    if(d.status && d.data){
+      var dd = d.data;
+      if(Array.isArray(dd))items=dd;
+      else if(dd.data&&Array.isArray(dd.data))items=dd.data;
+      else if(dd.result&&Array.isArray(dd.result))items=dd.result;
+      else if(dd.Infogempa&&dd.Infogempa.gempa)items=dd.Infogempa.gempa;
+      else if(dd.gempa&&Array.isArray(dd.gempa))items=dd.gempa;
+      else if(dd.auto&&Array.isArray(dd.auto))items=dd.auto;
+      else if(dd.auto&&dd.auto.Infogempa&&dd.auto.Infogempa.gempa)items=dd.auto.Infogempa.gempa;
+    }
+    if(!items){throw new Error('Format response tidak dikenali')}
+    if(!Array.isArray(items))items=[items];
+    if(!items.length){list.innerHTML='<div class="brt-empty">Belum ada data gempa</div>';gempaLoaded=true;return}
+    var html='';
+    items.forEach(function(g){
+      var mag=parseFloat(g.Magnitude||g.mag||0)||0;
+      var cls=mag>=6?'':mag>=5?'medium':'low';
+      var loc=g.Wilayah||g.lokasi||g.region||'-';
+      var time=g.DateTime||g.Tanggal||g.Jam||g.time||'-';
+      var depth=g.Kedalaman||g.depth||'-';
+      var coords=g.Coordinates||g.koordinat||g.coordinates||'-';
+      var pot=g.Potensi||g.potensi||'';
+      html+='<div class="brt-gempa-item">';
+      html+='<div class="brt-gempa-head">';
+      html+='<div class="brt-gempa-mag '+cls+'">M '+mag.toFixed(1)+'</div>';
+      html+='<div class="brt-gempa-time">'+String(time)+'</div>';
+      html+='</div>';
+      html+='<div class="brt-gempa-loc">'+String(loc).replace(/</g,'&lt;')+'</div>';
+      html+='<div class="brt-gempa-detail">Koordinat: <strong>'+String(coords)+'</strong></div>';
+      html+='<div class="brt-gempa-depth">Kedalaman: '+String(depth)+'</div>';
+      if(pot && pot.toLowerCase().indexOf('tsunami')!==-1 && pot.toLowerCase().indexOf('tidak')===-1){
+        html+='<div class="brt-gempa-tsunami">⚠ '+String(pot)+'</div>';
+      } else if(pot){
+        html+='<div class="brt-gempa-detail" style="margin-top:8px">'+String(pot)+'</div>';
+      }
+      html+='</div>';
+    });
+    list.innerHTML=html;
+    gempaLoaded=true;
+  }catch(e){
+    list.innerHTML='<div class="brt-error">Gagal: '+e.message+'</div>';
+  }finally{
+    btn.disabled=false;btn.textContent='Muat Info Gempa BMKG';
+  }
+}
+
+document.querySelector('[data-src="gempa"]').addEventListener('click',function(){loadGempa()});
 
 // Auto-load Kompas pertama kali
 setTimeout(function(){

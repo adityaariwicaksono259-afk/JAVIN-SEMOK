@@ -6588,5 +6588,59 @@ app.get('/api/canvas-proxy/:type', async function(req, res) {
 // === END CANVAS PROXY ===
 
 
+// === GEMPA BMKG PROXY ===
+app.get('/api/gempa-proxy', async function(req, res) {
+  try {
+    var urls = [
+      'https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json',
+      'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json',
+      'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json'
+    ];
+    var results = [];
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        var r = await fetch(urls[i], {
+          headers: { 'accept': 'application/json', 'user-agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(15000)
+        });
+        if (r.ok) {
+          var d = await r.json();
+          results.push({ url: urls[i], data: d });
+        }
+      } catch (e) {}
+    }
+    if (!results.length) {
+      return res.status(500).json({ status: false, message: 'Gagal ambil data gempa' });
+    }
+    // Gabungin semua gempa
+    var allGempa = [];
+    results.forEach(function(r) {
+      var g = r.data;
+      if (g.Infogempa && g.Infogempa.gempa) {
+        var items = g.Infogempa.gempa;
+        if (!Array.isArray(items)) items = [items];
+        allGempa = allGempa.concat(items);
+      }
+    });
+    // Hapus duplikat berdasarkan DateTime
+    var seen = {};
+    var unique = [];
+    allGempa.forEach(function(g) {
+      var key = (g.DateTime || g.Tanggal || '') + '|' + (g.Coordinates || '');
+      if (!seen[key]) {
+        seen[key] = true;
+        unique.push(g);
+      }
+    });
+    res.json({ status: true, data: unique });
+  } catch (e) {
+    console.error('[GEMPA] Error:', e.message);
+    res.status(500).json({ status: false, message: 'Gagal: ' + e.message });
+  }
+});
+// === END GEMPA ===
+
+
+
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
