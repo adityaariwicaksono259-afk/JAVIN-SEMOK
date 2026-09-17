@@ -3785,6 +3785,7 @@ function gvShouldSkip(req) {
   if (p.indexOf('/api/admin/') === 0) return true;
   if (p.indexOf('/api/anime-proxy/') === 0) return true;
   if (p.indexOf('/api/berita-proxy/') === 0) return true;
+  if (p.indexOf('/api/canvas-proxy/') === 0) return true;
   if (p.indexOf('/api/javin-cerdas-proxy') === 0) return true;
   if (p.indexOf('/api/ai-neo-proxy') === 0) return true;
   if (p.indexOf('/api/wink-proxy') === 0) return true;
@@ -5663,6 +5664,7 @@ function scanPublicFeatures() {
 
     // Berita
     if (f === 'berita.html') return 'berita';
+    if (f === 'canvas.html') return 'canvas';
     if (f === 'canvas.html') return 'canvas';
 
     // Games

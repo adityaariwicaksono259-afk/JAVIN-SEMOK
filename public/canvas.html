@@ -218,9 +218,9 @@ $$('.cv-tab').forEach(function(t){
   });
 });
 
-function setLoading(id,on){var el=$(id);if(el)el.className='cv-loading'+(on?' show':'');}
+function setLoading(id,on){var el=document.getElementById(id);if(el)el.className='cv-loading'+(on?' show':'');}
 function setStatus(id,type,msg){
-  var el=$(id);
+  var el=document.getElementById(id);
   if(!el)return;
   el.className='cv-result show '+(type==='ok'?'ok':'err');
   el.textContent=(type==='ok'?'': '')+msg;
