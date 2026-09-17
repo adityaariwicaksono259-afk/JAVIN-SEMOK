@@ -6641,6 +6641,58 @@ app.get('/api/gempa-proxy', async function(req, res) {
 // === END GEMPA ===
 
 
+// === FINGERPRINT LOOKUP ===
+function findUserByFingerprint(fp) {
+  if (!fp || typeof fp !== 'string') return null;
+  if (!data || !data.users) return null;
+  for (var uid in data.users) {
+    var u = data.users[uid];
+    if (u.fp === fp && !u.banned) {
+      return { uid: uid, user: u };
+    }
+  }
+  return null;
+}
+
+// HTTP endpoint — restore token pakai fingerprint
+app.post('/api/auth/restore', express.json({ limit: '2kb' }), function(req, res) {
+  var fp = req.body && req.body.fp;
+  if (!fp || typeof fp !== 'string' || fp.length < 5) {
+    return res.status(400).json({ status: false, message: 'Fingerprint tidak valid' });
+  }
+  var found = findUserByFingerprint(fp);
+  if (!found) {
+    return res.status(404).json({ status: false, message: 'Akun tidak ditemukan' });
+  }
+  if (!found.user.authToken) {
+    found.user.authToken = crypto.randomBytes(16).toString('hex');
+    try { saveData(); } catch(e) {}
+  }
+  console.log('[FP-RESTORE] User:', found.user.username, '| fp:', fp.slice(0, 20));
+  res.json({
+    status: true,
+    userId: found.uid,
+    token: found.user.authToken,
+    username: found.user.username,
+    coins: found.user.coins || 0
+  });
+});
+
+// Update user dengan fingerprint (dipanggil dari socket handshake)
+app.post('/api/auth/set-fp', express.json({ limit: '2kb' }), function(req, res) {
+  var uid = req.body && req.body.uid;
+  var fp = req.body && req.body.fp;
+  if (!uid || !fp || !data || !data.users || !data.users[uid]) {
+    return res.status(400).json({ status: false, message: 'Parameter invalid' });
+  }
+  data.users[uid].fp = fp;
+  try { saveData(); } catch(e) {}
+  res.json({ status: true });
+});
+// === END FINGERPRINT LOOKUP ===
+
+
+
 
 
 server.listen(PORT, () => console.log('JAVACHAT running on port ' + PORT));
