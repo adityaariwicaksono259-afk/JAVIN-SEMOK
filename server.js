@@ -5665,7 +5665,6 @@ function scanPublicFeatures() {
     // Berita
     if (f === 'berita.html') return 'berita';
     if (f === 'canvas.html') return 'canvas';
-    if (f === 'canvas.html') return 'canvas';
 
     // Games
     if (['slot.html','blackjack.html','dadu.html','dice.html','chess.html','mahjong.html','roulette.html','lottery.html','tebak.html','kartu.html','game.html'].indexOf(f) !== -1) return 'games';
