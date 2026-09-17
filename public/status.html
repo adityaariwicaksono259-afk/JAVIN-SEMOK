@@ -137,7 +137,7 @@ function renderStatus(d) {
  // Groups
  var cont = document.getElementById('groups');
  cont.innerHTML = '';
- var order = ['chat', 'games', 'tools', 'account', 'islamic', 'infra', 'security'];
+ var order = Object.keys(d.groups);
  order.forEach(function(k) {
  var g = d.groups[k];
  if (!g) return;
